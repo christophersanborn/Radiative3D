@@ -104,10 +104,16 @@ NTesselSphere::NTesselSphere(const int degree) :
                              [](Real a, const TakeoffAngle & b){
                                return a + b.Weight();
                              });
-  Real scalefactor = mN / raw;
+  std::cout << raw << std::endl;
+  Real scalefactor = mN / raw;   // THERE IT IS unsigned problem (-mN is large pos)
   for ( TakeoffAngle & toa : mvTOA ) {
-    toa.SetWeight(2.0*toa.Weight());  // TODO wrong math
+    toa.SetWeight(scalefactor*toa.Weight());
   }
+  Real raw2 = std::accumulate(mvTOA.begin(), mvTOA.end(), 0.0,
+                              [](Real a, const TakeoffAngle & b){
+                              return a + b.Weight();
+                             });
+  std::cout << raw2 << std::endl;
 
 }
 
@@ -118,7 +124,7 @@ int main() {
   using std::cout;
 
   cout << "hello\n";
-  NTesselSphere tess(2);
+  NTesselSphere tess(3);
   cout << "goodbye\n";
 
 }

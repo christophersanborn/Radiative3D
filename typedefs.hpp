@@ -155,7 +155,7 @@ namespace validate {
 
   /// Throws if not positive (if zero or negative)
   template<typename T>
-  T positive(T val) {
+  T strictpositive(T val) {
     if (val <= (T)0) throw Invalid("Value must not be negative or zero.");
     return val;
   }

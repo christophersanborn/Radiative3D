@@ -349,7 +349,7 @@ public:
         ///  1 if it has not).
   ThetaPhi CenterAngle(Index n) const {return _CenterPoints[n];}
         ///< Direction represented by n'th centerpoint in the list.
-  Real AngleArea(Index n) const {return 1.234;} 
+  Real AngleArea(Index n) const {return 1.001;} 
         ///< Solid Angle subtended by subtriangle with centerpoint
         ///  CenterAngle(n).
 

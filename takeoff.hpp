@@ -37,10 +37,10 @@ public:
 ;
   TakeoffAngle(S2::ThetaPhi toa, Real weight) 
     : mDir(toa), 
-      mWeight(validate::positive(weight)) {}
+      mWeight(validate::strictpositive(weight)) {}
 
   Real Weight() const {return mWeight;}
-  void SetWeight(Real weight) {mWeight=validate::positive(weight);}
+  void SetWeight(Real weight) {mWeight=validate::strictpositive(weight);}
 
 };//
 ///
