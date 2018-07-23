@@ -130,8 +130,8 @@ void TesselSphere::init_icosahedron(int degree) {
 }
 
 void TesselSphere::grab_centerpoints_from_tri(const Triangle & tri) {
-  ThetaPhi_Set::const_iterator src_begin =  tri.Centers.begin();
-  ThetaPhi_Set::const_iterator src_end   =  tri.Centers.end();
+  ThetaPhi::V::const_iterator src_begin =  tri.Centers().begin();
+  ThetaPhi::V::const_iterator src_end   =  tri.Centers().end();
   insert(end(), src_begin, src_end);
 }
 
@@ -219,15 +219,15 @@ int ThetaPhi_Set::GetBestIndexFromPoint(ThetaPhi point) {
 //
 
 Triangle::Triangle(Node n1, Node n2, Node n3, int degree)
-  : n1(n1),n2(n2),n3(n3),degree(degree),
-    Centers(_CenterPoints) {
+  : n1(n1),n2(n2),n3(n3),degree(degree)
+{
   //
   reserve_lists();
   //
   if (degree > 0) {
     subdivide();
   } else {
-    populate_lists();
+    singleton_populate_lists();
   }
 }
 
@@ -239,12 +239,13 @@ void Triangle::reserve_lists() {
   _CenterPoints.reserve( pow(4,degree) );
 }
 
-void Triangle::populate_lists() {
-  //Called when degree==0 to fill the data lists with the data from
-  //THIS triangle.  Higher degree triangle will populate their lists
-  //by concatenating the lower degree lists.
+void Triangle::singleton_populate_lists() {
+  // Called on construction when degree==0 to fill the data lists (area and
+  // centerpoint) with the data from THIS triangle.  (So, lists will have
+  // length 1, this triangle is not subdivided.) Higher degree triangles
+  // will populate their lists by concatenating the lower degree lists.
   Node center;
-  center = n1 + n2 + n3; //Normalization happens on assignment
+  center = n1 + n2 + n3; // Normalization happens on assignment
   _CenterPoints.push_back(center);
 }
 
@@ -264,22 +265,22 @@ void Triangle::subdivide() {
   //FIRST: (lower left subtriangle)
   tri = new Triangle(n1,q1,q3,degree-1);
   _CenterPoints.insert(_CenterPoints.end(), 
-			tri->Centers.begin(), tri->Centers.end());
+                        tri->Centers().begin(), tri->Centers().end());
   delete tri;
   //SECOND: (top triangle)
   tri = new Triangle(q1,n2,q2,degree-1);
   _CenterPoints.insert(_CenterPoints.end(), 
-			tri->Centers.begin(), tri->Centers.end());
+                        tri->Centers().begin(), tri->Centers().end());
   delete tri;
   //THIRD: (bottom right triangle)
   tri = new Triangle(q3,q2,n3,degree-1);
   _CenterPoints.insert(_CenterPoints.end(), 
-			tri->Centers.begin(), tri->Centers.end());
+                        tri->Centers().begin(), tri->Centers().end());
   delete tri;
   //FOURTH: (middle triangle)
   tri = new Triangle(q2,q3,q1,degree-1);
   _CenterPoints.insert(_CenterPoints.end(), 
-			tri->Centers.begin(), tri->Centers.end());
+                        tri->Centers().begin(), tri->Centers().end());
   delete tri;
   tri = 0;
 

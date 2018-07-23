@@ -208,6 +208,10 @@ protected:
 /// @sa S2::Node
 ///
 class ThetaPhi {
+public:
+
+  typedef std::vector<ThetaPhi> V;
+
 protected:
 
   // :::::::::::::::::::::::::::::::::::::
@@ -307,6 +311,7 @@ public:
 //  * Functions recursively
 //
 class Triangle { 
+
 protected:
 
   // :::::::::::::::::::::::::::::::::::::
@@ -319,7 +324,7 @@ protected:
   int degree;     //Degree of this triangle (When degree==0, we do
                   //not subdivide further)
 
-  ThetaPhi_Set _CenterPoints;  // List of center-points within the
+  ThetaPhi::V  _CenterPoints;  // List of center-points within the
                                // fully subdivided triangle
 
 public:
@@ -328,7 +333,7 @@ public:
   // ::: Public Member Data  (Triangle Class) :::
   // ::::::::::::::::::::::::::::::::::::::::::::
 
-  const ThetaPhi_Set & Centers; // RO access to _CenterPoints
+  //const ThetaPhi_Set & CentersX; // RO access to _CenterPoints
                 // NOTE:/WARNING: *** Assigning read-only references
                 // to class members comes with certain dangers: this
                 // may invalidate the ability to write an assignment
@@ -336,6 +341,17 @@ public:
                 // think I need, but...)  or even to use the default
                 // (is there one?)  assignment operator.  Should look
                 // into this.  Access function may be better idea.
+
+  const ThetaPhi::V & Centers() const {return _CenterPoints;}
+  Count NumCenterAngles() const {return _CenterPoints.size();}
+        ///< Number of degree-zero subtriangles (and corresponding
+        ///  center angles) if this triangle has been subdivided, (or
+        ///  1 if it has not).
+  ThetaPhi CenterAngle(Index n) const {return _CenterPoints[n];}
+        ///< Direction represented by n'th centerpoint in the list.
+  Real AngleArea(Index n) const {return 1.234;} 
+        ///< Solid Angle subtended by subtriangle with centerpoint
+        ///  CenterAngle(n).
 
 public: 
 
@@ -355,7 +371,7 @@ private:
 
   void subdivide();
   void reserve_lists();
-  void populate_lists();
+  void singleton_populate_lists();
 
 };
 

@@ -6,7 +6,7 @@ OUT_EXEC = main
 objects  = geom_s2.o geom_r3.o geom_r4.o probability.o sources.o \
            scatterers.o events.o phonons.o grid.o media.o model.o \
 	   rtcoef.o dataout.o scatparams.o cmdline.o user.o global.o \
-           ecs.o elastic.o main.o
+           ecs.o elastic.o takeoff.o main.o
 
 branch = $(shell basename "`svn info | grep '^URL:'`")
 revision = "\"$(branch)@$(shell svnversion) (svn)\""
@@ -78,6 +78,7 @@ ecs_hpp       = ecs.hpp     $(geom_hpp) $(elastic_hpp)
 #      /* Radiative3D Computation Core: */
 #
 
+takeoff_hpp = takeoff.hpp $(geom_hpp)
 rtcoef_hpp  = rtcoef.hpp  $(geom_hpp) $(raytype_hpp) $(complex_hpp)
 phonons_hpp = phonons.hpp $(geom_hpp) $(raytype_hpp)
 sources_hpp = sources.hpp $(geom_hpp) $(raytype_hpp) $(probability_hpp)
@@ -129,6 +130,9 @@ geom_r4.o : geom_r4.cpp $(geom_r4_hpp) $(comd)
 	$(CPP) -c $< $(FLAGS)
 
 probability.o : probability.cpp $(probability_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS)
+
+takeoff.o : takeoff.cpp $(takeoff_hpp) $(comd)
 	$(CPP) -c $< $(FLAGS)
 
 elastic.o : elastic.cpp $(elastic_hpp) $(comd)
