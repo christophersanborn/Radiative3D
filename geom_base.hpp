@@ -1,15 +1,15 @@
 // geom_base.hpp
-//
-// The geom library defines namespaces containing classes and other
-// constructs related to the geometry of spaces in various dimensions.
-// This file defines:
-//
-// o Namespace: Geometry
-//
-//    Mostly constants like pi and degrees-to-radians factors, etc.
-//    Meant to be of common utility to the other two spaces.
-//
-//
+///
+/// The geom library defines namespaces containing classes and other
+/// constructs related to the geometry of spaces in various dimensions.
+/// This file defines:
+///
+/// o Namespace: Geometry
+///
+///    Mostly constants like pi and degrees-to-radians factors, etc.
+///    Meant to be of common utility to the other two spaces.
+///
+///
 #ifndef GEOM_BASE_H_
 #define GEOM_BASE_H_
 //
@@ -20,9 +20,10 @@ namespace Geometry {
 //**************************************************************************
 // NAMESPACE: Geometry
 // PURPOSE:
-//
-//   To provide some basic constants and other constructs of common
-//   utility to all the OTHER geometry based namespaces.
+///
+///   To provide some basic constants and other constructs of common
+///   utility to all the OTHER geometry based namespaces.
+///
 //__________________________________________________________________________
 //**************************************************************************
 

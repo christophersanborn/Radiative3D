@@ -7,6 +7,7 @@
 #include "media.hpp"
 #include "grid.hpp"
 #include "rtcoef.hpp"
+#include "geom_r4.hpp"
 #include <iomanip>
 // In this file:
 // CLASS IMPLEMENTATIONS FOR:

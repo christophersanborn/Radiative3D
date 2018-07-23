@@ -156,7 +156,7 @@ rtcoef.o : rtcoef.cpp $(rtcoef_hpp) $(comd)
 grid.o : grid.cpp $(grid_hpp) $(comd)
 	$(CPP) -c $< $(FLAGS)
 
-media.o : media.cpp $(media_hpp) $(grid_hpp) $(rtcoef_hpp) $(comd)
+media.o : media.cpp $(media_hpp) $(grid_hpp) $(rtcoef_hpp) $(geom_r4_hpp) $(comd)
 	$(CPP) -c $< $(FLAGS)
 
 model.o : model.cpp $(model_hpp) $(phonons_hpp) $(dataout_hpp) $(comd)

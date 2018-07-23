@@ -1,15 +1,16 @@
 // geom_r4.hpp
-//
-// The geom library defines namespaces containing classes and other
-// constructs related to the geometry of spaces in various dimensions.
-// This file defines:
-//
-// o Namespace: R4
-//
-//    For four-element vectors and 4x4 matrices.  Includes a matrix
-//    inverse method for 4x4 matrix.
-//
-//
+///@file
+///
+/// The geom library defines namespaces containing classes and other
+/// constructs related to the geometry of spaces in various dimensions.
+/// This file defines:
+///
+/// o Namespace: R4
+///
+///    For four-element vectors and 4x4 matrices.  Includes a matrix
+///    inverse method for 4x4 matrix.
+///
+///
 #ifndef GEOM_R4_H_
 #define GEOM_R4_H_
 //
@@ -28,9 +29,9 @@ namespace R4 {
 
 //////
 // CLASS:    R4 :: Column
-//
-//   Encapsulates a column vector in R4.
-//
+///
+///  Encapsulates a column vector in R4.
+///
 class Column {
 private:
 
@@ -91,9 +92,9 @@ public:
 
 //////
 // CLASS:    R4 :: Matrix
-//
-//   Encapsulates 4x4 matrices.
-//
+///
+///  Encapsulates 4x4 matrices.
+///
 class Matrix {
 
   // :::::::::::::::::::::::::::::::::::
@@ -141,23 +142,23 @@ public:
 
 //////
 // CLASS:    R4 :: Rows  -from- R4::Matrix
-//
-//   Provides a custom constructor for the Matrix class allowing you
-//   to specify elements "row by row", eg:
-//
-//       R4::Matrix M = R4::Rows(r1,r2,r3,r4);
-//
-//   where r1, ... r4 are R4::Column vectors, which become the rows of
-//   the matrix.
-//
-//   Another use is to fill the rows with augmented R3 vectors, like
-//   so:
-//
-//       R4::Matrix M = R4::Rows(v1, c1, v2, c2, v3, c3, v4, c4);
-//
-//   where v1, ... v4 are R3::XYZ vectors, and c1, ... c4 are scalar
-//   constants, which fill out the rightmost column of the matrix.
-//
+///
+///   Provides a custom constructor for the Matrix class allowing you
+///   to specify elements "row by row", eg:
+///
+///       R4::Matrix M = R4::Rows(r1,r2,r3,r4);
+///
+///   where r1, ... r4 are R4::Column vectors, which become the rows of
+///   the matrix.
+///
+///   Another use is to fill the rows with augmented R3 vectors, like
+///   so:
+///
+///       R4::Matrix M = R4::Rows(v1, c1, v2, c2, v3, c3, v4, c4);
+///
+///   where v1, ... v4 are R3::XYZ vectors, and c1, ... c4 are scalar
+///   constants, which fill out the rightmost column of the matrix.
+///
 class Rows : public Matrix {
 
 public:
@@ -181,6 +182,8 @@ public:
 
 };
 
+//////
+/// Has an extra column
 class AugmentedRow {
 public:
 

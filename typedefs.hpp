@@ -1,21 +1,22 @@
 // typedefs.hpp
-//
-// This file defines elemental types to be used throughout the
-// Radiative3D project.  The goal to is provide abstract numeric types
-// that remove decisions of machine implementation from the core
-// coding process.  For example, when coding the Radiative3D
-// application-layer code, I do not want to have to be deciding
-// between single- and double-precision floating point types, for
-// example.  That choice is made here, in this file, and applies
-// throughout. This also makes it easy to make an application-wide
-// change later on, and assess the performance and precision
-// implications easily, and then make the best choice.  Several
-// abstract types are defined here, covering both real-number and
-// integer use cases.
-//
-// This file has recently been expanded to additionally include string
-// types and exception types.
-//
+///@file
+///
+/// This file defines elemental types to be used throughout the
+/// Radiative3D project.  The goal to is provide abstract numeric types
+/// that remove decisions of machine implementation from the core
+/// coding process.  For example, when coding the Radiative3D
+/// application-layer code, I do not want to have to be deciding
+/// between single- and double-precision floating point types, for
+/// example.  That choice is made here, in this file, and applies
+/// throughout. This also makes it easy to make an application-wide
+/// change later on, and assess the performance and precision
+/// implications easily, and then make the best choice.  Several
+/// abstract types are defined here, covering both real-number and
+/// integer use cases.
+///
+/// This file has recently been expanded to additionally include string
+/// types and exception types.
+///
 #ifndef TYPEDEFS_H_
 #define TYPEDEFS_H_
 //

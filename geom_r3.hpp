@@ -1,15 +1,17 @@
 // geom_r3.hpp
-//
-// The geom library defines namespaces containing classes and other
-// constructs related to the geometry of spaces in various dimensions.
-// This file defines:
-//
-// o Namespace: R3
-//
-//    For point and other geometric primatives in a flat three-space.
-//    Besically, defines a three-component point vector class.
-//
-//
+///@file
+///
+/// The geom library defines namespaces containing classes and other
+/// constructs related to the geometry of spaces in various dimensions.
+/// This file defines:
+///
+/// o Namespace: R3
+///
+///    For point and other geometric primatives in a flat three-space.
+///    Besically, defines a three-component point vector class.
+///
+/// @sa R2
+///
 #ifndef GEOM_R3_H_
 #define GEOM_R3_H_
 //
@@ -41,9 +43,9 @@ namespace R3{       /* Definitions below */
 //**************************************************************************
 // NAMESPACE: R3
 // PURPOSE:
-//
-//   To provide a set of classes, types, and constants to represent
-//   geometry on a flat (cartesian) three-space.
+///
+///   To provide a set of classes, types, and constants to represent
+///   geometry on a flat (cartesian) three-space.
 //__________________________________________________________________________
 //**************************************************************************
 
@@ -52,11 +54,11 @@ namespace R3 {
 
 //////
 // CLASS:   ::::  XYZ  ::::
-//
-//   Encapsulates Cartesian coordinate tripples in R3 space, and
-//   provides various geometric computation methods involving vectors
-//   in the space.
-//
+///
+///   Encapsulates Cartesian coordinate tripples in R3 space, and
+///   provides various geometric computation methods involving vectors
+///   in the space.
+///
 class XYZ {
 protected:
 
@@ -241,10 +243,10 @@ public:
 
 //////
 // CLASS:  R3 :: Matrix
-//
-//   Encapsulates 3x3 matrices and the various algebraic manipulations
-//   and properties thereof.
-//
+///
+///   Encapsulates 3x3 matrices and the various algebraic manipulations
+///   and properties thereof.
+///
 class Matrix {
 protected:
 
@@ -471,23 +473,25 @@ public:
 
 //////
 // CLASS: R3::OrthoAxes
-//
-// ENCAPS: A right-handed set of three orthogonal axes in cartesian
-//   3-space suitable to serve as the basis for a coordinate system.
-//   Rotational orientation of the axes can be specified on
-//   construction by the provision of three angular parameters, here
-//   denoted Theta, Phi, and Rot.  Theta and Phi determine the
-//   direction of the S3 axis, and Rot determines the orientation of
-//   the other two.
-//
-//   The class actually maintains TWO sets orthogonal unit vectors,
-//   which we will denote set {E} and set {S}. The first set, {E},
-//   orients the E1 and E2 vectors in the Theta^Hat and Phi^Hat
-//   directions, respectively, and serve as a well-defined reference
-//   with which to define the orientation of the S1 and S2 axes.  We
-//   interpret Rot in such a way that S1 will align along E1 when
-//   Rot==0, and will align along E2 when Rot==Pi/2.
-//   
+///@brief
+///
+///  A right-handed set of three orthogonal axes in cartesian
+///  3-space suitable to serve as the basis for a coordinate system.
+///
+///  Rotational orientation of the axes can be specified on
+///  construction by the provision of three angular parameters, here
+///  denoted Theta, Phi, and Rot.  Theta and Phi determine the
+///  direction of the S3 axis, and Rot determines the orientation of
+///  the other two.
+///
+///  The class actually maintains TWO sets orthogonal unit vectors,
+///  which we will denote set {E} and set {S}. The first set, {E},
+///  orients the E1 and E2 vectors in the Theta^Hat and Phi^Hat
+///  directions, respectively, and serve as a well-defined reference
+///  with which to define the orientation of the S1 and S2 axes.  We
+///  interpret Rot in such a way that S1 will align along E1 when
+///  Rot==0, and will align along E2 when Rot==Pi/2.
+///  
 class OrthoAxes {
 protected:
 

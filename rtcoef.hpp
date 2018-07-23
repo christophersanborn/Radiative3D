@@ -1,21 +1,22 @@
 // rtcoef.hpp
-//
-// This file develops the RTCoef class, which encapsulates
-// Reflection/Transmission coefficients across a first-order
-// discontinuous locally flat interface, and the probabilities of
-// transmission and reflection into P and S raytypes.
-//
-// The theoretical basis for this is developed in Aki and Richards
-// 1980, "Quantitative Seismology", Chapter 5.
-//
-// AUTHOR NOTE: While the code in this class is entirely my own work,
-//              I benefitted tremendously from being able to inspect
-//              the source code to Peter Shearer's PSPhonon, which
-//              implements the Aki and Richards treatment of
-//              Reflection/Transmission in much the same way as is
-//              done here.  ~C. Sanborn
-//
-//
+///@file
+///
+/// This file develops the RTCoef class, which encapsulates
+/// Reflection/Transmission coefficients across a first-order
+/// discontinuous locally flat interface, and the probabilities of
+/// transmission and reflection into P and S raytypes.
+///
+/// The theoretical basis for this is developed in Aki and Richards
+/// 1980, "Quantitative Seismology", Chapter 5.
+///
+/// AUTHOR NOTE: While the code in this class is entirely my own work,
+///              I benefitted tremendously from being able to inspect
+///              the source code to Peter Shearer's PSPhonon, which
+///              implements the Aki and Richards treatment of
+///              Reflection/Transmission in much the same way as is
+///              done here.  ~C. Sanborn
+///
+///
 #ifndef RTCOEF_H_
 #define RTCOEF_H_
 //
@@ -33,44 +34,44 @@
 
 //////
 // CLASS:   ::::  RTCoef  ::::
-//
-//   Encodes a set of probabilities for transmitting or reflecting
-//   through an interface, and conversions between P/S polarizations.
-//
-//   The structure has elements for all possible conversions, but only
-//   the ones relevant to a given input type should be non-zero.
-//
-// USAGE:
-//
-//   To use this class, a user must:
-//
-//   1.)  Construct an RTCoef object, providing an interface normal
-//        and a ray direction.
-//
-//   2.)  Set the public velocity and density members, which quantify
-//        the discontinuity across the interface.
-//
-//   2a.) To model a lossless free-surface: Set tranmission-side
-//        density to zero, and transmission-side velocities to
-//        very-small numbers (to avoid NaNs). This actually seems to
-//        result in zero transmission probability, but, to be certain
-//        (in case of numerical inacuracies), also set the public
-//        NoTransmit member to 'true'.
-//
-//   3.)  Call GetCoefs(), providing a raytype (P, SV, or SH), which
-//        will compute a set of outcome amplitudes and probabilities
-//        based on the provided incident raytype.  (If necessary to
-//        the use case, the user may call ChooseSPolType() to make a
-//        selection between SV and SH based on the incident
-//        polarization relative to the interface.)
-//
-//   4.)  Call Choose(), which will choose an outcome at random based
-//        on the computed relative probabilities.
-//
-//   5.)  Call the various GetChosen...() methods to retrieve the
-//        details of the chosen ray outcome.
-//
-//
+///
+///   Encodes a set of probabilities for transmitting or reflecting
+///   through an interface, and conversions between P/S polarizations.
+///
+///   The structure has elements for all possible conversions, but only
+///   the ones relevant to a given input type should be non-zero.
+///
+/// USAGE:
+///
+///   To use this class, a user must:
+///
+///   1.)  Construct an RTCoef object, providing an interface normal
+///        and a ray direction.
+///
+///   2.)  Set the public velocity and density members, which quantify
+///        the discontinuity across the interface.
+///
+///   2a.) To model a lossless free-surface: Set tranmission-side
+///        density to zero, and transmission-side velocities to
+///        very-small numbers (to avoid NaNs). This actually seems to
+///        result in zero transmission probability, but, to be certain
+///        (in case of numerical inacuracies), also set the public
+///        NoTransmit member to 'true'.
+///
+///   3.)  Call GetCoefs(), providing a raytype (P, SV, or SH), which
+///        will compute a set of outcome amplitudes and probabilities
+///        based on the provided incident raytype.  (If necessary to
+///        the use case, the user may call ChooseSPolType() to make a
+///        selection between SV and SH based on the incident
+///        polarization relative to the interface.)
+///
+///   4.)  Call Choose(), which will choose an outcome at random based
+///        on the computed relative probabilities.
+///
+///   5.)  Call the various GetChosen...() methods to retrieve the
+///        details of the chosen ray outcome.
+///
+///
 class RTCoef {
 private:
 

@@ -1,15 +1,16 @@
-// geom_s2.hpp
-//
-// The geom library defines namespaces containing classes and other
-// constructs related to the geometry of spaces in various dimensions.
-// This file defines:
-//
-// o Namespace: S2:
-//
-//    For geometry on the surface of a sphere.  More info is in the
-//    comments just inside the namespace statement.
-//
-//
+//  geom_s2.hpp
+///@file
+///
+/// The geom library defines namespaces containing classes and other
+/// constructs related to the geometry of spaces in various dimensions.
+/// This file defines:
+///
+/// o Namespace: S2:
+///
+///    For geometry on the surface of a sphere.  More info is in the
+///    comments just inside the namespace statement.
+///
+///
 #ifndef GEOM_S2_H_
 #define GEOM_S2_H_
 //
@@ -35,17 +36,17 @@ namespace R3{       /* Definitions in geom_r3.hpp */
 //**************************************************************************
 // NAMESPACE: S2
 // PURPOSE:
-//
-//   To provide a set of classes, types, and constants for
-//   representing geometry on the surface of a sphere (so-called S2
-//   space).
-//
-//   Also provides classes for discretizing the space on the surface
-//   of the sphere, such as the TesselSphere class, which uses a
-//   tessellation algorithm to provide a set of points more-or-less
-//   uniformely distributed on the surface. (Turns out it's not
-//   actually uniform, but might be close enough.)
-//
+///
+///   To provide a set of classes, types, and constants for
+///   representing geometry on the surface of a sphere (so-called S2
+///   space).
+///
+///   Also provides classes for discretizing the space on the surface
+///   of the sphere, such as the TesselSphere class, which uses a
+///   tessellation algorithm to provide a set of points more-or-less
+///   uniformely distributed on the surface. (Turns out it's not
+///   actually uniform, but might be close enough.)
+///
 //__________________________________________________________________________
 //**************************************************************************
 
@@ -66,45 +67,62 @@ namespace S2 {
 // CLASSES:
 //
 
-
-//CLASS:  S2::Node
-//ENCAPS: Unit-Sphere Node: a point on the surface of the unit sphere
-//Capabilities:
-//  * Self-normalizes on the assignment operator.
-//  * Does not normalize on arrithmatic operators. (allows for easy
-//    averaging of points, i.e., a=b+c+d puts the three-way average of
-//    b,c,d into a)
-//Examples:
-//  x = a + b + c
-//    Sets x equal to the NORMALIZED vector average of a & b & c.
-//  a + b + c
-//    This represents the UN-normalized vector sum of a + b + c
-//  somefunction(a + b)
-//    Here, the function will receive an UN-normalized node object.
-//    (But might be difference in rec by ref or rec by val.)
-//Normalized vs. Unnormalized State:
-//  In general, named instances of Node will always be in a
-//  normalized state, since their value can only be set by
-//  initialization or assignment.  Unnamed temporaries, though, such
-//  as the results of addition operators, CAN be in an unnormalized
-//  state.  There is but one exception to this that I know of: It is
-//  possible to initialize a Node from an unnamed temporary like so:
-//      Node node(Node(1,0,0) + Node(0,1,0));
-//  In this case, the expected call to the copy-constructor is
-//  suppressed and the new object simply binds to the unnamed
-//  temporary result of the addition, and node will end up in an
-//  unnormalized state.  (For this reason, I didn't bother overriding
-//  the default copy constructor, as it doesn't really buy me
-//  anything.  But anyway, aside from that oddball kind of thing,
-//  named objects will always be normalized.
-//Zero State:
-//  It is also possible for the node to be in a "zero" state, with
-//  x=y=z=0, and iscale=1.  This happens if either 1) you initialize a
-//  Node without arguments, or 2) you take a two-way average of
-//  antipodes (or any set of n points whose vector sum is zero).  At
-//  present, this state does not raise an error condition.  Although
-//  perhaps it should.
-//
+//////
+// CLASS:  S2::Node
+///@brief
+///
+/// Unit-Sphere Node: a point on the surface of the unit sphere
+///
+/// ## Capabilities:
+///
+///  * Self-normalizes on the assignment operator.
+///  * Does NOT normalize on arrithmatic operators. (allows for easy
+///    averaging of points, i.e., a=b+c+d puts the three-way average of
+///    b,c,d into a)
+///
+/// ## Examples:
+///
+/// `x = a + b + c`
+///
+///    Sets x equal to the NORMALIZED vector average of a & b & c.
+///
+///  `a + b + c`
+///
+///    This represents the UN-normalized vector sum of a + b + c
+///
+///  `somefunction(a + b)`
+///
+///    Here, the function will receive an UN-normalized node object.
+///    (But might be difference in rec by ref or rec by val.)
+///
+/// ## Normalized vs. Unnormalized State:
+///
+///  In general, named instances of Node will always be in a
+///  normalized state, since their value can only be set by
+///  initialization or assignment.  Unnamed temporaries, though, such
+///  as the results of addition operators, CAN be in an unnormalized
+///  state.  There is but one exception to this that I know of: It is
+///  possible to initialize a Node from an unnamed temporary like so:
+///
+///  `Node node(Node(1,0,0) + Node(0,1,0));`
+///
+///  In this case, the expected call to the copy-constructor is
+///  suppressed and the new object simply binds to the unnamed
+///  temporary result of the addition, and node will end up in an
+///  unnormalized state.  (For this reason, I didn't bother overriding
+///  the default copy constructor, as it doesn't really buy me
+///  anything.  But anyway, aside from that oddball kind of thing,
+///  named objects will always be normalized.
+///
+/// ## Zero State:
+///
+///  It is also possible for the node to be in a "zero" state, with
+///  x=y=z=0, and iscale=1.  This happens if either 1) you initialize a
+///  Node without arguments, or 2) you take a two-way average of
+///  antipodes (or any set of n points whose vector sum is zero).  At
+///  present, this state does not raise an error condition.  Although
+///  perhaps it should.
+///
 class Node {
 protected:
 
@@ -153,7 +171,7 @@ public:
   const Node operator + (const Node &) const;
   Node & operator = (const Node &);
 
-private:
+protected:
 
   // :::::::::::::::::::::::::::::::::::::
   // ::: Private Methods  (Node Class) :::
@@ -165,21 +183,30 @@ private:
 
 
 //////
-//CLASS:  S2::ThetaPhi
-//ENCAPS: A single Theta,Phi tuple.
-//Capabilities:
-//  * Initializable expressly from Theta, Phi parameters
-//  * Initializable implicitly from a Tessel::Node parameter
-//  * Initializable implicitly from a Tessel::LatLon parameter
-//Details:
-//  * When initializing from parameters or an object that holds x,y,z
-//    values, uses a RHS coordinate system where +z is North pole, +x
-//    goes through the equator/prime-meridian, and +y points at 90-deg
-//    East longitude.
-//  * When initializing from a (Lat,Lon) object, assume phi==0
-//    represents prime-meridian, and phi increases with eastward
-//    longitude.
-//
+// CLASS:  S2::ThetaPhi
+///@brief
+///
+/// A single Theta, Phi tuple representing a pure direction in a R3
+/// space.
+///
+/// ### Capabilities:
+///
+///  * Initializable expressly from Theta, Phi parameters
+///  * Initializable implicitly from a Tessel::Node parameter
+///  * Initializable implicitly from a Tessel::LatLon parameter
+///
+/// ### Details:
+///
+///  * When initializing from parameters or an object that holds x,y,z
+///    values, uses a RHS coordinate system where +z is North pole, +x
+///    goes through the equator/prime-meridian, and +y points at 90-deg
+///    East longitude.
+///  * When initializing from a (Lat,Lon) object, assume phi==0
+///    represents prime-meridian, and phi increases with eastward
+///    longitude.
+///
+/// @sa S2::Node
+///
 class ThetaPhi {
 protected:
 
