@@ -117,14 +117,15 @@ public:
 
 //////
 // CLASS:  CellFace
-//
-// ENCAPS:
-//
-//   This class encapsulates a single "face" of a polyhedral
-//   MediumCell, and is used to store attributes of that face, such as
-//   its interconnectivity to the faces of other MediumCells, spatial
-//   orientation of the face, reflection/transmission properties, etc.
-//
+///@brief
+///
+///   The CellFace class encapsulates a single "face" of a polyhedral
+///   MediumCell, and is used to store attributes of that face, such as
+///   its interconnectivity to the faces of other MediumCells, spatial
+///   orientation of the face, reflection/transmission properties, etc.
+///
+///   @see Tetra
+///
 class CellFace {
 public:
 
@@ -132,9 +133,9 @@ public:
   // ::: Enumerations  (CellFace Class) :::
   // ::::::::::::::::::::::::::::::::::::::
 
-  enum face_id_e {            // Provides a numbering scheme to ID the
-                              // faces on a given MediumCell
-
+  enum face_id_e              /// Provides a numbering scheme to ID the
+                              /// faces on a given MediumCell
+  {
     F_TOP    = 0,             // Used by two-faced cells, e.g. the
     F_BOTTOM = 1,             // Cylinder cells
 
@@ -174,20 +175,20 @@ protected:
   // :                of faces and cells)
   //
 
-  CellFace * mpOther;     // Points to corresponding CellFace on
-                          // the adjoining cell. 
+  CellFace * mpOther;     ///< Points to corresponding CellFace on
+                          ///  the adjoining cell. 
 
-  MediumCell * mpCell;    // Cell object to which this face belongs.
+  MediumCell * mpCell;    ///< Cell object to which this face belongs.
 
   // ::::::
   // :: Geometry:    (Determines the positioning and 
   // :                orientation of the face)
   //
 
-  R3::XYZ mNormal;        // Surface normal pointing outward from
-                          // MediumCell (unit magnitude)
+  R3::XYZ mNormal;        ///< Surface normal pointing outward from
+                          ///  MediumCell (unit magnitude)
 
-  R3::XYZ mPoint;         // A location known to be on the cellface.
+  R3::XYZ mPoint;         ///< A location known to be on the cellface.
 
 
 public:
@@ -292,49 +293,48 @@ public:
 
 //////
 // CLASS:  MediumCell
-//
-// PURPOSE:
-//
-//   To serve as an abstract base class for the category of classes
-//   that I will refer to as "MediumCell" classes. Here we declare the
-//   virtual methods that will comprise the interface to the whole
-//   family of MediumCell classes.
-//
-//   This arrangement is motivated by a desired ability to divide our
-//   "Earth media" into "Cells" in a variety of ways, in order to
-//   model both differing geometries and different approaches to
-//   modeling seismic propagation.
-//
-//   Examples of different geometries might include cells that divide
-//   up space into half-spaces, layers, or tetrahedra, etc.
-//
-//   Examples of different seismic modelling might be cells that treat
-//   velocities as uniform-throughout, or as linear velocity
-//   gradients, etc.
-//
-//   No actual objects of class MediumCell should ever be
-//   instantiated.  (In fact they can't be, because the virtual
-//   methods are not implemented.)  Rather, objects of the derived
-//   classes should be instantiated.  But those objects can be pointed
-//   to by MediumCell pointers.
-//
-//   There is a slight performace cost in using virtual methods, as
-//   the call is routed through an extra level of indirection.  In
-//   particular, gcc (without optimizations) seems add three
-//   additional 'mov' instructions, each involving a memory access
-//   (One to pull the *this pointer, one to pull the vtable pointer,
-//   and one to pull the function pointer), to the calling code.  On
-//   the whole I'm thinking (hoping) that this performance cost will
-//   be minimal, especially with optimizations turned on.
-//
-//   There is a very definite memory cost, however, as each and every
-//   MediumCell-derived object must contain a pointer to the vtable as
-//   an additional element. This will add 8-bytes to each MediumCell,
-//   or 8-MBytes for every one-million Cells in our model.  This may
-//   motivate a return to non-virtual method calling (and thus
-//   constraining our code to handling only ONE type of cell) after
-//   thorough testing of our most-capable cell type is complete.
-//
+///@brief
+///
+///   To serve as an abstract base class for the category of classes
+///   that I will refer to as "MediumCell" classes. Here we declare the
+///   virtual methods that will comprise the interface to the whole
+///   family of MediumCell classes.
+///
+///   This arrangement is motivated by a desired ability to divide our
+///   "Earth media" into "Cells" in a variety of ways, in order to
+///   model both differing geometries and different approaches to
+///   modeling seismic propagation.
+///
+///   Examples of different geometries might include cells that divide
+///   up space into half-spaces, layers, or tetrahedra, etc.
+///
+///   Examples of different seismic modelling might be cells that treat
+///   velocities as uniform-throughout, or as linear velocity
+///   gradients, etc.
+///
+///   No actual objects of class MediumCell should ever be
+///   instantiated.  (In fact they can't be, because the virtual
+///   methods are not implemented.)  Rather, objects of the derived
+///   classes should be instantiated.  But those objects can be pointed
+///   to by MediumCell pointers.
+///
+///   There is a slight performace cost in using virtual methods, as
+///   the call is routed through an extra level of indirection.  In
+///   particular, gcc (without optimizations) seems add three
+///   additional 'mov' instructions, each involving a memory access
+///   (One to pull the *this pointer, one to pull the vtable pointer,
+///   and one to pull the function pointer), to the calling code.  On
+///   the whole I'm thinking (hoping) that this performance cost will
+///   be minimal, especially with optimizations turned on.
+///
+///   There is a very definite memory cost, however, as each and every
+///   MediumCell-derived object must contain a pointer to the vtable as
+///   an additional element. This will add 8-bytes to each MediumCell,
+///   or 8-MBytes for every one-million Cells in our model.  This may
+///   motivate a return to non-virtual method calling (and thus
+///   constraining our code to handling only ONE type of cell) after
+///   thorough testing of our most-capable cell type is complete.
+///
 class MediumCell {
 protected:
 
@@ -410,29 +410,27 @@ public:
 
 //////
 // CLASS:  RCUCylinder  ("Right-Cirular Uniform Cylinder")
-//
 // FROM:   MediumCell
-//
-// ENCAPS: 
-//
-//   The RCUCylinder class encapsulates a MediumCell in the shape of a
-//   right-circular cylinder that is coaxial with the Z-axis, and with
-//   end-caps located at specified Z-depths.  The end-caps can take
-//   any orientation in space, and thus can be used to model inclined
-//   interfaces between cells, such as a dipping Moho, e.g.  The top
-//   and bottom endcaps will be treated as CellFaces that can be
-//   marked for collection, reflection, transmission or loss, etc.
-//   The curved side will always be treated as a loss face, and will
-//   be mapped to a CellFace object whose location and orientation
-//   have no particular meaning (since CellFace objects do not handle
-//   curvature).
-//
-//   It will be possible to stack RCUCylinder objects on top of each
-//   other to establish different velocity regions.
-//
-//   Seismic velocity inside the RCUCylinder is a single, spacially
-//   uniform quantity, (specified separately for P and S waves).
-//
+///@brief
+///
+///   The RCUCylinder class encapsulates a MediumCell in the shape of a
+///   right-circular cylinder that is coaxial with the Z-axis, and with
+///   end-caps located at specified Z-depths.  The end-caps can take
+///   any orientation in space, and thus can be used to model inclined
+///   interfaces between cells, such as a dipping Moho, e.g.  The top
+///   and bottom endcaps will be treated as CellFaces that can be
+///   marked for collection, reflection, transmission or loss, etc.
+///   The curved side will always be treated as a loss face, and will
+///   be mapped to a CellFace object whose location and orientation
+///   have no particular meaning (since CellFace objects do not handle
+///   curvature).
+///
+///   It will be possible to stack RCUCylinder objects on top of each
+///   other to establish different velocity regions.
+///
+///   Seismic velocity inside the RCUCylinder is a single, spacially
+///   uniform quantity, (specified separately for P and S waves).
+///
 class RCUCylinder : public MediumCell {
 protected:
 
@@ -546,12 +544,11 @@ protected:
 
 //////
 // CLASS:  Tetra  
-//
 // FROM:   MediumCell
-//
-// ENCAPS:
-//
-//
+///@brief
+///
+/// Tetrahedral model cell
+///
 class Tetra : public MediumCell {
 protected:
  
@@ -688,9 +685,11 @@ public:
 
 //////
 // CLASS:  GCAD_RetVal
-//
-//  This class encapsulates the return value of the GetCircArcDistToFace() member function.
-
+///@brief
+///
+///  This class encapsulates the return value of the
+///  GetCircArcDistToFace() member function.
+///
 class GCAD_RetVal{
 
 protected:

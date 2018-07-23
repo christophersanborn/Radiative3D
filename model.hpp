@@ -245,63 +245,61 @@ public:
 
 //////
 // CLASS:   ::: Model :::
-//
-// ENCAPS:  
-//
-//   Encapsulates a model of our simulated physical universe.  This
-//   object, in a way, coordinates the actions of all the others.
-//   It's primary jobs are:
-//
-//     o  Initialize global and class-static objects and variables,
-//        including the discrete array(s) of take-off angles, etc.
-//
-//     o  Initializes the random number generator
-//
-//     o  Build and initialize the collection of MediumCell objects
-//        that will represent our physical Earth model
-//
-//     o  Build the PhononSource object to represent our event source,
-//        and link it to the MediumCell in which it resides.
-//
-//     o  Provide a set of methods to run one or more simulation
-//        scenarios, eg. "spray X-number of phonons," etc.
-//
-//
-// INPUTS:
-//
-//   The constructor takes a ModelParams object as input. This
-//   contains a wealth of information to direct the construction and
-//   simulation of our Earth model and simulation scenarios.  The
-//   contents of the ModelParams class are largely determined by
-//   either options provided on the command-line or by the defaults
-//   hard-coded in the ModelParams class.  Among the parameters might
-//   be the filenames of various Earth-model data files which will
-//   provide further input to this class for model generation or other
-//   purposes.
-//
-// LIMITATIONS:
-//
-//   Because the constructor is responsible for setting "global"
-//   (actually class-static) parameters in other classes (eg. the the
-//   phonon frequency in the ScatterParams class), there should never
-//   be more than one Model object instantiated in any single runtime
-//   environment, as they cannot coexist without stepping on each
-//   other's toes.  This should not be a major limitation, as at
-//   present I cannot think of any reason to need more than one model
-//   object in a single running instance of the program.
-// 
+///
+///   Encapsulates a model of our simulated physical universe.  This
+///   object, in a way, coordinates the actions of all the others.
+///   It's primary jobs are:
+///
+///   *   Initialize global and class-static objects and variables,
+///       including the discrete array(s) of take-off angles, etc.
+///
+///   *   Initializes the random number generator
+///
+///   *   Build and initialize the collection of MediumCell objects
+///       that will represent our physical Earth model
+///
+///   *   Build the PhononSource object to represent our event source,
+///       and link it to the MediumCell in which it resides.
+///
+///   *   Provide a set of methods to run one or more simulation
+///       scenarios, eg. "spray X-number of phonons," etc.
+///
+///
+///   ### Inputs:
+///
+///   The constructor takes a ModelParams object as input. This
+///   contains a wealth of information to direct the construction and
+///   simulation of our Earth model and simulation scenarios.  The
+///   contents of the ModelParams class are largely determined by
+///   either options provided on the command-line or by the defaults
+///   hard-coded in the ModelParams class.  Among the parameters might
+///   be the filenames of various Earth-model data files which will
+///   provide further input to this class for model generation or other
+///   purposes.
+///
+///   ### Limitations:
+///
+///   Because the constructor is responsible for setting "global"
+///   (actually class-static) parameters in other classes (eg. the the
+///   phonon frequency in the ScatterParams class), there should never
+///   be more than one Model object instantiated in any single runtime
+///   environment, as they cannot coexist without stepping on each
+///   other's toes.  This should not be a major limitation, as at
+///   present I cannot think of any reason to need more than one model
+///   object in a single running instance of the program.
+/// 
 class Model {
-private:;
+protected:;
 
   // :::::::::::::::::::::::::::::::::::::::
   // ::: One-off Typedefs  (Model Class) :::
   // :::::::::::::::::::::::::::::::::::::::
 
-  typedef std::vector<MediumCell*>    // Array of MediumCell Pointers
-                MediumCellPtrArray;   // 
+  typedef std::vector<MediumCell*>    ///
+                MediumCellPtrArray;   ///< Array of MediumCell Pointers 
 
-  typedef std::vector<CellFace*>      // Array of CellFace Pointers
-                  CellFacePtrArray;   //
+  typedef std::vector<CellFace*>      ///
+                  CellFacePtrArray;   ///< Array of CellFace Pointers
 
 
   // :::::::::::::::::::::::::::::::::::::::::::::::
@@ -390,7 +388,7 @@ public:
   }
 
 
-private:
+protected:
 
   // ::::::::::::::::::::::::::::::::::::::::::::::::
   // ::: Internal Helper Functions  (Model Class) :::

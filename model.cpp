@@ -205,18 +205,20 @@ void ModelParams::OutputOctaveText(std::ostream * out) const {
 
 //////
 // CONSTRUCTOR:   ::: Model() :::
-//
-//   Initializes our physical universe and computational environment,
-//   and builds our Earth model based on user wishes as communicated to
-//   us via a ModelParams object.
-//
-//   Generally, only ONE model object should be instantiated at any
-//   given time.  Among the responsibilities of this constructor is to
-//   initialize certain global and class-static parameters, and
-//   instantiating multiple Model objects could result in them
-//   stepping on each others' toes.
-//
-//
+///
+///   Initializes our physical universe and computational environment,
+///   and builds our Earth model based on user wishes as communicated to
+///   us via a ModelParams object.
+///
+///   Generally, only ONE model object should be instantiated at any
+///   given time.  Among the responsibilities of this constructor is to
+///   initialize certain global and class-static parameters, and
+///   instantiating multiple Model objects could result in them
+///   stepping on each others' toes.
+///
+///   @callergraph
+///   @callgraph
+///
 Model::Model(const ModelParams & par) {
 
   std::cout << "@@ __BEGIN_MODEL_INITIALIZATION__" << std::endl;
@@ -493,16 +495,19 @@ Model::~Model() {
 
 //////
 // METHOD:  FindCellContainingPoint()
-//
-//   Walks the array of MediumCells and returns a pointer to the one
-//   that "best" contains the R3 point location provided in the
-//   arguments.  "Best" here refers to the fact that a point
-//   intended to be "just on the surface" of the cell (e.g., the
-//   location of a seismometer on the Earth's surface) might, due to
-//   round-off error, calculate as being slightly outside the
-//   cell. This function will return that cell anyway.  If no cell
-//   adequately contains the point, a null pointer is returned.
-//
+///
+///   Walks the array of MediumCells and returns a pointer to the one
+///   that "best" contains the R3 point location provided in the
+///   arguments.  "Best" here refers to the fact that a point
+///   intended to be "just on the surface" of the cell (e.g., the
+///   location of a seismometer on the Earth's surface) might, due to
+///   round-off error, calculate as being slightly outside the
+///   cell. This function will return that cell anyway.  If no cell
+///   adequately contains the point, a null pointer is returned.
+///
+///   @callergraph
+///   @callgraph
+///
 MediumCell * Model::FindCellContainingPoint(const R3::XYZ & loc) const {
 
   Real         best_mismatch;   // Goal is to "minimize" the mismatch
@@ -538,12 +543,15 @@ MediumCell * Model::FindCellContainingPoint(const R3::XYZ & loc) const {
 
 //////
 // METHOD:  Model :: FindSurface()
-//
-//   Given a location presumed to be near the surface, this method
-//   finds a correcsponding point on the surface that is found by
-//   following a vertical (skyward) line that intersects both the
-//   point and the surface.
-//
+///
+///   Given a location presumed to be near the surface, this method
+///   finds a correcsponding point on the surface that is found by
+///   following a vertical (skyward) line that intersects both the
+///   point and the surface.
+///
+///   @callergraph
+///   @callgraph
+///
 R3::XYZ Model::FindSurface(R3::XYZ loc) const {
 
   if (mSurfaceFaces.size() > 1) {   // TODO: write flexible version of this
@@ -581,9 +589,12 @@ R3::XYZ Model::FindSurface(R3::XYZ loc) const {
 
 //////
 // METHOD:  Model :: RunSimulation()
-//
-//   Runs the simulation outer-loop.
-//
+///
+///   Runs the simulation outer-loop.
+///
+///   @callergraph
+///   @callgraph
+///
 void Model::RunSimulation() {
 
   unsigned nph_byten = mNumPhonons / 10;  // For Progress Indicator
@@ -620,15 +631,18 @@ void Model::RunSimulation() {
 
 //////
 // METHOD:  Model :: BuildCellArray_Cylinder()
-//
-//   The BuildCellArray family of helper functions assist in the
-//   construction of the earth model by building the array of
-//   MediumCell objects that make up the material/volumetric part of
-//   the model. This one builds the cell array out of Cylinder
-//   MediumCell types.  The information needed to build the array
-//   comes from the Grid object (mGrid), which must be complete before
-//   this function is called.
-//
+///
+///   The BuildCellArray family of helper functions assist in the
+///   construction of the earth model by building the array of
+///   MediumCell objects that make up the material/volumetric part of
+///   the model. This one builds the cell array out of Cylinder
+///   MediumCell types.  The information needed to build the array
+///   comes from the Grid object (mGrid), which must be complete before
+///   this function is called.
+///
+///   @callergraph
+///   @callgraph
+///
 void Model::BuildCellArray_Cylinder() {
 
   // ::::::
@@ -711,86 +725,89 @@ void Model::BuildCellArray_Cylinder() {
 
 //////
 // METHOD:  Model :: BuildCellArray_WCGTetra()
-//
-//   Builds out the cell array, using tetrahedral cell, assuming the
-//   grid structure is "Warped Cartesian Grid."  This means that the
-//   grid codes for cuboidal subunits in which properties are
-//   specified on the eight corners, and the subunits are arranged in
-//   a regular array of rows, columns, and stacks.  Each subunit will
-//   comprise five individual tetra cells.  Note that it is up to the
-//   user how the row indx (i), column index (j), and stack index (k)
-//   map to real-life spatial coordinates (XYZ), but the assumption
-//   made for model building is that k increases with increasing
-//   depth. This is only important when the user wants discontinuous
-//   interfaces, where there is a "sudden" change in property values
-//   "above" (in direction of smaller k) and "below" (in direction of
-//   larger k) a particular interface.
-//
-//   RESPONSIBILITIES: Builds array of tetra cells.  Links them
-//   together within a cuboidal subunit (actually BuildBasicPattern
-//   handles this), and accross cuboidal subunits (via calls to
-//   LinkBlocks).  And ensures that surface interface is marked
-//   "collecting" and "reflecting".
-//
-//   GRID INTERPRETATION:  Nodes be like:  (ijk indices)
-//
-//     000-------010-------020-------                                         .
-//      |\         \         \                                                .
-//      | \         \         \              o----> (+j) Northwards (typical) .
-//      |  \         \         \             |\                               .
-//      |  100-------110-------120-------    | \                              .
-//      |   |\        |\        |\           |  (+i) Eastwards (typical)      .
-//     001  | \       | \       | \          v                                .
-//      |\  |  \      |  \      |  \         (+k) Downwards (typical)         .
-//      | \ |         |         |                                             .
-//      |  \|         |         |                                             .
-//      |  101-------111-------121-------                                     .
-//      |   |\        |\        |\                                            .
-//          | \       | \       | \                                           .
-//
-//
-//   BUILDOUT ORDER: Subunits are built in plunging order first (along
-//   k index), then what we call "row-building" order (along j index),
-//   and finally "column-building" order (along i index).  Adhering to
-//   this order means that the five tetras comprising a particular ijk
-//   subunit will have base index into the cell array of:
-//
-//     base = ((i*(nK*nJ) + j*nK + k) * 5)
-//
-//   this formula is codified in helper function WCGBaseIndexFromIJK(),
-//   which should be used (rather than coding the formula directly)
-//   whenever a base index is needed in order to reduce code duplication
-//   (and resultant opportunities for coding error).
-//
-//   CELL ORDER WITHIN SUBUNIT: There are five tetra cells per
-//   subunit.  The internal tetra (touches no exterior faces of
-//   subunit) of a particular subunit is always at offset 0 from the
-//   base index.  The tetra at offset 1 is the one covering the
-//   southwest (small i, small j) edge of the subunit.  Offset 1
-//   covers the northwest corner.  Offset 2 covers the northeast
-//   corner.  And offset 4 covers the southeast corner.
-//
-//   MIRROR PARITY: In order for the cell faces across subunits to
-//   join up correctly, the basic pattern must invert via a reflection
-//   as one moves from one subunit to an adjacent one.  The basic
-//   pattern and its reflection is depicted below, and is described in
-//   further detail in the commentary to WCGBuildBasicPattern() and
-//   WCGLinkBlocksForward().
-//
-//     000-------010-------020                                                .
-//      |\ *   (2) \ (1)   * \                                                .
-//      |.\    *    \    *    \              o----> (+j) Northwards (typical) .
-//      |  \ (4)    *\ *   (3) \             |\                               .
-//      |  100-------110-------120           | \                              .
-//      | . |        *|*        |            |  (+i) Eastwards (typical)      .
-//     001  | (4)  *  |  *  (3) |            v                                .
-//       \  |    *    |    *    |            (+k) Downwards (typical)         .
-//        \'|  *  (3) | (4)  *  |                                             .
-//         \|*        |        *|       Tetra offsets labeled as (n)          .
-//         101-------111-------121                                            .
-//            Natural  Reflected                                              .
-//
-//
+///
+///   Builds out the cell array, using tetrahedral cell, assuming the
+///   grid structure is "Warped Cartesian Grid."  This means that the
+///   grid codes for cuboidal subunits in which properties are
+///   specified on the eight corners, and the subunits are arranged in
+///   a regular array of rows, columns, and stacks.  Each subunit will
+///   comprise five individual tetra cells.  Note that it is up to the
+///   user how the row indx (i), column index (j), and stack index (k)
+///   map to real-life spatial coordinates (XYZ), but the assumption
+///   made for model building is that k increases with increasing
+///   depth. This is only important when the user wants discontinuous
+///   interfaces, where there is a "sudden" change in property values
+///   "above" (in direction of smaller k) and "below" (in direction of
+///   larger k) a particular interface.
+///
+///   RESPONSIBILITIES: Builds array of tetra cells.  Links them
+///   together within a cuboidal subunit (actually BuildBasicPattern
+///   handles this), and accross cuboidal subunits (via calls to
+///   LinkBlocks).  And ensures that surface interface is marked
+///   "collecting" and "reflecting".
+///
+///   GRID INTERPRETATION:  Nodes be like:  (ijk indices)
+///
+///     000-------010-------020-------                                         .
+///      |\         \         \                                                .
+///      | \         \         \              o----> (+j) Northwards (typical) .
+///      |  \         \         \             |\                               .
+///      |  100-------110-------120-------    | \                              .
+///      |   |\        |\        |\           |  (+i) Eastwards (typical)      .
+///     001  | \       | \       | \          v                                .
+///      |\  |  \      |  \      |  \         (+k) Downwards (typical)         .
+///      | \ |         |         |                                             .
+///      |  \|         |         |                                             .
+///      |  101-------111-------121-------                                     .
+///      |   |\        |\        |\                                            .
+///          | \       | \       | \                                           .
+///
+///
+///   BUILDOUT ORDER: Subunits are built in plunging order first (along
+///   k index), then what we call "row-building" order (along j index),
+///   and finally "column-building" order (along i index).  Adhering to
+///   this order means that the five tetras comprising a particular ijk
+///   subunit will have base index into the cell array of:
+///
+///     base = ((i*(nK*nJ) + j*nK + k) * 5)
+///
+///   this formula is codified in helper function WCGBaseIndexFromIJK(),
+///   which should be used (rather than coding the formula directly)
+///   whenever a base index is needed in order to reduce code duplication
+///   (and resultant opportunities for coding error).
+///
+///   CELL ORDER WITHIN SUBUNIT: There are five tetra cells per
+///   subunit.  The internal tetra (touches no exterior faces of
+///   subunit) of a particular subunit is always at offset 0 from the
+///   base index.  The tetra at offset 1 is the one covering the
+///   southwest (small i, small j) edge of the subunit.  Offset 1
+///   covers the northwest corner.  Offset 2 covers the northeast
+///   corner.  And offset 4 covers the southeast corner.
+///
+///   MIRROR PARITY: In order for the cell faces across subunits to
+///   join up correctly, the basic pattern must invert via a reflection
+///   as one moves from one subunit to an adjacent one.  The basic
+///   pattern and its reflection is depicted below, and is described in
+///   further detail in the commentary to WCGBuildBasicPattern() and
+///   WCGLinkBlocksForward().
+///
+///     000-------010-------020                                                .
+///      |\ *   (2) \ (1)   * \                                                .
+///      |.\    *    \    *    \              o----> (+j) Northwards (typical) .
+///      |  \ (4)    *\ *   (3) \             |\                               .
+///      |  100-------110-------120           | \                              .
+///      | . |        *|*        |            |  (+i) Eastwards (typical)      .
+///     001  | (4)  *  |  *  (3) |            v                                .
+///       \  |    *    |    *    |            (+k) Downwards (typical)         .
+///        \'|  *  (3) | (4)  *  |                                             .
+///         \|*        |        *|       Tetra offsets labeled as (n)          .
+///         101-------111-------121                                            .
+///            Natural  Reflected                                              .
+///
+///
+///   @callergraph
+///   @callgraph
+///
 void Model::BuildCellArray_WCGTetra() {
 
   int nI = mGrid.Ni()-1;  // Number of rows (of pattern blocks)
@@ -851,15 +868,15 @@ void Model::BuildCellArray_WCGTetra() {
 
 //////
 // METHOD  Model :: WCGBaseIndexFromIJK()   [static]
-//
-//   Helper function that computes the base index (index of first of
-//   five Tetra forming a block) of the i,j,k block in the cell array
-//   that results from Warped Cartesian (WCG) interpretation of the
-//   Grid array.  The formula that computes this base index is given
-//   in the commentary for BuildCellArray_WCGTetra() and conforms to
-//   the build-out order of blocks during model construction.  It is
-//   codified here to reduce code duplication.
-//
+///
+///   Helper function that computes the base index (index of first of
+///   five Tetra forming a block) of the i,j,k block in the cell array
+///   that results from Warped Cartesian (WCG) interpretation of the
+///   Grid array.  The formula that computes this base index is given
+///   in the commentary for BuildCellArray_WCGTetra() and conforms to
+///   the build-out order of blocks during model construction.  It is
+///   codified here to reduce code duplication.
+///
 Index Model::WCGBaseIndexFromIJK(Index i, Index j, Index k,
                                  Count nI, Count nJ, Count nK) {
   return ((i*(nK*nJ) + j*nK + k) * 5);
@@ -868,66 +885,68 @@ Index Model::WCGBaseIndexFromIJK(Index i, Index j, Index k,
 
 //////
 // METHOD:  Model :: WCGBuildBasicPattern()
-//
-//   Constructs a "block" of five Tetra cells spanning a set of eight
-//   Grid Nodes representing a 2x2x2 subunit of a Warped Cartesian
-//   Grid (WCG) structured Grid collection.  Pushes the five new Tetra
-//   cells onto the back end of mCellArray.  Responsible for internal
-//   face linkages among the cells, (but NOT responsible for external
-//   face linkages between this and adjacent blocks).  Responsible for
-//   requesting and linking Scatterers for each cell.  Responsible for
-//   marking top surface and bottom surface faces as "discontinous" if
-//   indicated by the appropriate grid nodes.  Responsible, if
-//   isSurface==true, for flagging the top surface faces as
-//   "collecting" and "reflecting.
-//
-//   Note that the basic pattern has two variants, which we call
-//   "natural" and "reflected."  Which pattern to build is a function
-//   of the mirror parameter (true --> build reflected pattern).  An
-//   alternating pattern of reflected/non-reflected blocks means that
-//   they can be joined continuously across matched-up faces.
-//
-//   Grid node references are passed in an eight element array.  The
-//   pack order is illustrated by the square-bracketted numbers [n] in
-//   the figure below.  The Tetra are constructed in a sequential
-//   order starting with the central (not visible) Tetra, and
-//   continuing in a clockwise fashion from there.  The Tetra are
-//   indexed in the figure with parenthetical numbers (n).  Each Tetra
-//   has four faces labeled A,B,C,D, and are oriented such that face A
-//   joins the internal Tetra, face B is flush with the j-index axis,
-//   face C with the i-index axis, and face D with the k-index axis.
-//   Face labels are also illustrated in the figure below.
-//
-//
-//     [0]-------------[2]         [0]-------------[2]
-//      |\ *          D  \          |\     D       * \          o------> (+j)
-//      |*\    *     (2)  \         | \   (1)    *    \         |\.
-//      |* \       *       \        |  \       *       \        | \.
-//      | * \  (4)     *    \       |(1)\    *    (3)   \       |  (+i)
-//      | *  \  D          * \      | B  \ *       D     \      V
-//      |B * [4]-------------[6]    |   .[4]-------------[6]   (+k)
-//      (1)*B |             * |     | .'  | *             | 
-//     [1]  * |  (4)      *   |    [1]  B |   *      C    | 
-//       \  * |   C     *     |      \ (4)|     *   (3)   | 
-//        \  *|       *       |       \   |       *       | 
-//         \ *|     *   C     |        \  |  (4)    *     | 
-//          \*|   *    (3)    |         \ |   C       *   | 
-//           \| *             |          \|             * | 
-//           [5]-------------[7]         [5]-------------[7]
-//                 Natural                    Reflected
-//
-//
-//   SCATTERER PARAMS: Each Tetra will have a ScatterParams object
-//   associated with it.  ScatterParams objects combine velocity
-//   information with heterogeneity information.  The velocity part of
-//   each ScatterParams object comes from top-layer nodes touching the
-//   individual tetra, but the HetSpec part always comes from node [0],
-//   which is the "smallest index" corner.  This means the HetSpec "fills"
-//   the whole block in the direction of increasing indices.  This should
-//   make it easier for modelers to visualize where their HetSpec
-//   attributes will be applied.
-//
-//
+///
+///   Constructs a "block" of five Tetra cells spanning a set of eight
+///   Grid Nodes representing a 2x2x2 subunit of a Warped Cartesian
+///   Grid (WCG) structured Grid collection.  Pushes the five new Tetra
+///   cells onto the back end of mCellArray.  Responsible for internal
+///   face linkages among the cells, (but NOT responsible for external
+///   face linkages between this and adjacent blocks).  Responsible for
+///   requesting and linking Scatterers for each cell.  Responsible for
+///   marking top surface and bottom surface faces as "discontinous" if
+///   indicated by the appropriate grid nodes.  Responsible, if
+///   isSurface==true, for flagging the top surface faces as
+///   "collecting" and "reflecting.
+///
+///   Note that the basic pattern has two variants, which we call
+///   "natural" and "reflected."  Which pattern to build is a function
+///   of the mirror parameter (true --> build reflected pattern).  An
+///   alternating pattern of reflected/non-reflected blocks means that
+///   they can be joined continuously across matched-up faces.
+///
+///   Grid node references are passed in an eight element array.  The
+///   pack order is illustrated by the square-bracketted numbers [n] in
+///   the figure below.  The Tetra are constructed in a sequential
+///   order starting with the central (not visible) Tetra, and
+///   continuing in a clockwise fashion from there.  The Tetra are
+///   indexed in the figure with parenthetical numbers (n).  Each Tetra
+///   has four faces labeled A,B,C,D, and are oriented such that face A
+///   joins the internal Tetra, face B is flush with the j-index axis,
+///   face C with the i-index axis, and face D with the k-index axis.
+///   Face labels are also illustrated in the figure below.
+///
+///
+///     [0]-------------[2]         [0]-------------[2]
+///      |\ *          D  \          |\     D       * \          o------> (+j)
+///      |*\    *     (2)  \         | \   (1)    *    \         |\.
+///      |* \       *       \        |  \       *       \        | \.
+///      | * \  (4)     *    \       |(1)\    *    (3)   \       |  (+i)
+///      | *  \  D          * \      | B  \ *       D     \      V
+///      |B * [4]-------------[6]    |   .[4]-------------[6]   (+k)
+///      (1)*B |             * |     | .'  | *             | 
+///     [1]  * |  (4)      *   |    [1]  B |   *      C    | 
+///       \  * |   C     *     |      \ (4)|     *   (3)   | 
+///        \  *|       *       |       \   |       *       | 
+///         \ *|     *   C     |        \  |  (4)    *     | 
+///          \*|   *    (3)    |         \ |   C       *   | 
+///           \| *             |          \|             * | 
+///           [5]-------------[7]         [5]-------------[7]
+///                 Natural                    Reflected
+///
+///
+///   SCATTERER PARAMS: Each Tetra will have a ScatterParams object
+///   associated with it.  ScatterParams objects combine velocity
+///   information with heterogeneity information.  The velocity part of
+///   each ScatterParams object comes from top-layer nodes touching the
+///   individual tetra, but the HetSpec part always comes from node [0],
+///   which is the "smallest index" corner.  This means the HetSpec "fills"
+///   the whole block in the direction of increasing indices.  This should
+///   make it easier for modelers to visualize where their HetSpec
+///   attributes will be applied.
+///
+///   @callergraph
+///   @callgraph
+///
 void Model::WCGBuildBasicPattern(const std::vector<const GridNode *> & nodes, 
                                  bool mirror, bool isSurface) {
 
@@ -1065,33 +1084,36 @@ void Model::WCGBuildBasicPattern(const std::vector<const GridNode *> & nodes,
 
 //////
 // METHOD:  Model :: WCGLinkBlocksForward()
-//
-//   Links the external faces that join block 'Block' to adjacent
-//   block 'Adjacent'.  Arguments 'Block' and 'Adjacent' are base
-//   indices into mCellArray that index the first of the five tetra
-//   comprising each block.  (Thus both indices shoud be multiples of
-//   five.)  The assumption is that 'Adjacent' refers to a block
-//   adjacent to 'Block' in either the +i direction, the +j direction,
-//   or the +k direction, though there are no checks to confirm this.
-//   Note that if 'Adjacent' sits on the -i, -j, or -k side of 'Block'
-//   then the linkages created will NOT be correct. The word "Forward"
-//   is in the method name as an explicit reminder of this.  The
-//   method needs to know across which face (ie along which axis) to
-//   join the block, and this is coded by the 'faceid' argument, which
-//   is expected to be one of to following values:
-//
-//     CellFace::FACE_B  -->  'Adjacent' sits +j of 'Block'
-//     CellFace::FACE_C  -->  'Adjacent' sits +i of 'Block'
-//     CellFace::FACE_D  -->  'Adjacent' sits +k of 'Block'
-//
-//   The method also needs to know the reflection parity of block
-//   'Block'.  This should be known at the calling level and is
-//   supplied via the 'mirror' argument.
-//
-//   The figure in the commnetary to WCGBuildBasicPattern() is
-//   illustrative and should be referred to for a more complete
-//   understanding of how WCGLinkBlocksForward is designed to work.
-//
+///
+///   Links the external faces that join block 'Block' to adjacent
+///   block 'Adjacent'.  Arguments 'Block' and 'Adjacent' are base
+///   indices into mCellArray that index the first of the five tetra
+///   comprising each block.  (Thus both indices shoud be multiples of
+///   five.)  The assumption is that 'Adjacent' refers to a block
+///   adjacent to 'Block' in either the +i direction, the +j direction,
+///   or the +k direction, though there are no checks to confirm this.
+///   Note that if 'Adjacent' sits on the -i, -j, or -k side of 'Block'
+///   then the linkages created will NOT be correct. The word "Forward"
+///   is in the method name as an explicit reminder of this.  The
+///   method needs to know across which face (ie along which axis) to
+///   join the block, and this is coded by the 'faceid' argument, which
+///   is expected to be one of to following values:
+///
+///     CellFace::FACE_B  -->  'Adjacent' sits +j of 'Block'
+///     CellFace::FACE_C  -->  'Adjacent' sits +i of 'Block'
+///     CellFace::FACE_D  -->  'Adjacent' sits +k of 'Block'
+///
+///   The method also needs to know the reflection parity of block
+///   'Block'.  This should be known at the calling level and is
+///   supplied via the 'mirror' argument.
+///
+///   The figure in the commnetary to WCGBuildBasicPattern() is
+///   illustrative and should be referred to for a more complete
+///   understanding of how WCGLinkBlocksForward is designed to work.
+///
+///   @callergraph
+///   @callgraph
+///
 void Model::WCGLinkBlocksForward(Index Block, Index Adjacent,
                                  CellFace::face_id_e faceid,
                                  bool mirror) {
