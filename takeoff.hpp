@@ -13,7 +13,6 @@
 #include <vector>
 #include "geom.hpp"
 
-
 //////
 // CLASS: TakeoffAngle
 ///@brief
@@ -30,14 +29,18 @@
 ///
 class TakeoffAngle {
 protected:
-  ;
+;
   S2::ThetaPhi  mDir;     ///<  Direction of take-off
   Real          mWeight;  ///<  Weight factor
 
 public:
-  ;
+;
   TakeoffAngle(S2::ThetaPhi toa, Real weight) 
-    : mDir(toa), mWeight(weight) {}
+    : mDir(toa), 
+      mWeight(validate::positive(weight)) {}
+
+  Real Weight() const {return mWeight;}
+  void SetWeight(Real weight) {mWeight=validate::positive(weight);}
 
 };//
 ///
@@ -53,6 +56,7 @@ public:
 class TakeoffArray {
 protected:
   ;
+  Count mN;
   std::vector<TakeoffAngle> mvTOA;
 
 public:
@@ -63,7 +67,6 @@ public:
 
 protected:
   ;
-  Real solid_to_weight(Real sa) const; // TODO sa/(4pi/N)
 
 };//
 ///

@@ -1,5 +1,6 @@
 CC=gcc
 CPP=g++
+CPP11=g++ -std=c++11
 FLAGS=-O0 -g -Wall 
 
 OUT_EXEC = main
@@ -133,7 +134,7 @@ probability.o : probability.cpp $(probability_hpp) $(comd)
 	$(CPP) -c $< $(FLAGS)
 
 takeoff.o : takeoff.cpp $(takeoff_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+	$(CPP11) -c $< $(FLAGS)
 
 elastic.o : elastic.cpp $(elastic_hpp) $(comd)
 	$(CPP) -c $< $(FLAGS)

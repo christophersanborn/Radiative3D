@@ -4,10 +4,13 @@
 /// Implement take-off angle classes
 ///
 
+#include <iostream>  // TEMPORARY
+#include <numeric>
 #include "takeoff.hpp"
 
-TakeoffArray::TakeoffArray(Count size) {
-  mvTOA.reserve(size);
+TakeoffArray::TakeoffArray(Count size) : mN(size) {
+  mvTOA.reserve(mN);
+std::cerr << "TakeoffArray ctor size = " << size << "\n";
 }
 
 //////
@@ -17,7 +20,7 @@ int NTesselSphere::NumAnglesFromDegree(const int degree) {
 }
 
 NTesselSphere::NTesselSphere(const int degree) :
-  TakeoffArray(NumAnglesFromDegree(degree))
+  TakeoffArray(NumAnglesFromDegree(validate::nonnegative(degree)))
 {
   // Twelve nodes make up the vertices of an icosahedron. The nodes
   // can be aligned so that each node extends in only two of the three
@@ -52,7 +55,7 @@ NTesselSphere::NTesselSphere(const int degree) :
   //then the corner ones, starting with the four in the northern
   //hemisphere, and then the four in the southern.
 
-  const int num_faces = 20;
+  const Count num_faces = 20;
   Node * fa [num_faces] [3] = {   // Face Array:
     {&NF, &NB, &LN},    // The two that touch the North edge
     {&NF, &NB, &RN},
@@ -78,19 +81,44 @@ NTesselSphere::NTesselSphere(const int degree) :
   };
 
   // Now create a temporary fully-subdivided triangle for each face,
-  // and harvest the centerpoints arrays:
+  // and harvest the centerpoints and get preliminary weights:
+  std::cerr << "NTesselSphere ctor sides defined\n";
 
-  for (int ctr=0; ctr<num_faces; ctr++) {
+  for (Index ctr=0; ctr<num_faces; ctr++) {
     // For each icosahedron face:
+    std::cerr << "NTesselSphere ctor for each side\n";
     S2::Triangle tri(*fa[ctr][0], *fa[ctr][1], *fa[ctr][2], degree);
-    for (int subctr=0; subctr<tri.NumCenterAngles(); ctr++) {
-      // For each minimal subtriangle, get direction and weight: 
-      S2::ThetaPhi toadir = tri.CenterAngle(subctr);
-      Real weight = solid_to_weight(tri.AngleArea(subctr));
-      mvTOA.push_back(TakeoffAngle(toadir,weight));
+    std::cerr << "NTesselSphere ctor triangle has "
+              << tri.NumCenterAngles() << "centers\n";
+
+    for (Index subctr=0; subctr<tri.NumCenterAngles(); subctr++) {
+       // For each minimum subtriangle:
+       S2::ThetaPhi toadir = tri.CenterAngle(subctr);
+       Real prelim_weight = tri.AngleArea(subctr);
+       mvTOA.push_back(TakeoffAngle(toadir,prelim_weight));
     }
+  }
+
+  // Now scale the preliminary weights so that they satisfy Sum(w)=nN:
+  Real raw = std::accumulate(mvTOA.begin(), mvTOA.end(), 0.0,
+                             [](Real a, const TakeoffAngle & b){
+                               return a + b.Weight();
+                             });
+  Real scalefactor = mN / raw;
+  for ( TakeoffAngle & toa : mvTOA ) {
+    toa.SetWeight(2.0*toa.Weight());  // TODO wrong math
   }
 
 }
 
 //
+
+
+int main() {
+  using std::cout;
+
+  cout << "hello\n";
+  NTesselSphere tess(2);
+  cout << "goodbye\n";
+
+}

@@ -145,6 +145,29 @@ typedef  std::logic_error        Invalid;
 //          But typedefs suffice for now.
 //
 
+/// EXPERIMENTAL: Data validators. Trying out in takeoff.[hc]pp for
+/// now.  One problem is the what() messages thrown do not identify
+/// where in the source they were called from. So, the error messages
+/// are not very useful. (But, these are intended to detect logical
+/// errors resulting from programmer bugs, NOT as validators for bad
+/// user input.)
+namespace validate {
+
+  /// Throws if not positive (if zero or negative)
+  template<typename T>
+  T positive(T val) {
+    if (val <= (T)0) throw Invalid("Value must not be negative or zero.");
+    return val;
+  }
+
+  /// Throws if negative
+  template<typename T>
+  T nonnegative(T val) {
+    if (val < (T)0) throw Invalid("Value must not be negative.");
+    return val;
+  }
+};
+
 ///
 #endif //#infdef TYPEDEFS_H_
 //
