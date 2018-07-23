@@ -1,10 +1,10 @@
-// phonons.hpp
-//
-// This file develops the Phonon class, which represents a phonon in
-// flight. 
-//
-// This file does not participate in any namespaces. (All constructs
-// are defined in the global namespace.)
+/// @file phonons.hpp
+///
+/// This file develops the Phonon class, which represents a phonon in
+/// flight. 
+///
+//  This file does not participate in any namespaces. (All constructs
+//  are defined in the global namespace.)
 //
 #ifndef PHONONS_H_
 #define PHONONS_H_

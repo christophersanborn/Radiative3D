@@ -578,7 +578,7 @@ Real RCUCylinder::GetQatPoint(const R3::XYZ & loc, raytype type) const {
 // METHOD:   RCUCylinder :: Face()
 ///
 ///   Returns a read-write reference to either the top or bottom
-///   CellFace object, as determined by the value of face_id
+///   CellFace object, as determined by the value of @p face_id
 ///
 CellFace & RCUCylinder::Face(CellFace::face_id_e face_id) {
   switch (face_id) {

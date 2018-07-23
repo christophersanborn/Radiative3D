@@ -376,13 +376,17 @@ public:
   //
 
   virtual CellFace & Face(CellFace::face_id_e face_id) = 0;
-                // Returns a read-write reference to the CellFace
-                // object, presumed to be on the surface of the
-                // MediumCell, identified by face_id
+            ///< Returns a read-write reference to the CellFace
+            ///  object, presumed to be on the surface of the
+            ///  MediumCell, identified by @p face_id
 
   virtual Scatterer * GetActiveScatterer() = 0;
+            ///< Returns a pointer to the Scatterer object representing
+            ///  the scattering regime active inside the MediumCell.
 
   virtual void Link(Scatterer *) = 0;
+            ///< Links the provided Scatter to the MediumCell, making it
+            ///  the active scatterer inside the cell.
 
   virtual TravelRec AdvanceLength(raytype rt, Real len, 
                                   const R3::XYZ & startloc,
@@ -397,6 +401,9 @@ public:
 
   virtual Real GetWavelengthAtPoint(const R3::XYZ & loc,
                                     raytype type) const =0;
+            ///< Returns elestic wavelength for a phonon of raytype @p
+            ///  type at location @p loc presumed to be within the
+            ///  MediumCell.
 
   virtual Real GetDensityAtPoint(const R3::XYZ & loc) const =0;
 

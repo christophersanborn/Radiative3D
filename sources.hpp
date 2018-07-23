@@ -1,20 +1,21 @@
-// sources.hpp
-//
-// This file defines a base class for a whole hierarchy of classes to
-// represent seismic sources. The basic "family" of these sources will
-// divide principally over those sources that are "events" in the
-// sense of an earthquake or explosion event, and those that are
-// "scatterers" in the sense of treating a scattering event as a
-// source of re-radiated phonons.
-//
-// The principle deriviative files to this file are: events.hpp, and
-// scatterers.hpp.
-//
-// Generally, a code module that needs "sources" will not include this
-// file directly, but will include either (or both) of events.hpp or
-// scatterers.hpp.  Those files, in turn, include this file.
-//
-//
+//  sources.hpp
+/// @file
+///
+/// This file defines a base class for a whole hierarchy of classes to
+/// represent seismic sources. The basic "family" of these sources will
+/// divide principally over those sources that are "events" in the
+/// sense of an earthquake or explosion event, and those that are
+/// "scatterers" in the sense of treating a scattering event as a
+/// source of re-radiated phonons.
+///
+/// The principle derivative files to this file are: events.hpp, and
+/// scatterers.hpp.
+///
+/// Generally, a code module that needs "sources" will not include this
+/// file directly, but will include either (or both) of events.hpp or
+/// scatterers.hpp.  Those files, in turn, include this file.
+///
+///
 #ifndef SOURCES_H_
 #define SOURCES_H_
 //
