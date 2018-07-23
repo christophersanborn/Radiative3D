@@ -1,0 +1,12 @@
+# Compiler objects
+*.o
+
+# Executable
+main
+main.exe
+
+# Runtime output
+data/
+*.octv
+*.dat
+*.runrcpt

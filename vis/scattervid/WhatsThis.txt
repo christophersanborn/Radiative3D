@@ -1,0 +1,10 @@
+This is a quick bash and octave project to produce videos of the scattering of phonons from the output of Radiative3D.
+
+Capture the Radiative3D output into a file.  
+
+Use the bash scripts to preprocess the data.  
+
+Use the Octave script to produce the framecache (collection of still frames)
+
+Use ffmpeg to make a movie.
+
