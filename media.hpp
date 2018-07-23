@@ -90,25 +90,28 @@ class GridData;   /* Passed by constant reference to Tetra constructor */
 //////
 // CLASS:   ::::  TravelRec  ::::
 // ENCAPS:  Travel Record for a Phonon
-//
-//   Encodes one "hop" or one "leg" of the journey of a phonon along a
-//   ray.  For example, from a phonon's current location to a
-//   scatterring event, or to a cell boundary, etc.
-//
-//   Data members are public.  (This class intended to be used more
-//   like a struct than a class)
-//
+///@ingroup phonon_support
+///@brief
+///
+///   The TravelRec class describes a single "hop" or "leg" of the
+///   journey of a Phonon along a complex trajectory.  For example,
+///   from a Phonon's current location to a scatterring event, or to a
+///   cell boundary, etc.
+///
+///   Data members are public.  (This class intended to be used more
+///   like a struct than a class.)
+///
 class TravelRec {
 public:
   
-  Real     PathLength;  // Distance travelled along (possibly curved)
-                        //  path
-  Real     TravelTime;  // Time it took to travel that distance
-  R3::XYZ      NewLoc;  // Location of phonon after travelling
-  S2::ThetaPhi NewDir;  // Direction of phonon after travelling
-  Real    Attenuation;  // Intrinsic Attenutation determined by Q
-  CellFace    * pFace;  // Points to CellFace through which the ray
-                        //  exited the MediumCell. (Undefined if N/A.)
+  Real     PathLength;  ///<  Distance travelled along (possibly curved)
+                        ////  path
+  Real     TravelTime;  ///<  Time it took to travel that distance
+  R3::XYZ      NewLoc;  ///<  Location of phonon after travelling
+  S2::ThetaPhi NewDir;  ///<  Direction of phonon after travelling
+  Real    Attenuation;  ///<  Intrinsic Attenutation determined by Q
+  CellFace    * pFace;  ///<  Points to CellFace through which the ray
+                        ///   exited the MediumCell. (Undefined if N/A.)
 };
 
 

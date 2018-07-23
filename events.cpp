@@ -107,7 +107,14 @@ ShearDislocation::ShearDislocation(Tensor::Tensor MT, R3::XYZ Loc) :
 }//
 //
 
-
+//////
+// METHOD:
+///@brief
+///
+///   Generates a new Phonon at the event source location and
+///   probabilistically assigns it an inital direction, polarization,
+///   etc.
+///
 Phonon ShearDislocation::GenerateEventPhonon() {
 
   Phonon P = GenerateRandomPhonon(RAY_NA);

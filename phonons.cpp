@@ -14,6 +14,7 @@
 //
 //  Methods Defined Here:
 //
+//   o  Constructors
 //   o  Move()
 //   o  Transform()
 //   o  PseudoReflect()
@@ -38,13 +39,90 @@ Real Phonon::cm_ttl = 3600.0;    // One hour.  Note: the Model()
                                  // the change there, not here.
 
 //////
+// CONSTRUCTORS:
+///@name Constructors
+///
+///  Phonons are constructed either by event sources as originators of
+///  a phonon lifetime trajectory, or by Scatterer objects as
+///  "relative" phonons and used only to communicate a relative
+///  deflection of an existing in-flight phonon, whose direction,
+///  polarization, and raytype will be adjusted by the Transform()
+///  method.
+///
+///  Phonon constructors allow you set the initial direction,
+///  polarization mode (raytype), and optionally initial location.
+///  Initial polarization angle is set automatically from raytype as
+///  either 0 or 90 degrees, and it is subsequently tracked as a
+///  continuous value. (Future planned modifications will permit
+///  inital polarization angle to be set as a continuum upon
+///  construction.)
+///
+///  Remaining properties must be set manually following construstion. 
+///
+///  @param mode   Specifies initial polarization mode.  May be RAY_P,
+///                RAY_SV, or RAY_SH, but internally only RAY_P vs
+///                RAY_S are retained. (S polarization is tracked as a
+///                continuum value after construction.)
+///@{
+
+//////
+// CONSTRUCTOR:
+///@brief
+///
+/// This version allows to specify starting location. NOTE: This
+/// version currently unused.
+///
+Phonon::Phonon(const R3::XYZ & loc, const S2::ThetaPhi & dir, raytype mode) :
+  mTimeAlive(0),
+  mPathLength(0),
+  mAmplitude(1.0),
+  mLoc (loc), 
+  mDir (dir), 
+  mPol (mode == RAY_SH ? Geometry::Pi * 0.5 : 0.0),
+  mType (mode == RAY_P ? RAY_P : RAY_S), 
+  mpCell (0)
+{ 
+  mSID = cm_phonon_counter++;
+  nudge_if_singular();
+}
+
+//////
+// CONSTRUCTOR:
+///@brief
+///
+///  This version specifies initial direction and raytype as RAY_P,
+///  RAY_SV, or RAY_SH, and auto-computes polarization angle 0 or 90
+///  degrees based on SV or SH.
+///
+Phonon::Phonon(const S2::ThetaPhi & dir, raytype mode) :
+  mTimeAlive(0),
+  mPathLength(0),
+  mAmplitude(1.0),
+  mLoc (0,0,0), 
+  mDir (dir), 
+  mPol (mode == RAY_SH ? Geometry::Pi * 0.5 : 0.0),
+  mType (mode == RAY_P ? RAY_P : RAY_S),
+  mpCell (0)
+{
+  mSID = cm_phonon_counter++;
+  nudge_if_singular();
+}
+///@}  // End doxy member group
+//
+
+
+//////
 // METHOD:  Phonon :: Move()    (private, at the moment)
 //
 // WHAT-IT-DOES:
 //
-//   It "moves" a phonon, updating it's internal location, direction,
-//   total pathlength and traveltime members, etc., according to the
-//   Travel Record provided in the argument.
+///  The Move() method moves a Phonon by updating it's internal
+///  location, direction, total pathlength and traveltime members,
+///  etc., according to the TravelRec object provided in the argument.
+///
+///  The Move() method is called from the Propagate() method, which in
+///  handling various interactions with interfaces, cell boundaries,
+///  and scatterers, has generated the TravelRec describing the move.
 //
 // ACCESS:
 //
@@ -67,47 +145,44 @@ inline void Phonon::Move(const TravelRec & travel) {
 
 //////
 // METHOD:  Phonon :: Transform()
-//
-// WHAT-IT-DOES:
-//
-//   Transforms the direction and polarization of the phonon by an
-//   amount determined by a "relative phonon" taken as an input.
-//
-// HOW-IT-WORKS:
-//
-//   We assume the current direction and polarization of the phonon
-//   define a coordinate system {a} wherin a3 is a unit vector in the
-//   direction of travel, a1 is in the direction of polarization, and
-//   a2 is mutually perpendicular as in an rhs coordinate system.
-//
-//   We further assume that the relative phonon (typically generated
-//   by a scattering algorithm) is expressed in a coordinate system
-//   {s} wherin s3 is a unit vector in the direction that represents
-//   zero deviation from the original path, s1 represents the original
-//   polarization direction, and s2 is mutually perpendictular.
-//
-//   Internally, the phonon direction is represented in an independent
-//   "lab frame".  This method updates the phonon direction and
-//   polarization to account for the deflection/rotation coded in the
-//   relative phonon.
-//
-//   This method borrows heavily from the code in the SCATRAYPOL
-//   and BENDRAY subroutines in Shearer's PSPhonon.
-//
-// INPUTS:
-//
-//   rel   -  A "relative" phonon (direction, type, and polarization
-//            code a deflection/rotation and/or P<->S conversion)
-// OUTPUTS:
-//   (none)
-//
-// SIDE-AFFECTS:
-//
-//   Internal object state is changed:
-//     * dir updated to new phonon direction.
-//     * pol updated to new polarization.
-//     * type updated to new raytype
-//
+///@brief
+///
+///   Transforms the direction and polarization of the phonon by an
+///   amount determined by a "relative phonon" taken as an input.
+///
+///   @param [in] rel: A Phonon object whose direction attributes code a
+///                    deflection angle, and whose other attributes code
+///                    raytype and polarization changes such as P<->S
+///                    conversions, etc.
+///
+///   ### How it Works:
+///
+///   We assume the current direction and polarization of the phonon
+///   define a coordinate system {a} wherin a3 is a unit vector in the
+///   direction of travel, a1 is in the direction of polarization, and
+///   a2 is mutually perpendicular as in an rhs coordinate system.
+///
+///   We further assume that the relative phonon (typically generated
+///   by a scattering algorithm) is expressed in a coordinate system
+///   {s} wherin s3 is a unit vector in the direction that represents
+///   zero deviation from the original path, s1 represents the original
+///   polarization direction, and s2 is mutually perpendictular.
+///
+///   Internally, the phonon direction is represented in an independent
+///   "lab frame".  This method updates the phonon direction and
+///   polarization to account for the deflection/rotation coded in the
+///   relative phonon.
+///
+///   This method borrows heavily from the code in the SCATRAYPOL
+///   and BENDRAY subroutines in Shearer's PSPhonon.
+///
+///   ### Side-Effects:
+///
+///   Internal object state is changed:
+///     * mDir updated to new phonon direction.
+///     * mPol updated to new polarization.
+///     * mType updated to new raytype
+///
 void Phonon::Transform(const Phonon & rel) {
   
   // Establish coordinate system {a1, a2, a3} to represent the CURRENT
@@ -167,13 +242,15 @@ void Phonon::Transform(const Phonon & rel) {
 
 //////
 // METHOD:  Phonon :: Velocity()
-//
-//   Returns seismic velocity at current location of phonon.  Depends
-//   on mpCell being set.  Barfs unkindly (probably a segfault) if it
-//   isn't (e.g., for "relative" phonons used in scattering
-//   computations, but this is not the intended use case for this
-//   method).
-//
+///@brief
+///
+///   Returns seismic velocity at current location of phonon.
+///
+///   Depends on mpCell being set.  Barfs unkindly (probably a
+///   segfault) if it isn't (e.g., for "relative" phonons used in
+///   scattering computations, but this is not the intended use case
+///   for this method).
+///
 Real Phonon::Velocity() const {
   return mpCell->GetVelocAtPoint(mLoc, mType);
 }
@@ -181,18 +258,21 @@ Real Phonon::Velocity() const {
 
 //////
 // METHOD:  Phonon :: DirectionOfMotion()
-//
-//   Returns the direction of particle motion of the ray.  In the case
-//   of P phonons, this is the same as the direction of propagation.
-//   In the case of S phonons, it is perpendicular to propagation, and
-//   the exact orientation is determined by the polarization angle.
-//
-// RETURNS:  
-//
-//   Returns an R3::XYZ object coding the direction of motion.  Return
-//   value is guaranteed to be "normal", ie, to have a vector
-//   magnitude of 1.0.
-//
+///@brief
+///
+///   Returns the direction of particle motion of the ray.
+///
+///   In the case of P phonons, this is the same as the direction of
+///   propagation.  In the case of S phonons, it is perpendicular to
+///   propagation, and the exact orientation is determined by the
+///   polarization angle.
+///
+/// @return 
+///
+///   Returns an R3::XYZ object coding the direction of motion.  Return
+///   value is guaranteed to be "normal", ie, to have a vector
+///   magnitude of 1.0.
+///
 R3::XYZ Phonon::DirectionOfMotion() const {
 
   if (mType == RAY_P) {
@@ -209,14 +289,25 @@ R3::XYZ Phonon::DirectionOfMotion() const {
 //////
 // METHOD:     Phonon::Refract()
 // CALLED-BY:  Phonon::Propagate()
-//
-//   This is a dispatcher function. It's purpose is to determine what
-//   type of refraction handling is required by the situtaion, and to
-//   call the appropriate refraction helper functions to handle it.
-//
-//   On the macro level, this function handles the transmission of
-//   phonons from one cell into a neighbor cell across an interface.
-//
+///@brief
+///
+///   Handles the refraction or reflection/transmission (R/T) of a
+///   Phonon interacting with a CellFace boundary, via a method
+///   appropriate to the type if interface.
+/// 
+///   This is a dispatcher function. It's purpose is to determine what
+///   type of refraction handling is required by the situtaion, and to
+///   call the appropriate refraction helper functions to handle it.
+///
+///   On the macro level, this function handles the transmission of
+///   phonons from one cell into a neighbor cell across an interface.
+///
+///   @param pFace    Points to CellFace interface with which Phonon is
+///                   interacting.
+///
+///   @callergraph
+///   @callgraph
+///
 void Phonon::Refract(CellFace * pFace) {
 
   Real vel_eps = 0.00001;   // Threshold below which we don't bother
@@ -253,18 +344,21 @@ void Phonon::Refract(CellFace * pFace) {
 //////
 // METHOD:     Phonon::Refraction_Continuous()
 // CALLED BY:  Phonon::Refract()
-//
-//   Handles the transfer of a phonon from its current cell into the
-//   cell that adjoins it through pFace.
-//
-//   This version is for the case when velocity is continuous across
-//   the interface.  For cells that model velocity gradients, this is
-//   usually the case (baring special discontinuity interfaces such as
-//   a Moho layer).
-//
-//   The phonon is basically handed over to the adjoinin cell without
-//   much additional fanfare.
-//
+///@brief
+///
+///   Handles the transfer of a Phonon from its current MediumCell
+///   into the cell that adjoins it through pFace.
+///
+///   This version is for the case when velocity is continuous across
+///   the interface.  For cells that model velocity gradients, this is
+///   usually the case (baring special discontinuity interfaces such as
+///   a Moho layer).
+///
+///   The phonon is basically handed over to the adjoinin cell without
+///   much additional fanfare.
+///
+///   @callergraph
+///
 void Phonon::Refraction_Continuous(CellFace * pFace) {
 
   InsertInto( &(pFace->OtherCell()) );
@@ -275,34 +369,37 @@ void Phonon::Refraction_Continuous(CellFace * pFace) {
 //////
 // METHOD:     Phonon::Refraction_Bend()
 // CALLED BY:  Phonon::Refract()
-//
-//   Handles the transfer of a phonon from its current cell into the
-//   cell that adjoins it via an identified exit CellFace.
-//
-//   This version assumes the siesmic velocities are discontinuous
-//   across the interface, and calculates ray-bending accordingly.
-//   Useful for models based on uniform-velocity cells, whose velocity
-//   models consequently become "stair-step" functions.  Falls back to
-//   hard reflect if supercritical incidence (total-internal
-//   reflection).  In this latter case, we don't change the
-//   bookkeeping of the phonons "current cell", and the result is as
-//   if the phonon "transferred" back into the same cell.
-//
-//   This version does NOT do P/S conversions.  Thus this function
-//   should not be used to handle grid-indicated discontinuity faces.
-//   Another mechanism is provided for that.
-//
-//   Keeps S-polarization "unchanged" throughout, which is to say that
-//   the SH/SV ratio is unchanged, as measured relative to the
-//   plane-of-incidence.  (This does NOT mean that the mPol member
-//   will not change.  It probably will change, since it is measured
-//   w.r.t a global coordinate system, not the plane of incidence.)
-//
-//   NOTE: because of the way exit-face intersection is computed, we
-//   can count on pFace->Normal().Dot(mDir) to always be
-//   positive. (ie., we are always traveling "with", not "against",
-//   the exit-face normal.)
-//
+///@brief
+///
+///   Handles the transfer of a phonon from its current cell into the
+///   cell that adjoins it via an identified exit CellFace.
+///
+///   This version assumes the siesmic velocities are discontinuous
+///   across the interface, and calculates ray-bending accordingly.
+///   Useful for models based on uniform-velocity cells, whose velocity
+///   models consequently become "stair-step" functions.  Falls back to
+///   hard reflect if supercritical incidence (total-internal
+///   reflection).  In this latter case, we don't change the
+///   bookkeeping of the phonons "current cell", and the result is as
+///   if the phonon "transferred" back into the same cell.
+///
+///   This version does NOT do P/S conversions.  Thus this function
+///   should not be used to handle grid-indicated discontinuity faces.
+///   Another mechanism is provided for that.
+///
+///   Keeps S-polarization "unchanged" throughout, which is to say that
+///   the SH/SV ratio is unchanged, as measured relative to the
+///   plane-of-incidence.  (This does NOT mean that the mPol member
+///   will not change.  It probably will change, since it is measured
+///   w.r.t a global coordinate system, not the plane of incidence.)
+///
+///   NOTE: because of the way exit-face intersection is computed, we
+///   can count on pFace->Normal().Dot(mDir) to always be
+///   positive. (ie., we are always traveling "with", not "against",
+///   the exit-face normal.)
+///
+///   @callergraph
+///
 void Phonon::Refraction_Bend(CellFace * pFace) {
 
   R3::XYZ fnorm = pFace->Normal();
@@ -403,24 +500,29 @@ void Phonon::Refraction_Bend(CellFace * pFace) {
 //////
 // METHOD:     Phonon::Refraction_FullRT()
 // CALLED BY:  Phonon::Refract()
-//
-//   Handles the transfer of a phonon from its current cell into the
-//   cell that adjoins it through pFace.
-//
-//   This version is for the specially marked interfaces that are
-//   intended to represent first-order discontinuities (velocity
-//   jumps) across an interface, e.g. a Moho discontinuity.  Full
-//   reflection/transmission and P/S conversion probabilities are
-//   handled.
-//
-//   Contrast this with Refraction_Bend(), which does handle
-//   discontinuous velocities across an interface, but treats only the
-//   simple bending of rays by Snells law. This latter case is
-//   appropriate for so-called stair-step models in which velocities
-//   are stepwise-constant functions.  In order to get FullRT
-//   treatment on a particular interface, the user must request this
-//   via a double-valued grid layer.
-//
+///@brief
+///
+///   Handles the probabilistic reflection/transmission (with
+///   refraction and P/S conversions) of a Phonon from its current
+///   MediumCell into the cell that adjoins it through CellFace
+///   parameter pFace.
+///
+///   This version is for the specially marked interfaces that are
+///   intended to represent first-order discontinuities (velocity
+///   jumps) across an interface, e.g. a Moho discontinuity.  Full
+///   reflection/transmission and P/S conversion probabilities are
+///   handled.
+///
+///   Contrast this with Refraction_Bend(), which does handle
+///   discontinuous velocities across an interface, but treats only the
+///   simple bending of rays by Snells law. This latter case is
+///   appropriate for so-called stair-step models in which velocities
+///   are stepwise-constant functions.  In order to get FullRT
+///   treatment on a particular interface, the user must request this
+///   via a double-valued grid layer.
+///
+///   @callergraph
+///
 void Phonon::Refraction_FullRT(CellFace * pFace) {
 
   RTCoef rt = pFace->GetRTBasis(mLoc, mDir);  
@@ -473,19 +575,24 @@ void Phonon::Refraction_FullRT(CellFace * pFace) {
 
 //////
 // METHOD:  Phonon :: InsertInto( MediumCell * )
-//
-// WHAT-IT-DOES:
-//
-//   This methods makes the necessary internal changes to "link" a
-//   phonon to the MediumCell in which it is to reside for the next
-//   few rounds of simulation.  At a basic level, this means setting
-//   the internal mpCell and mpScat members, but, depending on
-//   situation, this could also mean making trajectory or other
-//   changes.
-//
-//   UPDATE: Trajectory and other such "motion" parameters are handled
-//   elsewhere.  This function is now only about linkage.
-//
+///@brief
+///
+///   Associates the Phonon with the given MediumCell object. Called
+///   when phonon is first generated or when transmitting from one
+///   cell into another.
+///
+///   This methods makes the necessary internal changes to "link" a
+///   phonon to the MediumCell in which it is to reside for the next
+///   few rounds of simulation.  At a basic level, this means setting
+///   the internal mpCell and mpScat members, but, depending on
+///   situation, this could also mean making trajectory or other
+///   changes.
+///
+///   UPDATE: Trajectory and other such "motion" parameters are handled
+///   elsewhere.  This function is now only about linkage.
+///
+///   @callergraph
+///
 void Phonon::InsertInto(MediumCell * pCell) {
 
   mpCell = pCell;           // "Link" us to the MediumCell
@@ -499,39 +606,34 @@ void Phonon::InsertInto(MediumCell * pCell) {
 
 //////
 // METHOD:  Phonon :: Propagate()
-//
-// WHAT-IT-DOES:
-//
-//   Takes a phonon which is assumed to exist at somesuch location in
-//   somesuch MediumCell and "propagates" that phonon along its
-//   directed path, processing all possible occurances (like
-//   scattering and reflections) along the way.  Typically, this
-//   function would be called in a loop soon after a "new" phonon is
-//   generated by a seismic SourceEvent object.
-//
-// HOW-IT-WORKS:
-//
-//   (Mostly documented in comments inside the function)
-//
-// INPUTS:
-//   (none)
-//
-// OUTPUTS:
-//   (none)
-//
-// SIDE-AFFECTS:
-//
-//   Upon comletion, phonon is in a "dead" state, meaning it has
-//   either left the model (and no longer exists inside any valid
-//   MediaCell), or because its mTimeAlive has exceeded cm_ttl
-//   (meaning phonon has propagated longer than the time-to-live limit
-//   on propagation sim-time and has therefore been discarded).
-//
-//   During propagation, various phonon events, such as scattering
-//   incidents, reflections, intersections with collection faces,
-//   etc., are reported to the outside world through method calls to
-//   the global DataOut object.
-//
+///@brief
+///
+///   Takes a phonon which is assumed to exist at somesuch location in
+///   somesuch MediumCell and "propagates" that phonon along its
+///   directed path, processing all possible occurances (like
+///   scattering and reflections) along the way.  Typically, this
+///   function would be called in a loop soon after a "new" phonon is
+///   generated by a seismic SourceEvent object.
+///
+///   ### How it Works:
+///
+///   (Mostly documented in comments inside the function)
+///
+///   ### Side Effects:
+///
+///   Upon comletion, phonon is in a "dead" state, meaning it has
+///   either left the model (and no longer exists inside any valid
+///   MediaCell), or because its mTimeAlive has exceeded cm_ttl
+///   (meaning phonon has propagated longer than the time-to-live limit
+///   on propagation sim-time and has therefore been discarded).
+///
+///   During propagation, various phonon events, such as scattering
+///   incidents, reflections, intersections with collection faces,
+///   etc., are reported to the outside world through method calls to
+///   the global DataOut object.
+///
+///   @callgraph
+///
 void Phonon::Propagate() {
  
   while (true) {    // ===========================

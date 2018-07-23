@@ -33,31 +33,38 @@ S2::S2Set * PhononSource::pTOA = NULL;
 
 //////
 // CONSTRUCTOR:  PhononSource(int, int)
-//
-//   Sets up the two Probability Distribution (ProbDist object)
-//   vectors: mPDists and mWholeProbs.  The two parameters define the
-//   number of input conditions, and the number of output conditions.
-//   These determine the size of the vectors and the length of the
-//   WholeProbs arrays.
-//
-//   The mPDists vector will have nraytypes_out number of elements,
-//   and each contianed ProbDist object will have length nTOA.
-//
-//   The mWholeProbs vector will have nraytypes_in number of elements,
-//   and each contained ProbDist object will have length
-//   nraytypes_out.
-//
-//   Note that this BASE CLASS constructor constructs and allocates
-//   (resizes) the ProbDist vectors, but does NOT populate them with
-//   actual probability values.  That is the task of derived classes,
-//   which will be specialized to the particular type of source
-//   (e.g. event-source, scattering, etc.) being modeled.
-//
-//   NOTE: It is assumed that the static member nTOA has been properly
-//   set prior to construction of the first PhononSource object.  If
-//   not... there will be problems.
-//
-PhononSource::PhononSource(int nraytypes_in, int nraytypes_out) :
+///@brief
+///
+///   Initializes a two-tiered probability map controlling initial
+///   phonon state and take-off angle, and, (todo) initial phase and
+///   polarization angle.
+///
+///   Sets up the two Probability Distribution (ProbDist)
+///   vectors: #mPDists and #mWholeProbs.  The two parameters define the
+///   number of input conditions, and the number of output conditions.
+///   These determine the size of the vectors and the length of the
+///   WholeProbs arrays.
+///
+///   The mPDists vector will have nraytypes_out number of elements,
+///   and each contianed ProbDist object will have length nTOA.
+///
+///   The mWholeProbs vector will have nraytypes_in number of elements,
+///   and each contained ProbDist object will have length
+///   @p 'nraytypes_out'.
+///
+///   Note that this BASE CLASS constructor constructs and allocates
+///   (resizes) the ProbDist vectors, but does NOT populate them with
+///   actual probability values.  That is the task of derived classes,
+///   which will be specialized to the particular type of source
+///   (e.g. event-source, scattering, etc.) being modeled.
+///
+///   NOTE: It is assumed that the static member nTOA has been properly
+///   set prior to construction of the first PhononSource object.  If
+///   not... there will be problems.
+///
+PhononSource::PhononSource(int nraytypes_in,  //!< Num input raytypes
+                           int nraytypes_out  //!< Num output raytypes
+                          ) :
   mPDists     (nraytypes_out, ProbDist(nTOA)          ),
   mWholeProbs (nraytypes_in,  ProbDist(nraytypes_out) )
 {}

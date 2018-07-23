@@ -42,15 +42,21 @@ class Phonon;   /* Defined in phonon.hpp */
 // CLASSES: Definitions
 //
 
-// CLASS:  Sources::PhononSource
-// ENCAPS:
-//   A very generic base class of a Phonon Source.  Doesn't even
-//   include the probability function.  (because at this point the
-//   dimensionality of the funciton isn't known.  Could be
-//   single-type, or P-S, or scattering PP, SS, PS, SP, etc.)
-// FEATURES:
-//   * Static member to maintain take-off angle list.
-//
+//////
+// CLASS:   PhononSource
+///@brief
+///
+///  Generic base class for Phonon sprayers.
+///
+///  A very generic base class of a Phonon Source.  Doesn't even include
+///  the probability function.  (because at this point the dimensionality
+///  of the funciton isn't known.  Could be single-type, or P-S, or
+///  scattering PP, SS, PS, SP, etc.)
+///
+///  ## FEATURES:
+///
+///  * Static member to maintain take-off angle list.
+///
 class PhononSource {
 protected:
 
@@ -71,13 +77,12 @@ protected:
   // ::: Static Members  (PhononSource Class) :::
   // ::::::::::::::::::::::::::::::::::::::::::::
 
-  static int nTOA;
-  static S2::S2Set * pTOA;   // Pointer to class-level take-off-angle
-                             // array. Defines set of take-off angles
-                             // to be used by all PhononSource
-                             // objects.  Needs to be initialized by
-                             // Set_TOA_Array() at some point prior to
-                             // construction of first object.
+  static int nTOA;           ///< Number of Take-Off-Angles in the TOA set.
+  static S2::S2Set * pTOA;   ///< Pointer to class-level take-off-angle
+                             ///  array. Defines set of take-off angles to be
+                             ///  used by all PhononSource objects.  Needs to
+                             ///  be initialized by Set_TOA_Array() at some
+                             ///  point prior to construction of first object.
 
 public:
 
@@ -127,11 +132,14 @@ protected:
   // different set of output possibilities compared with one arriving
   // as an S phonon.)
 
-  std::vector<ProbDist>  mPDists;       // The Distributions. These
-                                        // encode the "shape," if you
-                                        // will, of the radiation/spray
-                                        // patterns.
+  std::vector<ProbDist>  mPDists;       //!< The Distributions. These
+                                        //!< encode the "shape," if you
+                                        //!< will, of the radiation/spray
+                                        //!< patterns.
 
+  /** Top-tier probability distribution. This encodes the relative
+      probability of each "shape" as defined in the mPDists
+      distributions. */
   std::vector<ProbDist>  mWholeProbs;   // The Whole Probs
                                         // Array(s). These encode the
                                         // relative probabilities of

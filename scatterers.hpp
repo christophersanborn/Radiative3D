@@ -29,47 +29,46 @@
 
 //////
 // CLASS:  Scatterer -FROM- PhononSource
-//
-// PURPOSE:
-//
-//   This class represents "Scatterers," as treated theoretically in the
-//   manner described by Sato and Fehler.  The Scatterer object derives
-//   from, and thus is a kind of, the PhononSource object.  Ie, the
-//   Scatterer object is a "source" of scattered phonons.
-//
-// MEMORY FOOTPRINT:
-//
-//   This class, like any class derived from PhononSource, could be
-//   considered somewhat "heavy".  It maintains a large array of
-//   probabilities correllating to each possible takeoff-angle, and the
-//   Scatterer class in particular also maintains a similar array of
-//   polarization values.  Because of this, care and consideration should
-//   be given to reducing the total number of Scatterer objects that need
-//   to be allocated.  In a model with many volume cells, giving each one
-//   its own scatterer might not be a good idea.
-//
-// ALLOCATION PROCEDURE:
-//
-//   To ameliorate this situation, this class proveds a static method
-//   called GetScattererMatchingParams(), the purpose of which is to
-//   maintain a list of allocated Scatterers, and to return a pointer to
-//   an existing Scatterer if one that sufficiently matches the requested
-//   parameters already exists. Otherwise, it constructs and records a new
-//   scatterer and returns a pointer to that one.  The model-building code
-//   should use this member rather than the 'new' keyword to link volume
-//   cells to Scatterers.
-//
-// CACHEING PROCEDURE:
-//
-//   To further ameliorate the memory demands of the scattering class,
-//   the class will maintain the ability to flush the Probability
-//   arrays if the net memory demands become too large.  Each
-//   scattering object will keep a use-count so that more frequently
-//   used Probability arrays can be preferentially kept compared to
-//   less frequently used arrays.  In essence, the most frequently
-//   used arrays will be kept in a cache, whereas the less frequently
-//   used arrays will be re-generated as needed.
-//
+///@brief
+///
+///   This class represents "Scatterers," as treated theoretically in the
+///   manner described by Sato and Fehler.  The Scatterer object derives
+///   from, and thus is a kind of, the PhononSource object.  Ie, the
+///   Scatterer object is a "source" of scattered phonons.
+///
+/// ## MEMORY FOOTPRINT
+///
+///   This class, like any class derived from PhononSource, could be
+///   considered somewhat "heavy".  It maintains a large array of
+///   probabilities correllating to each possible takeoff-angle, and the
+///   Scatterer class in particular also maintains a similar array of
+///   polarization values.  Because of this, care and consideration should
+///   be given to reducing the total number of Scatterer objects that need
+///   to be allocated.  In a model with many volume cells, giving each one
+///   its own scatterer might not be a good idea.
+///
+/// ## ALLOCATION PROCEDURE
+///
+///   To ameliorate this situation, this class proveds a static method
+///   called GetScattererMatchingParams(), the purpose of which is to
+///   maintain a list of allocated Scatterers, and to return a pointer to
+///   an existing Scatterer if one that sufficiently matches the requested
+///   parameters already exists. Otherwise, it constructs and records a new
+///   scatterer and returns a pointer to that one.  The model-building code
+///   should use this member rather than the 'new' keyword to link volume
+///   cells to Scatterers.
+///
+/// ## CACHEING PROCEDURE
+///
+///   To further ameliorate the memory demands of the scattering class,
+///   the class will maintain the ability to flush the Probability
+///   arrays if the net memory demands become too large.  Each
+///   scattering object will keep a use-count so that more frequently
+///   used Probability arrays can be preferentially kept compared to
+///   less frequently used arrays.  In essence, the most frequently
+///   used arrays will be kept in a cache, whereas the less frequently
+///   used arrays will be re-generated as needed.
+///
 class Scatterer : public PhononSource {
 protected:
 

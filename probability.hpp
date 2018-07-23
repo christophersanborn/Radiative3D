@@ -19,57 +19,65 @@
 // *** CLASSES:
 //
 
-//////
-// CLASS:   ProbDist
-//
-//   Encapsulates a probability distribution, or an array of
-//   non-negative numbers used to establish the relative probability
-//   of a set of discrete, indexed elements.  Provides also a set of
-//   methods useful for randomly selecting an index from the set.
-//
-//   STORAGE: Numerical probabilities are stored one of two different
-//   ways, with a boolean member encoding the storage method.  The
-//   class will of its own accord switch between the storage methods
-//   depending on which representation suits a desired action.  The
-//   two representations are (1) differential and (2) accumulated, aka
-//   integrated.  If the representation is differential, then the
-//   elements of the array contain the relative probility of occurence
-//   of the element.  If the representation is integrated, then the
-//   elements of the array contain the cumulative sum of relative
-//   probability as the array index increases.  The differential
-//   representation is typically used for population the distribution,
-//   and the integrated representation is used for randomly selecting
-//   an index (since the random chooser requires this form).  Usually,
-//   the ProbDist object begins life in differential form and then
-//   switches to integral form when the first method that requires
-//   that form is called.
-//
-//   NORMALIZATION: The numerical values stored in the arrays are NOT
-//   normalized, meaning (equivalently) that the sum of the
-//   differential values, and the final integrated value, are not
-//   necessarily unitary. (Ie, might not sum to 1).  This is intended
-//   design, and the implication is that when code-users set
-//   individual probability elements, they are setting RELATIVE
-//   probability weights, and not necessarily absolute (normalized)
-//   probabilities. This means the distribution will have some
-//   "magnitude," and that that magnitude will be accessible to the
-//   user as it may presumably be of some use to the user.  The
-//   chooser methods, which select an element index at random, will
-//   scale appropriately and function as expected regardless of this
-//   magnitude.
-//
-//   TERMINOLOGY: "[Relative] Probability Weight" will refer to the
-//   un-normalized probability of a particular single element.
-//   "Differential Probability" will refer to the normalized
-//   probability of a particular single element.  The Probability
-//   Weights (PW) and the Differential Probabilities (DP) stand in the
-//   relation PW = Magnitude * DP.  "Cumulative Probability" will
-//   refer to the sum of the Probability Weight of a particular
-//   element and all elements with lower indices than the particular
-//   element.  Cumulative Probabilities are NOT normalized.  There is
-//   at present no adopted terminology for normalized cumulative
-//   probability as there is at present no use case for it.
-//
+///////
+/// @class ProbDist
+///
+/// @brief
+///
+///   The ProbDist class encapsulates a probability distribution, taken
+///   as an array of non-negative numbers used to establish the relative
+///   probability of a set of discrete, indexed elements.  The class
+///   also provides a set of methods useful for randomly selecting an
+///   index from the set.
+///
+/// @detail
+///
+///   ## STORAGE
+///
+///   Numerical probabilities are stored one of two different ways, with a
+///   boolean member encoding the storage method.  The class will of its
+///   own accord switch between the storage methods depending on which
+///   representation suits a desired action.  The two representations are
+///   (1) differential and (2) accumulated, aka integrated.  If the
+///   representation is differential, then the elements of the array
+///   contain the relative probility of occurence of the element.  If the
+///   representation is integrated, then the elements of the array contain
+///   the cumulative sum of relative probability as the array index
+///   increases.  The differential representation is typically used for
+///   population the distribution, and the integrated representation is
+///   used for randomly selecting an index (since the random chooser
+///   requires this form).  Usually, the ProbDist object begins life in
+///   differential form and then switches to integral form when the first
+///   method that requires that form is called.
+///
+///   ## NORMALIZATION
+///
+///   The numerical values stored in the arrays are NOT normalized,
+///   meaning (equivalently) that the sum of the differential values, and
+///   the final integrated value, are not necessarily unitary. (Ie, might
+///   not sum to 1).  This is intended design, and the implication is that
+///   when code-users set individual probability elements, they are
+///   setting RELATIVE probability weights, and not necessarily absolute
+///   (normalized) probabilities. This means the distribution will have
+///   some "magnitude," and that that magnitude will be accessible to the
+///   user as it may presumably be of some use to the user.  The chooser
+///   methods, which select an element index at random, will scale
+///   appropriately and function as expected regardless of this magnitude.
+///
+///   ## TERMINOLOGY
+///
+///   "[Relative] Probability Weight" will refer to the un-normalized
+///   probability of a particular single element.  "Differential
+///   Probability" will refer to the normalized probability of a
+///   particular single element.  The Probability Weights (PW) and the
+///   Differential Probabilities (DP) stand in the relation 
+///   PW = Magnitude * DP.  "Cumulative Probability" will refer to the sum
+///   of the Probability Weight of a particular element and all elements
+///   with lower indices than the particular element.  Cumulative
+///   Probabilities are NOT normalized.  There is at present no adopted
+///   terminology for normalized cumulative probability as there is at
+///   present no use case for it.
+///
 class ProbDist {
 protected:
 
