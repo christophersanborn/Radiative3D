@@ -32,6 +32,7 @@ MODIDX=40  # HALFSPACE        # Model Index: Selects from custom coded models.
 
 event=eq        # 'eq' or 'expl' - See case statement below for choices
 EQISOFRAC=0.0   # Iso fraction for EQ event (choose from range [-1.0, 1.0])
+                # (Or choose as Iso Angle in range [-90, -1), (1, 90].)
 
 ##
 ##  Epicenter and Station Locations

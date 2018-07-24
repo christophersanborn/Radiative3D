@@ -7,10 +7,15 @@
 #  Note: Can't handle spaces in seis file name.  I think spaces in
 #  directory names are OK if properly quoted.
 #
-seispattern='seis_???.octv'  # Breaks on spaces. Can't figure out how
-                             # to make spaces work with the globbing
-                             # below.
+seispattern='seisfiles/seis_???.octv'  # Breaks on spaces. Can't figure out how
+                                       # to make spaces work with the globbing
+                                       # below.
+parampattern='out_mparams.octv' # Combine.m also works for parameter file,
+                                # e.g. to compute summed phonon count.
+
+# Take a couple guesses at location of combine.m
 COMB_M="$(dirname "${BASH_SOURCE[0]}")"/../vis/seisplot/combine.m
+[ -f "$COMB_M" ] || COMB_M="$(dirname "${BASH_SOURCE[0]}")"/combine.m
 
 print_usage(){
     echo "  Usage:"
@@ -20,7 +25,7 @@ print_usage(){
     echo "  by combining multiple smaller-count runs."
 }
 
-if [ $# -ne 3 ]; then 
+if [ $# -ne 3 ]; then
     echo "error: wrong number of arguments."
     print_usage;
     exit
@@ -28,9 +33,13 @@ elif [ ! -d "$1" ] || [ ! -d "$2" ]; then
     echo "error: dir1 and dir2 must be directories."
     print_usage;
     exit
-elif [ -e "$3" ]; then 
+elif [ -e "$3" ]; then
     echo "error: outdir must not exist."
     print_usage;
+    exit
+fi
+if [ ! -f "$COMB_M" ]; then
+    echo "error: can't find combine.m"
     exit
 fi
 
@@ -38,7 +47,7 @@ fi
 dir1="$1"
 dir2="$2"
 odir="$3"
-mkdir -p "$odir"
+mkdir -p "$odir/seisfiles"
 
 # Combo Log:
 if [ -f "$dir1/combolog" ]; then
@@ -69,16 +78,17 @@ else
 fi
 
 # Combine:
-for file1 in "$dir1"/$seispattern; do
-    bn=`basename $file1`
+for file1 in "$dir1"/$seispattern "$dir1"/$parampattern; do
+    #bn=`basename $file1` # doesn't work if file is in subdirectory
+    bn="${file1#$dir1}"
     file2="$dir2"/"$bn"
     ofile="$odir"/"$bn"
     if [ ! -f "$file2" ]; then
         echo "warning: files missing in dir2; skipping $bn."
         continue
     fi
-    echo "Combining: $file1 and $file2..."
+    #echo "Combining: $file1 and $file2..."
     echo "combine(\"$file1\", \"$file2\", \"$ofile\")" \
-        | octave -qf -p "`dirname $COMB_M`"
+        | octave -qfW -p "`dirname $COMB_M`"
 
 done

@@ -147,6 +147,7 @@ MODIDX=40  # HALFSPACE        # Model Index: Selects from custom coded models.
 
 event=eq        # 'eq' or 'expl' - See case statement below for choices
 EQISOFRAC=0.0   # Iso fraction for EQ event (choose from range [-1.0, 1.0])
+                # (Or choose as Iso Angle in range [-90, -1), (1, 90].)
 
 ##
 ##  Epicenter and Station Locations
@@ -618,8 +619,9 @@ produce_lapsecurves() {  # $1:     filename tag (eg station code if relevant)
     print("LapseTime-$1-$axestxt.png","-r200");
 
     # Now plot the R1 R2 data:
-    fehlerR1R2plot(R1R2data);
-    #axis([0.5 1.4 0.1 0.6]);
+    fehlerR1R2plot(R1R2data, [7 4.5], true);
+    #axis([-1.5 4 -0.5 2.5]);
+    set(get(gca(),"title"),"string","R_2 vs. R_1 in XXXXX Model");
     print("tmp-FehlerR1R2-$1-$axestxt.pdf");
 
     # Now plot QsQi for reference: (Trick the R1R2 plot into plotting

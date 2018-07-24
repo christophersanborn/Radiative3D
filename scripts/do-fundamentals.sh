@@ -182,6 +182,7 @@ function CreateBatchDirectory {
     cp vis/scattervid/*.m "$revdir"/        #      ''
     cp vis/scattervid/preprocess.sh "$revdir"/ #   ''
     cp scripts/do-fundamentals.sh "$revdir"/   #   ''
+    cp scripts/combineresults.sh "$revdir"/ #      ''
     cp scripts/wikify.sh "$revdir"/         #      ''
     ln -sr "$combodir" "$sumfigdir/datasrc"
     ln -sr "$revdir"/*.m "$sumfigdir"/

@@ -5,6 +5,9 @@
 # conditions, to produce an aggregate seis file with a higher phonon
 # count.
 #
+# Also works to combine out_mparams.octv file to produce one
+# representing the correct summed phonon count.
+#
 function combine(sfn1, # seis filename 1
                  sfn2, # seis filename 2
                  osfn  # output seis filename
@@ -20,9 +23,14 @@ function combine(sfn1, # seis filename 1
   # TODO: Check for compatibility between Location parameters, etc.
   # to confirm that these files really should be combined
 
-  SEIS.TraceXYZ = S1.TraceXYZ + S2.TraceXYZ;
-  SEIS.TracePS = S1.TracePS + S2.TracePS;
-  SEIS.CountPS = S1.CountPS + S2.CountPS;
+  if (isfield(S1,"TraceXYZ"))
+    SEIS.TraceXYZ = S1.TraceXYZ + S2.TraceXYZ;
+    SEIS.TracePS = S1.TracePS + S2.TracePS;
+    SEIS.CountPS = S1.CountPS + S2.CountPS;
+  end
+  if (isfield(S1,"NumPhonons"))
+    SEIS.NumPhonons = S1.NumPhonons + S2.NumPhonons;
+  end
 
   save("-text", osfn, "SEIS");
 
