@@ -10,18 +10,23 @@
 # set(gcf(),"visible", "on") in order to see it.
 #
 
-function normcurve_compare(NC1,         # Either a NORMCURVE struct or a cell
-                                        #  array of NORMCURVE structs
-                           NC2,         # Either a NORMCURVE struct or [],
-                                        # if NC1 is a cell array.
-                           REF,         # NORMCURVE for Reference curve
-                           clipindex=20,  # Ignore indices before this when
-                                          # computing view window y-max.
-                           ROI={},      # Region of Interest struct or
-                                        # array of structs
-                           ViewY = [0 0]  # Override Y bounds of view window
-                                          # if non-zero
-                          )
+function normcurve_compare(
+                NC1,              # Either a NORMCURVE struct or a cell array
+                                  # of NORMCURVE structs
+                NC2,              # Either a NORMCURVE struct or [], if NC1 is
+                                  # a cell array.
+                REF,              # NORMCURVE for Reference curve
+                clipindex=20,     # Ignore indices before this when computing
+                                  # view window y-max.
+                ROI={},           # Region of Interest struct or array of
+                                  # structs
+                ViewY = [0 0],       # Override Y bounds of view window
+                                     # (if non-zero)
+                PaperWH = [6.0 4.5], # Paper width, height
+
+                RangePower = 0    # Scale energy by r^q where q is RangePower
+                                  # Can be used to remove geometric spreading.
+           )
 
   # Default Color sequence:
   Colors{1} = [0.1 0.1 0.7];  # Blue
@@ -31,19 +36,20 @@ function normcurve_compare(NC1,         # Either a NORMCURVE struct or a cell
   Colors{5} = [0.7 0.1 0.1];  # Red (Reference color)
 
   # Domain:
-  X = linspace(REF.RangeWindow(1), REF.RangeWindow(2), 
+  X = linspace(REF.RangeWindow(1), REF.RangeWindow(2),
                length(REF.SummedEnergy));
 
   # Series:
   R1 = REF.SummedEnergy;
   R1txt="";
   if (isfield(REF,"Label")); R1txt = REF.Label; end
+  if (!isfield(REF,"Visible")); REF.Visible = true; end
   # Unpack args into a cell array of Y-series.
   if (iscell(NC1))
     for i=1:length(NC1)
       Y{i} = NC1{i}.SummedEnergy;
       Ytxt{i} = "";
-      Ycolor{i} = Colors{mod(i,length(Colors))};
+      Ycolor{i} = Colors{mod(i-1,length(Colors))+1};
       Ylinestyle{i} = "-";
       if (isfield(NC1{i},"Label")); Ytxt{i} = NC1{i}.Label; end
       if (isfield(NC1{i},"ColorIndex")); Ycolor{i} = Colors{NC1{i}.ColorIndex}; end
@@ -64,9 +70,11 @@ function normcurve_compare(NC1,         # Either a NORMCURVE struct or a cell
     if (isfield(NC2,"LineStyle")); Ylinestyle{2} = NC2.LineStyle; end
   end
 
-  # Normalize on end-value of Y{1}, (Assumes Y{1} represents the
-  # "baseline" condition, so all others will compare with that.)
-  E_baseline = Y{1}(end);
+  # Normalize on end-value of Y{1}, (Assumes Y{1} represents the "baseline"
+  # condition, so all others will compare with that), and scale enery by
+  # r^q, e.g. to remove effects of geometric spreading. (We pick unity as
+  # the end point so that Y{1}(end) will still be 1.0.)
+  E_baseline = Y{1}(end) * (X(end) ./ X').^RangePower;
   R1 = R1 ./ E_baseline;
   for i=1:length(Y)
       Y{i} = Y{i} ./ E_baseline;
@@ -85,30 +93,36 @@ function normcurve_compare(NC1,         # Either a NORMCURVE struct or a cell
     printf("Overriding view wndw [xmin xmax ymin ymax] = [%g %g %g %g] %s\n",
            viewwindow, "at user's request.");
   end
+  viewwindow += [1 0 0 0]; # (Prevent 0 from appearing on axis.)
+                           # ((Mild aesthetic preference...))
 
   ##
   ## ...And PLOT!
   ##
 
-  txtsize = 6.5;                # Axes ticktext and labels
-  titlesize = 8.0;              # Title text slightly bigger
-  legtxtsize = 5.0;             # And legend text slightly smaller
-  serieslinewidth = 3.375;      # For the E-curve series
-  thinlinewidth = 1.375;        # For the reference curve
-  
-  figinit(4.0, 3.0,                 # Clear and initialize 
+  txtsize = 9.0;                # Axes ticktext and labels
+  titlesize = 9.0;              # Title text slightly bigger
+  legtxtsize = 10.0;            # And legend text slightly smaller
+  serieslinewidth = 8;          # For the E-curve series
+  thinlinewidth = 2.0;          # For the reference curve
+
+  figinit(PaperWH(1), PaperWH(2),   # Clear and initialize 
       "paperunits", "inches",       # a 4.0" x 3.0" figure
       "visible", "off");            #
   axes("nextplot", "add",           # Create and initialize an axes object
-       "fontweight", "bold", "fontsize", txtsize, "linewidth", 0.25);
+       "fontweight", "bold", "fontsize", txtsize, "linewidth", 1.0);
 
   hNoLine = semilogy(1,1,"color", "white", "linestyle", ":"); # Create a gap
-  hR1 = semilogy(X, R1, "color", Colors{end},                 # Reference curve
-                 "linewidth", thinlinewidth, "linestyle", "--");
-
   legend(hNoLine," ");  # Legend Null-Entry; Keeps other entries out of corner
-  if (length(R1txt)>0)
-    legend(hR1, R1txt);
+
+  printf("  Ref curve: E(x)=c*x^q; c=%g, q=%g\n",...
+                    REF.PLCQ_Summed(1),REF.PLCQ_Summed(2));
+  if (REF.Visible)  # Reference curve
+    hR1 = semilogy(X, R1, "color", Colors{end},
+                      "linewidth", thinlinewidth, "linestyle", "--");
+    if (length(R1txt)>0)
+      legend(hR1, R1txt);
+    end
   end
 
   for i=1:length(Y)             # For each e-curve series:
@@ -138,8 +152,8 @@ function normcurve_compare(NC1,         # Either a NORMCURVE struct or a cell
             #"ticklength", [0.015 0.025]  # 50% bigger tick size
      );
 
-  hlgnd = findobj(gcf(),"type","axes","Tag","legend");
-  set(hlgnd, "fontweight", "bold", "FontSize", legtxtsize);   # Set legend text size
+  hlgnd = findobj(gcf(),"type","axes","Tag","legend");  # Set legend text size
+  set(hlgnd, "fontweight", "normal", "FontSize", legtxtsize, "FontName", "Mono");
 
 end
 

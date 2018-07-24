@@ -7,12 +7,25 @@
 ##  The viewport is computed to include the source as well as two
 ##  destination locations.
 ##
-
-function scattervid_above(
+##  If called with non-empty SelectedIdx, can be used to print
+##  individual frames as pdf's, instead of producing a whole movie.
+##
+##  Return values are handles to the scatter point series (of the most
+##  recent frame).  Can be used to tweak how they display (when used
+##  to produce a single frame).
+##
+function [hP hS] = scattervid_above(
              AnnoStruct = 0,  # Annotation struct (-1 signals lop nor defaults,
                               #  0 signals 'no annotations', otherwise see
                               #  ValidateAnnoStruct() for struct format.)
-             ArgStruct = struct()       # Additional optional args
+             ArgStruct = struct(),  # Additional optional args
+             PaperWH = [6],         # [Width, Height]. Height is assumed from
+                                    # aspect ratio if absent.
+             SelectedIdx = []       # If empty we produce movie. If a list, then
+                                    # no movie but we print individual frames as
+                                    # pdfs. If length one we plot but do not
+                                    # print (assumed top level will tweak titles
+                                    # and such before print).
            )
            # ArgStruct elements and defaults:
            #  duration,  - Simtime to plot (lesser of this or PhononTTL)
@@ -35,7 +48,7 @@ function scattervid_above(
   LocText = ProvideDefault(ArgStruct, "loctext", []);
   pixwidth = ProvideDefault(ArgStruct, "pixwidth", 1000);
   aspect = ProvideDefault(ArgStruct, "aspect", 4/3);
-  
+
 
   PP = load("scatters_P");
   SS = load("scatters_S");
@@ -120,8 +133,11 @@ function scattervid_above(
   ## Setup Paper Space:
   ##
 
-  figwidth  = 6; # 
+  figwidth  = PaperWH(1);
   figheight = figwidth/aspect;
+  if (length(PaperWH>1))
+    figheight = PaperWH(2);
+  end
   paperdpi=pixwidth/figwidth;
   #fonttitle  = 9.5;             # Not actually parameterized below, 
   fontxylabel = 9.0;             # but uncomment if I want to parameterize
@@ -149,7 +165,16 @@ function scattervid_above(
   ## Make Frames:
   ##
 
-  for f_idx = (0:(NumFrames-1))
+  makemovie_b = true;                   # << Behavior flags
+  printframes_b = true;                 #
+  f_idx_range = (0:(NumFrames-1));
+  if (length(SelectedIdx)>0)
+    f_idx_range = SelectedIdx;
+    makemovie_b = false;
+    if (length(SelectedIdx)==1) printframes_b = false; end
+  end
+
+  for f_idx = f_idx_range
 
     lstP = find(P_TI==f_idx);
     lstS = find(S_TI==f_idx);
@@ -160,7 +185,7 @@ function scattervid_above(
     hold on;
     if (plotgrid==1)                          #
       baseplot_gridWCGabove(GG,RangeColors);  # Plot grid mesh as backdrop
-    end  
+    end
     if (length(SEISMETA)>0)             #
       baseplot_seismap_above(SEISMETA); # Plot seismometers (defined below)
     end
@@ -168,20 +193,29 @@ function scattervid_above(
       baseplot_gridWCGabove(GG);        # Plot grid mesh as backdrop
     end
     PlotAnnotations(AnnoStruct);        # Plot station labels and vectors
-    scatter(s_x(lstS), s_y(lstS), "b");
-    scatter(p_x(lstP), p_y(lstP), "r");
+    hS = scatter(s_x(lstS), s_y(lstS), "b");
+    hP = scatter(p_x(lstP), p_y(lstP), "r");
     title(Title);
     ylabel("Northing (km)");
     xlabel("Easting (km)");
     axis(viewwindow);
 
     text(plot_left+0.03*plot_width, plot_bot+0.97*plot_height,
-         sprintf("t = %5.2f s ",(f_idx+1)*dt),
+         sprintf("t = %5.2f s ",(f_idx+1)*dt), "tag", "TimeCode",
          "verticalalignment", "top", "horizontalalignment", "left",
          "fontsize", fontxylabel, "fontweight", "demi");  # Time label
 
-    filename = sprintf("framecache/FIG__%04d.png", f_idx);
-    print(filename, sprintf("-r%1.0f",paperdpi));
+    if (makemovie_b)
+      filename = sprintf("framecache/FIG__%04d.png", f_idx);
+      print(filename, sprintf("-r%1.0f",paperdpi));
+    else
+      set(hP,"linewidth",2.0);  ## Thicker marker pen for pdf version
+      set(hS,"linewidth",2.0);  ##
+      if (printframes_b)
+        filename = sprintf("Scatvid_Above__Frame_%04d.pdf", f_idx);
+        print(filename);
+      end
+    end
 
   endfor
 
@@ -190,12 +224,13 @@ function scattervid_above(
   ## Produce Movie:
   ##
 
-  file_cache = "framecache/FIG__%04d.png";
-  file_out   = "framecache/movie.mp4";
+  if (makemovie_b)
+    file_cache = "framecache/FIG__%04d.png";
+    file_out   = "framecache/movie.mp4";
 
-  ffmakevid(file_out, file_cache, "pixwidth", pixwidth,
-            "framerate", 10, "bitrate", 2000000); 
-
+    ffmakevid(file_out, file_cache, "pixwidth", pixwidth,
+              "framerate", 10, "bitrate", 2000000); 
+  end
 
 endfunction
 
@@ -275,11 +310,11 @@ function baseplot_seismap_above(SM)
   for idx = 1:length(SM)
       GatherAx1 = SM(idx).GatherRadius(1,2) * SM(idx).AxesX1;
       GatherAx2 = SM(idx).GatherRadius(1,2) * SM(idx).AxesX2;
-      LineColor = [0.1 0.4 0.6];
+      LineColor = [0.1 0.3 0.5];
       FillColor = [0.6 0.9 0.6];
-      LineWidth = 1;
+      LineWidth = 2.0;
       TwoAxEllipse(GatherAx1, GatherAx2, SM(idx).Location,
-                   LineWidth, FillColor, FillColor);
+                   LineWidth, 0.8*FillColor, FillColor);
       X = SM(idx).Location(1) + [-0.7*GatherAx1(1) -GatherAx1(1)];
       Y = SM(idx).Location(2) + [-0.7*GatherAx1(2) -GatherAx1(2)];
       line (X, Y, "linewidth", LineWidth,

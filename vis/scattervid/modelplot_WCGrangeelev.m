@@ -15,7 +15,12 @@ function modelplot_WCGrangeelev(
              plottitle = "Crust Model",     # Title
              mparfile = "out_mparams.octv", # MParams file
              seispattern = "",    # Glob pattern for seis files
-             seisrange = []       # Which ones to plot (eg. [160,169:10:319])
+             seisrange = [],      # Which ones to plot (eg. [160,169:10:319])
+             PaperWH = [5.0 3.75],# Paper width, height
+             wiremesh = true,     #
+             RotMat = [1 0; 0 1]  # Optionals rotation/transform matrix, e.g.
+                                  # to adjust orientation of an OCS RAW
+                                  # "Earth-curved" grid
            )
 
   GG = read_gridgeom(gridfile);
@@ -26,7 +31,7 @@ function modelplot_WCGrangeelev(
                   0.9 0.5 0.1; ];
   SEISMETA = read_seismeta(seispattern,seisrange);
 
-  figinit(5.0, 3.75,                # Initialize a 5" x 3.75" figure
+  figinit(PaperWH(1), PaperWH(2),   # Initialize figure
           "paperunits", "inches",   #
           "visible", "off");        #
 
@@ -49,8 +54,10 @@ function modelplot_WCGrangeelev(
   title(plottitle);               #
   xlabel("Range (km)");           #
 
-  baseplot_gridWCGrangeelev(GG,LayerColors);  # Model color fill
-  baseplot_gridWCGrangeelev(GG);              # Plot grid wire mesh
+  baseplot_gridWCGrangeelev(GG,LayerColors,RotMat); # Model color fill
+  if (wiremesh)
+    baseplot_gridWCGrangeelev(GG,0,RotMat);         # Plot (thicker) wire mesh
+  end
   if (length(SEISMETA)>0)
     # TODO: Plot seismometers.  Note that scattervid_p2p defines an
     # inline function baseplot_seismap_elev to plot the seismometers.

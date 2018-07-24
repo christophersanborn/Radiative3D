@@ -21,23 +21,48 @@
 ##  takes the whole azimuth and compresses into rho.  But it is
 ##  *intended* to filter by azimuth, eventually.
 ##
-function scattervid_p2p(
+##  If called with non-empty SelectedIdx, can be used to print
+##  individual frames as pdf's, instead of producing a whole movie.
+##
+##  Return values are handles to the scatter point series (of the most
+##  recent frame).  Can be used to tweak how they display (when used
+##  to produce a single frame).
+##
+function [hP hS] = scattervid_p2p(
              AnnoStruct = 0,        # Annotations struct (NOT USED YET)
-             ArgStruct = struct()   # Additional optional args
+             ArgStruct = struct(),  # Additional optional args
+             PaperWH = [20/3],      # [Width, Height]. Height is assumed from
+                                    # aspect ratio if absent.
+             SelectedIdx = []       # If empty we produce movie. If a list, then
+                                    # no movie but we print individual frames as
+                                    # pdfs. If length one we plot but do not
+                                    # print (assumed top level will tweak titles
+                                    # and such before print).
            )
            # ArgStruct elements and defaults:
            #  destination - Loc of target station or seisfile containing same
            #  gridfile   - Name of file with grid data
            #  gridcolors - Layer colors as column of RGB row-triples
+           #  pmarkprops -
+           #  smarkprops -
+           #  axesprops  -
            #  duration   - Simtime to plot (lesser of this or PhononTTL)
            #  numframes  - Number of frames in video
+           #  pixwidth   -
            #  azifilt    - Only plot scatters within +/-Azi of SRC-DEST line
            #  mparams    - Metadata like source tensor
            #  seispat    - seis-file pattern (e.g. "seis_%03d.octv")
            #  seisrange  - which ones to plot (eg. [160,169:10:319])
            #  loctext    - Source location name
+           #  titlefmt   - Title fprint string; Overrides loctext if set
            #  window     - Explicit viewport [L R T B]
            #               If set, overrides "smart" best guess
+           #  fileprefix - Prefix on frame files when individual frames requested
+           #
+           # Note on marker props: Pass this as a double-braced array. E.g.
+           # Args.pmarkprops = {{"linewidth", 2.5[, ...]}}.  Also, props are
+           # for a scatter series, not a plot line. So use "sizedata" instead
+           # of "size", and there is not "color", etc.
 
   destination = ProvideDefault(ArgStruct, "destination", [100 0 0]);
   gridfile = ProvideDefault(ArgStruct, "gridfile", "griddump.txt");
@@ -48,11 +73,16 @@ function scattervid_p2p(
   seisrange = ProvideDefault(ArgStruct, "seisrange", []);
   window = ProvideDefault(ArgStruct, "window", []);
   LocText = ProvideDefault(ArgStruct, "loctext", "(Loc)");
+  TitleFTxt = ProvideDefault(ArgStruct, "titlefmt", []);
   pixwidth = ProvideDefault(ArgStruct, "pixwidth", 1000);
   aspect = ProvideDefault(ArgStruct, "aspect", 5/3);
   LayerColors = ProvideDefault(ArgStruct, "gridcolors", []);
+  pmarkprops = ProvideDefault(ArgStruct, "pmarkprops", {});
+  smarkprops = ProvideDefault(ArgStruct, "smarkprops", {});
+  axesprops = ProvideDefault(ArgStruct, "axesprops", {});
   AziFilt = ProvideDefault(ArgStruct, "azifilt", 25); ## Not Used
-                                   
+  fileprefix = ProvideDefault(ArgStruct, "fileprefix", "");
+
   # PARAMETERS:
   if (ischar(destination))
     SEIS = load(destination);
@@ -80,7 +110,7 @@ function scattervid_p2p(
                     0.7 0.1 0.1;
                     0.9 0.5 0.1;];
   end
-  
+
   # Time Interval
   Duration = min(Duration,META.PhononTTL);
   dt = Duration/NumFrames;
@@ -95,7 +125,9 @@ function scattervid_p2p(
   end
   Title = sprintf("%s at %s; Freq = %0.3f; %g sec", 
                   EventText, LocText, META.Frequency, Duration);
-
+  if (ischar(TitleFTxt))
+    Title = sprintf(TitleFTxt, META.Frequency, Duration);
+  end
 
   # Process P arrays:
 
@@ -138,14 +170,17 @@ function scattervid_p2p(
   ## Setup Paper Space:
   ##
 
-  figwidth  = 20/3; # 6.666..., Reasonable for text size
-  figheight = figwidth/aspect;
+  figwidth  = PaperWH(1);           # (Default 6.666_, reasonable for text size)
+  figheight = figwidth/aspect;      # Height automatic,
+  if (length(PaperWH>1))            # unless explicit.
+    figheight = PaperWH(2);
+  end
   paperdpi=pixwidth/figwidth;
   #fonttitle  = 9.5;    # TODO: font sizes not parameterized yet
   fontxylabel = 9.0;
   #fontaxes = 9.0;
 
-  figinit(figwidth,figheight,       # Clear and initialize fig in 
+  figinit(figwidth,figheight,       # Clear and initialize fig in
           "paperunits", "inches",   # remote headless-safe way
           "visible", "off");        #
 
@@ -167,48 +202,83 @@ function scattervid_p2p(
   plot_width = plot_right-plot_left;
   plot_height = plot_top-plot_bot;
 
+  ##
+  ## Make Frames:
+  ##
 
-  # Plot!
-  for f_idx = (0:(NumFrames-1))
+  makemovie_b = true;                   # << Behavior flags
+  printframes_b = true;                 #
+  f_idx_range = (0:(NumFrames-1));
+  if (length(SelectedIdx)>0)
+    f_idx_range = SelectedIdx;
+    makemovie_b = false;
+    if (length(SelectedIdx)==1) printframes_b = false; end
+  end
+
+  for f_idx = f_idx_range               # LOOP over frames:
 
     lstP = find(P_TI==f_idx);
     lstS = find(S_TI==f_idx);
 
     # Plot
 
-    set(gcf(), "visible", "off");  # Initialize figure
-    clf(); hold on;                # Clear and hold
-    plot (0,0);                    # Dot at center, (prevents
-    axis(viewwindow);              # clobbering of axes command)
-    title(Title);                  # Titles and labels
-    xlabel("Range (km)");          #
+    set(gcf(), "visible", "off");       # Initialize figure
+    clf(); hold on;                     # Clear and hold
+    plot (0,0);                         # Dot at center, (prevents
+    axis(viewwindow);                   # clobbering of axes command)
+    title(Title);                       # Titles and labels
+    xlabel("Range (km)");               #
 
     if (plotgrid==1)
       baseplot_gridWCGrangeelev(GG,LayerColors);  # Model color fill
       baseplot_gridWCGrangeelev(GG);              # Plot grid wire mesh
     end
     if (length(SEISMETA)>0)
-      baseplot_seismap_elev(SEISMETA);  # Plot seismometers (defined below)
+      baseplot_seismap_elev(SEISMETA);            # Plot seismometers (defined below)
     end
 
-    scatter(s_x(lstS), s_y(lstS), "b");   # Plot Phonons
-    scatter(p_x(lstP), p_y(lstP), "r");   #
-
-    text(plot_right, plot_bot, sprintf("t = %5.2f s ",(f_idx+1)*dt),
+    hS2 = scatter(s_x(lstS), s_y(lstS), 8, "none"); # Plot Phonons: shadow
+    hS = scatter(s_x(lstS), s_y(lstS), 4, "none");  #               marker
+    hP2 = scatter(p_x(lstP), p_y(lstP), 8, "none"); # (TODO: would 'plot' be
+    hP = scatter(p_x(lstP), p_y(lstP), 4, "none");  # (better than 'scatter'?)
+    set(hP2,"linewidth",1.0,"markerfacecolor",[0.4 0 0],"marker","s");
+    set(hP,"linewidth",1.0,"markerfacecolor",[1.0 0 0],"marker","s");
+    set(hS2,"linewidth",1.0,"markerfacecolor",[0 0 0.4],"marker","s");
+    set(hS,"linewidth",1.0,"markerfacecolor",[0 0 1.0],"marker","s");
+                                                    # Sqr mrkr reduces filesize
+    text(plot_right, plot_bot,
+              sprintf("t = %5.2f s ",(f_idx+1)*dt), "tag", "TimeCode",
               "verticalalignment", "bottom", "horizontalalignment", "right",
               "fontsize", fontxylabel, "fontweight", "demi");  # Time label
 
-    filename = sprintf("framecache/FIG__%04d.png", f_idx);
-    print(filename, sprintf("-r%1.0f",paperdpi));
+    set(hP2, pmarkprops(1:2:end), pmarkprops(2:2:end));
+    set(hP, pmarkprops(1:2:end), pmarkprops(2:2:end));
+    set(hS2, smarkprops(1:2:end), smarkprops(2:2:end));
+    set(hS, smarkprops(1:2:end), smarkprops(2:2:end));
+    set(gca(), axesprops(1:2:end), axesprops(2:2:end));
+    if (makemovie_b)
+      filename = sprintf("framecache/FIG__%04d.png", f_idx);
+      print(filename, sprintf("-r%1.0f",paperdpi));
+    else
+      if (printframes_b)
+        filename = sprintf("%sScatvid_P2P__Frame_%04d.pdf", fileprefix, f_idx);
+        print(filename);
+      end
+    end
 
   endfor
 
-  file_cache = "framecache/FIG__%04d.png";
-  file_out   = "framecache/movie.mp4";
+  ##
+  ## Produce Movie:
+  ##
 
-  ffmakevid(file_out, file_cache, "pixwidth", pixwidth,
-            "framerate", 10, "bitrate", 2000000); 
+  if (makemovie_b)
+    file_cache = "framecache/FIG__%04d.png";
+    file_out   = "framecache/movie.mp4";
 
+    ffmakevid(file_out, file_cache, "pixwidth", pixwidth,
+              "framerate", 10, "bitrate", 2000000); 
+  end
 
 endfunction
 

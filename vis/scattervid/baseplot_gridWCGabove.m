@@ -36,7 +36,7 @@ function baseplot_gridWCGabove(
         Color = ColorMap(min(ir,size(ColorMap,1)),:);
         fill(X,Y,Color);
       else
-        line (X,Y,"linewidth",0.5,"color",[0,0,0]);
+        line (X,Y,"linewidth",1.5,"color",[0,0,0]);
       end
     end
   end
