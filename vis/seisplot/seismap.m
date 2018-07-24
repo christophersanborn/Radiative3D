@@ -37,9 +37,15 @@ function seismap(seisglob="seis_*.octv",
   # Plot range circles:
   rangecirccolor=[0.8,0.8,0.8];
   rangecircwidth=1.5;
-  for R = (1:9)*100
+  xymax = max(abs(window));
+  [ymax,iymax] = max(abs(window(3:4)));
+  radiiskip = 10^floor(log10(0.49*ymax));   # Skip size appropriate to range
+  if (ymax/radiiskip>10) radiiskip*=2; end  # No more than 10 skips
+  if (iymax==2) skipdirection = 1; else skipdirection = -1; end
+  for R = (1:floor(1.4142*xymax/radiiskip))*radiiskip
     drawcirc(ELocX,ELocY,R,rangecircwidth,rangecirccolor);
-    h=text(ELocX,ELocY+R,sprintf("%g km",R),"horizontalalignment","left",
+    h=text(ELocX,ELocY+skipdirection*R,sprintf("%g km",R),
+           "horizontalalignment","left",
            "verticalalignment","bottom", "color", rangecirccolor,
            "clipping", "on");  # clipping on apparently broken...
     if ((ELocY+R)>window(4))
@@ -83,7 +89,7 @@ function seismap(seisglob="seis_*.octv",
     if (length(j)==1)
        Ltxt = labels(j);
        text(SLocX,SLocY+max(SRadP,SRadS),Ltxt,"horizontalalignment","center",
-            "verticalalignment","bottom", "fontweight", "bold");
+            "verticalalignment","bottom", "fontweight", "bold", "clipping", "on");
     end
   end
   if (length(labels)>length(labelthese))

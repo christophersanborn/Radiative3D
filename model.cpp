@@ -346,10 +346,18 @@ Model::Model(const ModelParams & par) {
   } // END switch (par.GridSource)
   ///
   std::cout << "|\n";   // Tell user what we did:
-  std::cout << "|  " << std::setw(6) << mGrid.N() 
+  std::cout << "|  " << std::setw(6) << mGrid.N()
             << "  Grid nodes initialized.  Arrangement: "
             << mGrid.Ni() << " x " << mGrid.Nj() << " x "
-            << mGrid.Nk() << "\n";
+            << mGrid.Nk() << "\n|\n";
+  if (!ECS.IsEarthFlattening() && !ECS.CurvedCoords()) std::cout
+            << "|  Coordinate mapping is rectilinear.\n";
+  if (ECS.IsEarthFlattening()) std::cout
+            << "|  An Earth-flattening transformation was used with"
+            << " Earth Radius = " << ECS.GetEarthRadius() << "\n";
+  if (ECS.CurvedCoords()) std::cout
+            << "|  Level planes were curved with Earth Radius = "
+            << ECS.GetEarthRadius() << "\n";
   std::cout << "|\n";
 
 

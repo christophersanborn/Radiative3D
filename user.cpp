@@ -28,12 +28,14 @@
 void LopNorCylinder(Grid &, const std::vector<Real> &);
 void LopNorCylinderMoho(Grid &, const std::vector<Real> &);
 void LopNorCylinderMoho2(Grid &, const std::vector<Real> &);
+void HalfspaceCylinder(Grid &, const std::vector<Real> &);
 void ScatParamsStudy(Grid &, const std::vector<Real> &);
 void CrustPinchWCG(Grid &, const std::vector<Real> &);
 void CrustUpthrustWCG(Grid &, const std::vector<Real> &);
 #include "user_LopNorCyl_inc.cpp"
 #include "user_LopNorCylMoho_inc.cpp"
 #include "user_LopNorCylMoho2_inc.cpp"
+#include "user_Halfspace_inc.cpp"
 #include "user_NSCP_inc.cpp"
 #include "user_Upthrust_inc.cpp"
 
@@ -90,6 +92,11 @@ void Grid::ConstructGridManual(int Selection, const std::vector<Real> &args) {
   case 8:
     std::cout << LineHead << "Selected Crust Upthrust Model (Tetra WCG).\n";
     CrustUpthrustWCG(*this, args);
+    break;
+
+  case 40:
+    std::cout << LineHead << "Selected Halfspace Model (Layered).\n";
+    HalfspaceCylinder(*this, args);
     break;
 
   case 128:

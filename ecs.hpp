@@ -272,9 +272,11 @@ public:
   // ::: Get-Methods  (EarthCoords class) :::
   // ::::::::::::::::::::::::::::::::::::::::
 
+  bool IsEarthFlattening() const {return mFlatten;}
   bool CurvedCoords() const {           // Returns true if selected mapping
     return (mMapCode == RAE_CURVED);    // involves curvature.
   }                                     //
+  Real GetEarthRadius() const {return mRadE;}
 
 
   // ::::::::::::::::::::::::::::::::::::::::::::
