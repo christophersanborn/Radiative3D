@@ -312,26 +312,26 @@ produce_lapsecurves() {  # $1:     filename tag (eg station code if relevant)
   geospread=2
   LT1="${4:-0}"
   LT2="${5:-30}"
+  QIntS="$(grep -A 10 '#  R3D_GRID:' stdout.txt | grep '^  0   0   0' | awk '{ print $11 }')"
+  QScatS="$(grep -A 6 '#  BEGIN SCATTERER DUMP:' stdout.txt | grep -m 1 '^ ' | awk '{ print $5 * $9 }')"
+  echo "$QScatS $QIntS" > QScatIntS.txt
   octave -qf <<EOF
 
     AR1 = array("seisfiles/seis_%03d.octv",$2,$3);
-    AR2 = AR3 = AR4 = false; nAR = 1;
-    if (exist("other","dir")==7)
-      AR2 = array("other/seisfiles/seis_%03d.octv",$2,$3);
-      nAR += 1;
+    ARs = {AR1}; nAR = 1;
+    QScatInt = {load("QScatIntS.txt")};
+    otherdirs = {"other"};
+    for (i=1:25); otherdirs{end+1} = sprintf("other%d",i); end
+    for (i=1:length(otherdirs))
+      if (exist(otherdirs{i},"dir")==7)
+        filepattern = sprintf("%s%s",otherdirs{i},"/seisfiles/seis_%03d.octv");
+        AR = array(filepattern,$2,$3);
+        ARs{end+1} = AR; nAR += 1;
+        QScatInt{end+1} = load(sprintf("%s/QScatIntS.txt",otherdirs{i}));
+      end
     end
-    if (exist("other2","dir")==7)
-      AR3 = array("other2/seisfiles/seis_%03d.octv",$2,$3);
-      nAR += 1;
-    end
-    if (exist("other3","dir")==7)
-      AR4 = array("other3/seisfiles/seis_%03d.octv",$2,$3);
-      nAR += 1;
-    end
-    ARs = {AR1,AR2,AR3,AR4};
-    QScatInt = $QScatInt;               # TEMP need way get from source
-    LineWidths = {7, 5, 3, 1};
-    LineStyles = {"-", "-.", ":", "-"};
+    LineWidths = {7,6,5,4,3,2,1};
+    LineStyles = {"-", "-.", ":"};
 
     LgEdge = $phaseedge;  # [v, t0]
     LWindow1 = $LT1 + [0 15];
@@ -340,12 +340,15 @@ produce_lapsecurves() {  # $1:     filename tag (eg station code if relevant)
     lapsetimebaseplot();
     global linestyle;
 
+    R1R2data = [];
     for i=1:nAR
-      linestyle.style = LineStyles{i};
-      linestyle.width = LineWidths{i};
-      lapsetimecurve(ARs{i}, QScatInt{i}, $axesxyz, $geospread,
-                                          LgEdge, LWindow1, LWindow2);
+      linestyle.style = LineStyles{mod(i-1,length(LineStyles))+1};
+      linestyle.width = LineWidths{mod(i-1,length(LineWidths))+1};
+      data = lapsetimecurve(ARs{i}, QScatInt{i}, $axesxyz,
+                            $geospread, LgEdge, LWindow1, LWindow2);
+      R1R2data = [R1R2data; data];
     end
+    R1R2data
 
     axis([0 250, 0.0001 10]);
     titletxt = sprintf(
@@ -360,12 +363,17 @@ produce_lapsecurves() {  # $1:     filename tag (eg station code if relevant)
     print("tmp-LapseTime-$1-$axestxt.pdf");
     print("LapseTime-$1-$axestxt.png","-r200");
 
+    # Now plot the R1 R2 data:
+    fehlerR1R2plot(R1R2data);
+    print("tmp-FehlerR1R2-$1-$axestxt.pdf");
+
 EOF
   pdfcroptobb "tmp-LapseTime-$1-$axestxt.pdf" \
               "LapseTime-$1-$axestxt.pdf"  # Crop to bb
+  pdfcroptobb "tmp-FehlerR1R2-$1-$axestxt.pdf" \
+              "FehlerR1R2-$1-$axestxt.pdf"  # Crop to bb
 }
 # Lapse Time curves:
-QScatInt='{[2058 1000], [1234 1235]}'   # TEMP
 produce_lapsecurves LGX 48 95 0 30      # Lg Lapse Time curve at LGX
 
 ## (Do not edit/remove this comment block.)
