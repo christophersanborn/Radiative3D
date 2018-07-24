@@ -20,8 +20,10 @@ function fehlerR1R2plot(
   axes("fontsize", 9,               # Create and initialize axes obj
        "linewidth", 0.5, "nextplot", "add");
 
-  QSColors = {[.85 0 0], [0 .75 0], [0 0 .85]};
-  QIColors = {[1 1 1]*.65, [1 1 1]*.35, [1 1 1]*0};
+  QSColors = {[.8 0 .6], [.85 0 0], [0.8 0.4 0], [.82 .77 0], [0 .65 0],...
+              [0 0.45 0.65], [.1 .0 .85], [.65 0 .75]};
+  QIColors = {[1 1 1]*.75, [1 1 1]*.65, [1 1 1]*.55, [1 1 1]*.45,...
+              [1 1 1]*.35, [1 1 1]*.20,[1 1 1]*0};
 
   # Segregate on QS, Sort on QI
   Colors = QSColors;
@@ -54,24 +56,22 @@ function fehlerR1R2plot(
     h = plot(R1set,R2set, "color", Colors{mod(i-1,length(Colors))+1},
                           "linewidth", 2.0
         );
-    ltext = sprintf("Q_{Int} =\t%4g", uniqueQI(i));
+    ltext = sprintf("Q_{Int} = %4g", uniqueQI(i));
     hl = legend([h],ltext, "location", "northwest");
     set(hl, "fontsize", 7, "fontname", "Mono");
     legend("boxoff");
   end
-
-  get(legend())
 
   # Data Labels
   for (i=1:length(R1))
     text(R1(i), R2(i), sprintf("%d",i),
          "horizontalalignment", "right",
          "verticalalignment", "bottom",
-         "fontname", "Courier", "fontsize", 8);
-    text(R1(i), R2(i), sprintf("%.2f",B0(i)),
+         "fontname", "Courier", "fontsize", 3);
+    text(R1(i), R2(i), sprintf("",B0(i)),
          "horizontalalignment", "left",
          "verticalalignment", "top",
-         "fontname", "Times", "fontsize", 6);
+         "fontname", "Times", "fontsize", 4);
   end
 
   # Labels and Titles
