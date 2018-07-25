@@ -1,5 +1,5 @@
 ### NAME
-**Radiative3D** - A program that uses **radiative transport** theory to model seismic energy propagation in 3D Earth models.
+Radiative3D - A program that uses radiative transport theory to model seismic energy propagation in 3D Earth models.
 
 ### SYNOPSIS
 When run directly, Radiative3D is invoked as follows:
@@ -10,24 +10,23 @@ Often, however, Radiative3D runs are scripted, and a few example "do-scripts" ar
 
     ./do-crustpinch.sh [RUN_ID]
 
-where ''<tt>RUN_ID</tt>'' is an optional alphanumeric identifier that will become part of the name of the output directory. 
+where _`RUN_ID`_ is an optional alphanumeric identifier that will become part of the name of the output directory. 
 
 ### DESCRIPTION
-[[Radiative3D]] models energy propagation through both deterministic and statistical structure which are specified and characterized on a gridded dataset referred to as the "Earth model".  Arguments to '''Radiative3D''' control various aspects of the operation, including specification of the Earth model, specification of the broader "physics model", and the selection and control of various inputs and outputs.
+Radiative3D models energy propagation through both deterministic and statistical structure which are specified and characterized on a gridded dataset referred to as the "Earth model".  Arguments to Radiative3D control various aspects of the operation, including specification of the Earth model, specification of the broader "physics model", and the selection and control of various inputs and outputs.
 
 #### Arguments
-<blockquote>
 
-<tt>-F, --frequency=''FREQ''</tt>
+<tt>-F, --frequency=_FREQ_</tt>
 : Sets the frequency of all generated phonons.  Radiative3D operates at a single frequency.  To generate broadband results, do multiple data runs and combine the results.
 
-<tt>-N, --num-phonons=''NUM_PHONONS''</tt>
-: Number of phonons to emit from source before exiting.  Can take a multiplier suffix of <tt>K</tt>, <tt>M</tt>, or <tt>B</tt> for thousand, million, and billion, respectively.  E.g., use <tt>--num-phonons=10M</tt> for ten million phonons.
+<tt>-N, --num-phonons=_NUM_PHONONS_</tt>
+: Number of phonons to emit from source before exiting.  Can take a multiplier suffix of `K`, `M`, or `B` for thousand, million, and billion, respectively.  E.g., use `--num-phonons=10M` for ten million phonons.
 
-<tt>-T, --timetolive=''time''</tt>
+<tt>-T, --timetolive=_time_</tt>
 : Sets the time to live for each phonon, or in other words the amount of sim-time to model.
 
-<tt>-A, --toa-degree=''TOA_DEGREE''</tt>
+<tt>-A, --toa-degree=_TOA_DEGREE_</tt>
 : Sets the take-off angle degree, which determines the number of discrete [[take-off angle]]s that PhononSource objects (e.g. event sources and scattering sources) have to choose from.  Increasing this number increases the angular fineness of these objects.  "Degree," in this context, is an integer that represents the number of times the angular space is subdivided, and in the default (and at present only) method for discretizing take-off angles, the algorithm starts with 20 angles and subdivides by four with each iteration (degree), such that N_TOA = 20 * 4 ^ (degree).
 
 ##### _Grid args:_
@@ -41,31 +40,31 @@ where ''<tt>RUN_ID</tt>'' is an optional alphanumeric identifier that will becom
 : If specified, a parsable plaintext dump of the grid will be written to <tt>stdout</tt> prior to simulation start.
 
 ##### _Model args:_
-<tt>--model-args=''ARG_LIST''</tt> <br>
-<tt>--model-compiled-args=''ARG_LIST''</tt> ''(deprecated form)''
+<tt>--model-args=_ARG_LIST_</tt> <br>
+<tt>--model-compiled-args=_ARG_LIST_</tt> _(deprecated form)_
 : Some model grids allow parameterized values, enabled structural variations of the model to be easily scripted. This option allows a comma-separated list of double-precision values to be passed in on the command line and made available as parameters to these grids.
 
-<tt>--range=''RANGE''</tt> <br>
-<tt>--cylinder-range=''RANGE''</tt> ''(deprecated form)''
+<tt>--range=_RANGE_</tt> <br>
+<tt>--cylinder-range=_RANGE_</tt> ''(deprecated form)''
 : When using a LAYERED model defined by a plumb-line grid, the model cells are horizontal layers separated by planar tilted interfaces.  The otherwise infinite lateral extent of these layers is truncated by imposing a cylindrical bounding radius centered on a vertical through the origin.  This option sets the bounding radius, effectively defining the distance range that is modeled.  This option only applies to LAYERED models and is ignored for TETRA models based on tetrahedral model cells.
 
-<tt>--flatten</tt>  ''*** DEPRECATED ***''
+<tt>--flatten</tt>  *** _DEPRECATED_ ***
 : Apply an [[Earth-flattening transformation]] to depth coordinates and velocities when constructing the model.  This is intended to enhance ray-turning in layered Earth models as a proxy for the spherical curvature that is lacking from those models.  See [[Aki and Richards 1980 - Quantitative Seismology|Aki and Richards]] for more info on EFT's. (Note: the velocity transform is performed only for layered model types, but the depth transform occurs for both layered or tetrahedral based models, though it should be noted it is generally unnecessary for tetra models, as the model mesh can be constructed to follow real Earth curvature.)
 
 : Deprecation note:  the <tt>--flatten</tt> option is deprecated, as coordinate mapping choices, including flattening, are now attributes of the Grid object, and as such are specified in the grid definition file, or via Grid class methods if hard-coding a grid.  If a mapping choice is specified in this way, then the <tt>--flatten</tt> option will have no effect and will be silently ignored.  This option may be removed in a future release.
 
 ##### _Sim args:_
-<tt>--overridemfp=''P'',''S''</tt>
+<tt>--overridemfp=_P_,_S_</tt>
 : If specified, use the provided mean free path values for scattering model-wide, despite what the calculated mean free paths would be from the otherwise specified heterogeneity parameters.  Scattering shapes (deflection profiles) are unaffected by this argument.
 
 <tt>--nodeflect</tt>
 : If specified, scattering deflections are "squashed," meaning that while scattering events still occur, they do not result in any deflection or other modifications (raytype or polarization changes) to the phonon's ray trajectory.  This is commonly used, sometimes in concert with <tt>--overridemfp</tt> for producing videos (which plot scattering events), to easily visualize "clean" (i.e. no scattering) wavefront propagation. Or in other words, this option changes scattering events into mere "checkpoint" events used to illustrate evolving wavefronts.
 
 ##### _Event args:_
-<tt>-L, --source-loc=''X'',''Y'',''Z''</tt>
+<tt>-L, --source-loc=_X_,_Y_,_Z_</tt>
 : Specifies the location of the event source in cartesian X,Y,Z coordinates.  In the future, other coordinate systems may be supported (such as Lat, Lon, and depth).
 
-<tt>-E, --source=''SOURCE-ARGS''</tt>
+<tt>-E, --source=_SOURCE-ARGS_</tt>
 : Determines the event source type via the provided source arguments.  The format of the source args is a keyword followed by a comma-sepated (no whitespace) list of arguments that are required by the given keyword.  The keywords are as follows:
 :
 : <tt>--source=EQ</tt>
@@ -78,7 +77,7 @@ where ''<tt>RUN_ID</tt>'' is an optional alphanumeric identifier that will becom
 :: Specifies a double-couple [[moment tensor]] with an optional isotropic component added in.  The double-couple orientation is given in terms of ''<tt>strike</tt>'', ''<tt>dip</tt>'', and ''<tt>rake</tt>'' angles, given in degrees.  The optional fifth argument, ''<tt>moment</tt>'', sets the magnitude of the moment tensor, which otherwise defaults to 1.0.  This parameter has no bearing on the actual simulation, but does affect the numbers displayed when the moment tensor is output to the console (the parameter has purely aesthetic utility).  The optional fourth argument, ''<tt>isofrac</tt>'', specifies the isotropic component of the moment tensor as a fraction of the total squared-magnitude of the moment tensor. Valid values are in the range [-1.0 to 1.0], with 0.0 being the default.  Positive values indicate an explosive component, whereas negative values indicate an implosive component. Zero means pure double-couple, or no isotropic component.  This argument can alternatively be specified as an angle, rather than a fraction, owing to the fact that [[isotropic]] and [[deviatoric]] moments form orthogonal subspaces of the total moment tensor vector space.  If this manner of specification is desired, the value ''<tt>isoangle</tt>'' should be given in the split range of [-90, -1) or (1, +90].  (The range between -1 and 1 is inaccessible because it will be interpreted as ''<tt>isofrac</tt>'' rather than ''<tt>isoangle</tt>'', but this is unlikely to be problematic in practice.)
 
 ##### _Reporting / data output args:_
-<tt>--reports[=''REPORTS_FLAGS'']</tt>
+<tt>--reports[=_REPORTS_FLAGS_]</tt>
 : Enables real-time event reporting.  These are reports of various simulation events detailing the trajectories of individual phonons, such as generation at source, reflection off interfaces, scattering events, collection by seismometers, etc., written to an output stream as they are simulated.  The aggregate of these micro-reports can be used for, among other things, producing videos of energy propagation within the Earth model.  Multiple keywords can be provided as a comma-separated list in order to specify which event types are desired. Event reports are written to <tt>stdout</tt> unless directed to a file by the <tt>--report-file</tt> option.  The keywords are:
 : <tt>--reports</tt>, <tt>--reports=ALL_ON</tt>
 :: Turns ON all real-time reports. (If called without any keyword, <tt>ALL_ON</tt> is assumed.)
@@ -125,8 +124,6 @@ where ''<tt>RUN_ID</tt>'' is an optional alphanumeric identifier that will becom
 : Adds a "point-to-point" array along the line (X1,Y1,Z1) to (X2,Y2,Z2).  If two gather radii are specified, then the gather radius increases linearly from ''gather1'' at the beginning point to ''gather2'' at the end point.  If the option is specified as <tt>--seis-p2pw</tt>, then the gather radii are specified in elastic wavelengths, which are a function of elastic velocity at the seismometer's emplacement location at the specified frequency (and will result in differing gather radii for P and S wave modes).  Otherwise, the gather radii are specified in the model's chosen length unit, typically kilometers.  (Note however that, at present, the <tt>--seis-p2p</tt> option, if specified with only a single gather radius, still assumes this radius is in wavelengths.  This is for backwords compatibility with old scripts, but this usage is deprecated and will be changed in a future version.)
 
 : This option can be specified multiple times.
-
-</blockquote>
 
 #### Earth models
 Earth models are constructed as a mesh of nodal locations at which known or hypothesized material properties are specified. Based on these nodal locations, Radiative3D divides space into a set of model cells inside which material properties are interpolated based on the values specified at the nodes.  The material properties specified include the elastic properties of ''Vp'', ''Vs'', ''density'', and ''Q'', and four additional properties defining the [[heterogeneity spectrum]] of the material: ''nu'', ''epsilon'', ''a'', and ''kappa''.
