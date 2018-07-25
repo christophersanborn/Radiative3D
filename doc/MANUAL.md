@@ -1,14 +1,14 @@
 ### NAME
-**Radiative3D** - A program that uses [[radiative transport]] theory to model seismic energy propagation in 3D Earth models.
+**Radiative3D** - A program that uses **radiative transport** theory to model seismic energy propagation in 3D Earth models.
 
 ### SYNOPSIS
 When run directly, Radiative3D is invoked as follows:
 
-: <tt>./main [OPTIONS]...</tt>
+    ./main [OPTIONS]...
 
 Often, however, Radiative3D runs are scripted, and a few example "do-scripts" are included as samples.  The scripts: (1) set up model and simulation parameters and assemble them as command line options, (2) start the simulation in a timestamped output directory, (3) record program output and other information into log files, and (4) run visualization scripts after run completion to produces figures or videos. One such example do-script is <tt>do-crustpinch.sh</tt>.  It is recommended to copy the script and modify to taste.  It is run in the following way:
 
-: <tt>./do-crustpinch.sh [RUN_ID]</tt>
+    ./do-crustpinch.sh [RUN_ID]
 
 where ''<tt>RUN_ID</tt>'' is an optional alphanumeric identifier that will become part of the name of the output directory. 
 
@@ -183,7 +183,7 @@ To get good quality images, a few tens of thousands of phonons will be propagate
 #### Via Subversion
 Source code for Radiative3D can be obtained via Subversion.  When a version 1.0 release becomes available, the following command will retrieve the source code from our repositories:
 
-: <tt>svn co https://rainbow.phys.uconn.edu/svn/Radiative3D/tags/Radiative3D-v1.0.0/ [destdir]</tt>
+    svn co https://rainbow.phys.uconn.edu/svn/Radiative3D/tags/Radiative3D-v1.0.0/ [destdir]
 
 This will download the v1.0.0 release and place the contents in destination directory <tt>destdir</tt>, or else it will create directory <tt>Radiative3D-v1.0.0</tt> if the optional argument <tt>[destdir]</tt> is omitted.
 
