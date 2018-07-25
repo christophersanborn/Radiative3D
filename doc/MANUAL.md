@@ -1,12 +1,7 @@
-{{Radiative3D}}
-{{TOC limit|3}}
-=== NAME ===
-<blockquote>
-[[Radiative3D]] - A program that uses [[radiative transport]] theory to model seismic energy propagation in 3D Earth models.
-</blockquote>
+### NAME
+**Radiative3D** - A program that uses [[radiative transport]] theory to model seismic energy propagation in 3D Earth models.
 
-=== SYNOPSIS ===
-<blockquote>
+### SYNOPSIS
 When run directly, Radiative3D is invoked as follows:
 
 : <tt>./main [OPTIONS]...</tt>
@@ -16,13 +11,11 @@ Often, however, Radiative3D runs are scripted, and a few example "do-scripts" ar
 : <tt>./do-crustpinch.sh [RUN_ID]</tt>
 
 where ''<tt>RUN_ID</tt>'' is an optional alphanumeric identifier that will become part of the name of the output directory. 
-</blockquote>
 
-=== DESCRIPTION ===
-<blockquote>
+### DESCRIPTION
 [[Radiative3D]] models energy propagation through both deterministic and statistical structure which are specified and characterized on a gridded dataset referred to as the "Earth model".  Arguments to '''Radiative3D''' control various aspects of the operation, including specification of the Earth model, specification of the broader "physics model", and the selection and control of various inputs and outputs.
 
-==== Arguments ====
+#### Arguments
 <blockquote>
 
 <tt>-F, --frequency=''FREQ''</tt>
@@ -37,7 +30,7 @@ where ''<tt>RUN_ID</tt>'' is an optional alphanumeric identifier that will becom
 <tt>-A, --toa-degree=''TOA_DEGREE''</tt>
 : Sets the take-off angle degree, which determines the number of discrete [[take-off angle]]s that PhononSource objects (e.g. event sources and scattering sources) have to choose from.  Increasing this number increases the angular fineness of these objects.  "Degree," in this context, is an integer that represents the number of times the angular space is subdivided, and in the default (and at present only) method for discretizing take-off angles, the algorithm starts with 20 angles and subdivides by four with each iteration (degree), such that N_TOA = 20 * 4 ^ (degree).
 
-===== ''Grid args:'' =====
+##### _Grid args:_
 <tt>--grid-file=''FILENAME''</tt> ''(not yet implemented)''
 : This specifies that the model grid should be read from file ''FILENAME'' and used for the construction of the Earth model.  The grid file format is described in: ''[[Grid formats in Radiative3D]]''. (Note: at the current time, reading of grid files is not yet supported, and users should hard-code models. See the <tt>--grid-compiled</tt> option.)
 
@@ -47,7 +40,7 @@ where ''<tt>RUN_ID</tt>'' is an optional alphanumeric identifier that will becom
 <tt>--dump-grid</tt>
 : If specified, a parsable plaintext dump of the grid will be written to <tt>stdout</tt> prior to simulation start.
 
-===== ''Model args:'' =====
+##### _Model args:_
 <tt>--model-args=''ARG_LIST''</tt> <br>
 <tt>--model-compiled-args=''ARG_LIST''</tt> ''(deprecated form)''
 : Some model grids allow parameterized values, enabled structural variations of the model to be easily scripted. This option allows a comma-separated list of double-precision values to be passed in on the command line and made available as parameters to these grids.
@@ -61,14 +54,14 @@ where ''<tt>RUN_ID</tt>'' is an optional alphanumeric identifier that will becom
 
 : Deprecation note:  the <tt>--flatten</tt> option is deprecated, as coordinate mapping choices, including flattening, are now attributes of the Grid object, and as such are specified in the grid definition file, or via Grid class methods if hard-coding a grid.  If a mapping choice is specified in this way, then the <tt>--flatten</tt> option will have no effect and will be silently ignored.  This option may be removed in a future release.
 
-===== ''Sim args:'' =====
+##### _Sim args:_
 <tt>--overridemfp=''P'',''S''</tt>
 : If specified, use the provided mean free path values for scattering model-wide, despite what the calculated mean free paths would be from the otherwise specified heterogeneity parameters.  Scattering shapes (deflection profiles) are unaffected by this argument.
 
 <tt>--nodeflect</tt>
 : If specified, scattering deflections are "squashed," meaning that while scattering events still occur, they do not result in any deflection or other modifications (raytype or polarization changes) to the phonon's ray trajectory.  This is commonly used, sometimes in concert with <tt>--overridemfp</tt> for producing videos (which plot scattering events), to easily visualize "clean" (i.e. no scattering) wavefront propagation. Or in other words, this option changes scattering events into mere "checkpoint" events used to illustrate evolving wavefronts.
 
-===== ''Event args:'' =====
+##### _Event args:_
 <tt>-L, --source-loc=''X'',''Y'',''Z''</tt>
 : Specifies the location of the event source in cartesian X,Y,Z coordinates.  In the future, other coordinate systems may be supported (such as Lat, Lon, and depth).
 
@@ -84,7 +77,7 @@ where ''<tt>RUN_ID</tt>'' is an optional alphanumeric identifier that will becom
 : <tt>--source=SDR,''strike'',''dip'',''rake'',''[isofrac|isoangle'',''[moment]]''</tt>
 :: Specifies a double-couple [[moment tensor]] with an optional isotropic component added in.  The double-couple orientation is given in terms of ''<tt>strike</tt>'', ''<tt>dip</tt>'', and ''<tt>rake</tt>'' angles, given in degrees.  The optional fifth argument, ''<tt>moment</tt>'', sets the magnitude of the moment tensor, which otherwise defaults to 1.0.  This parameter has no bearing on the actual simulation, but does affect the numbers displayed when the moment tensor is output to the console (the parameter has purely aesthetic utility).  The optional fourth argument, ''<tt>isofrac</tt>'', specifies the isotropic component of the moment tensor as a fraction of the total squared-magnitude of the moment tensor. Valid values are in the range [-1.0 to 1.0], with 0.0 being the default.  Positive values indicate an explosive component, whereas negative values indicate an implosive component. Zero means pure double-couple, or no isotropic component.  This argument can alternatively be specified as an angle, rather than a fraction, owing to the fact that [[isotropic]] and [[deviatoric]] moments form orthogonal subspaces of the total moment tensor vector space.  If this manner of specification is desired, the value ''<tt>isoangle</tt>'' should be given in the split range of [-90, -1) or (1, +90].  (The range between -1 and 1 is inaccessible because it will be interpreted as ''<tt>isofrac</tt>'' rather than ''<tt>isoangle</tt>'', but this is unlikely to be problematic in practice.)
 
-===== ''Reporting / data output args:'' =====
+##### _Reporting / data output args:_
 <tt>--reports[=''REPORTS_FLAGS'']</tt>
 : Enables real-time event reporting.  These are reports of various simulation events detailing the trajectories of individual phonons, such as generation at source, reflection off interfaces, scattering events, collection by seismometers, etc., written to an output stream as they are simulated.  The aggregate of these micro-reports can be used for, among other things, producing videos of energy propagation within the Earth model.  Multiple keywords can be provided as a comma-separated list in order to specify which event types are desired. Event reports are written to <tt>stdout</tt> unless directed to a file by the <tt>--report-file</tt> option.  The keywords are:
 : <tt>--reports</tt>, <tt>--reports=ALL_ON</tt>
@@ -112,7 +105,7 @@ where ''<tt>RUN_ID</tt>'' is an optional alphanumeric identifier that will becom
 : <tt>--summary=OFF</tt>
 :: Turns OFF all summary reports
 
-===== ''Seismometer args:'' =====
+##### _Seismometer args:_
 <tt>--binsize=''number''</tt>
 : When binning energy for seismogram output, this is the width of each bin in time units (typically seconds).  (Mutually exclusive with <tt>--binspercycle</tt>.)
 
@@ -135,28 +128,28 @@ where ''<tt>RUN_ID</tt>'' is an optional alphanumeric identifier that will becom
 
 </blockquote>
 
-==== Earth models ====
+#### Earth models
 Earth models are constructed as a mesh of nodal locations at which known or hypothesized material properties are specified. Based on these nodal locations, Radiative3D divides space into a set of model cells inside which material properties are interpolated based on the values specified at the nodes.  The material properties specified include the elastic properties of ''Vp'', ''Vs'', ''density'', and ''Q'', and four additional properties defining the [[heterogeneity spectrum]] of the material: ''nu'', ''epsilon'', ''a'', and ''kappa''.
 
 Radiative3D currently supports two distinct modeling and meshing approaches: stacked layers of spatially uniform elastic properties, or a warped cartesian grid (WCG) of nodes in which material properties vary linearly based on a tetrahedral tessellation of the space using the node locations as the corners of the tetrahedral model cells.  The former approach is more akin to "1-D" models, and the latter approach fully utilizes the 3-D modeling capabilities of Radiative3D.
 
 Currently, Radiative3D lacks file importers for reading Earth models into memory. To construct Earth models, the model structure must be hard coded using our model-building API.  Changes to the model structure thus require a recompile.  These "user-coded" models are coded in the source file called <tt>user.cpp</tt>, and inspection of that file will reveal several example models to choose from, and explain the model building API.
 
-==== Dimensions and units ====
+#### Dimensions and units
 For user interaction (input and output), [[Radiative3D]] is generally agnostic about choice of physical units.  The only requirements are consistency of choice, and an understanding that the units you use for input will determine the units you get for output.  Specific details are as follows:
 
-===== ''Distance and time:'' =====
+##### _Distance and time:_
 [[Radiative3D]] is designed for Earth-scale models and temporal resolutions of ~1 Hz or greater.  As such there is a general presumption that length quantities will be in kilometers and time quantities will be in seconds, but there is nothing specifically constraining this.  What you use for input is what you will get for output.  E.g., if you use kilometers for your model dimensions, and want temporal output in seconds, then make sure you use kilometers/second as your velocity units.
 
-===== ''Frequency:'' =====
+##### _Frequency:_
 For input/output, [[Radiative3D]] uses ordinary frequency measurements (i.e., cycles-per-time, not radians-per-time).  Frequency measures will share the time dimension with velocities.  I.e, if you are inputting velocities in length-per-second, then input frequency using cycles/second, or Hertz.
 
-===== ''Density:'' =====
+##### _Density:_
 For most use cases, [[Radiative3D]] sets no restriction on choice of units for densities.  Where densities are used in computation, only ratios come into play.  Thus it is user choice what units to use.
 
 The only exception to this is when Earth models are defined in terms of shear and bulk moduli (a feature not yet supported), instead of P and S velocities.  In this case, the choice of density units must be in agreement with the choice of moduli units to produce the desired length and time units.
 
-===== ''Attenuation Q:'' =====
+##### _Attenuation Q:_
 [[Radiative3D]] interprets Q values as the inverse of the per-radian fractional rate-of-energy-loss due to intrinsic (e.g. thermal) attenuation. For instance, for a wavefront in a uniform-Q medium, where the energy decays with time ''t'' as:
 
 <math>E(t) = E_0\exp\left[-\frac{\omega t}{Q}\right]</math>,
@@ -169,11 +162,8 @@ Or, thinking of Q as an angular time constant, Q represents the number of radian
 
 Thinking in terms of ordinary cycles, instead of radians, Q is the number of cycles ''(f*t)'' of wavefront evolution resulting in an exp[-2π] energy attenuation (about a 99.8% reduction) of the wave.
 
-</blockquote>
-
-=== EXAMPLES ===
-<blockquote>
-==== Crust pinch: envelopes ====
+### EXAMPLES
+#### Crust pinch: envelopes
 An envelope and travel-time curve simulation in a crustal pinch model can be run via the example script called <tt>do-crustpinch.sh</tt>.  From the Radiative3D install directory, run:
 : <tt>./do-crustpinch.sh test01</tt>
 
@@ -181,7 +171,7 @@ The script will create an output directory at <tt>./data/YYYYMMDD-HHMMSS-test01-
 
 Note that to get good quality envelopes, tens of millions of phonons will be propagated, and you can expect the simulation to run for a few hours.  For this reason, it may be prudent to run the simulation inside a GNU screen session, especially if you are running it on a remote computer.
 
-==== Crust pinch: video ====
+#### Crust pinch: video
 A video simulation in a crustal pinch model can be run via the example script called <tt>do-crustpinch-vids.sh</tt>.  From the Radiative3D install directory, run:
 : <tt>./do-crustpinch-vids.sh test02</tt>
 
@@ -189,11 +179,8 @@ The script will create an output directory at <tt>./data/YYYYMMDD-HHMMSS-test02-
 
 To get good quality images, a few tens of thousands of phonons will be propagated.  You can expect the simulation to run for about ten to twenty minutes, and the video generation to take another twenty minutes after that.  Videos are generally much less computationally intensive to produce than envelopes and travel-time curves are, because for videos every phonon is useful, whereas for envelopes only those phonons that interact with a given seismometer are useful in producing the envelope trace.
 
-</blockquote>
-
-=== INSTALLATION ===
-<blockquote>
-==== Via Subversion ====
+### INSTALLATION
+#### Via Subversion
 Source code for Radiative3D can be obtained via Subversion.  When a version 1.0 release becomes available, the following command will retrieve the source code from our repositories:
 
 : <tt>svn co https://rainbow.phys.uconn.edu/svn/Radiative3D/tags/Radiative3D-v1.0.0/ [destdir]</tt>
@@ -204,7 +191,7 @@ This will download the v1.0.0 release and place the contents in destination dire
 
 Radiative3D is written in C++ and compilation is automated with GNU Make.  Compiling is simply a matter of typing "<tt>make</tt>" on the command line.
 
-==== Requirements ====
+#### Requirements
 Radiative3D itself has no requirements other than a reasonably recent C++ compiler.  It is tested to compile and run on the following platforms: Fedora Linux, Ubuntu Linux, and Macintosh OS X.  While we strive for platform-independence in the development of Radiative3D, the accompanying scripts that automate Radiative3D simulation runs and produce visualizations from its output may have cross-platform issues.  Linux is the ''recommended'' platform for these scripts. The following packages are required to run the automation and visualization scripts in unmodified form:
 
 * '''Bash''' interpreter.
@@ -220,16 +207,13 @@ Radiative3D itself has no requirements other than a reasonably recent C++ compil
 * '''ffmpeg''' (optional; for video generation scripts)
 ** ffmpeg is an open-source video encoding tool that we use to concatenate still frames into videos.  It is available for Linux, OS X, and Windows.
 
-</blockquote>
-
-=== BUGS ===
-<blockquote>
-==== Limitations of algorithm ====
+### BUGS
+#### Limitations of algorithm
 The code employs [[radiative transport]] for modeling the propagation of energy within three-dimensional solid bodies.  Radiative transport is an extension of [[ray theory]], which can be thought of as the limiting case of full-wave treatment for infinite frequencies.  Since we use it to model finite-frequency physics, ray theory, (and hence radiative transport), may be inappropriate and give erroneous results for certain Earth-model configurations.  In particular, radiative transport may have trouble with: steep velocity gradients or model features with sizes on the order of a wavelength or smaller, free-surface effects, sharp interface effects, and the propagation of free-surface or interface waves (diffracted phases), or other instances in which waves would propagate along a 2D manifold rather than a 3D space.
 
 The code models phonons at a single frequency per run.  To produce broadband synthetics, multiple simulation runs must be conducted, and the results summed.  Dispersion is not modeled by the code, however it can be explicitly input by using custom Earth models for each desired frequency.
 
-==== Validation status ====
+#### Validation status
 Radiative3D is in need of validation.  Until it is validated, it should be assumed that results produced with Radiative3D not only may contain, but ''do'' contain, errors and inaccuracies in multiple areas, and that extreme caution should be used in drawing any definitive conclusions from the results.  Validation is an important aspect of code development, and it would be foolish to assume that logical and/or implementation errors will not be found — and corrected — during this stage.
 
 Validation would consist of an iterative process of code review and code testing, in which models of varying degrees of complexity are simulated and results compared against expectations.  In some cases, test models will be simple enough that expected results can be computed analytically. In other cases, the test models will be complex, but can be simulated by other methods, and expectations arrived at in that manner.
@@ -238,19 +222,13 @@ It should also be noted that validation, once complete, will not be an assertion
 
 As regards the types of issues that may be revealed during validation, our greatest concern is with the apportionment of energy between the three components of motion for seismic envelope output. (E.g., between radial, transverse, and vertical components.)  There are known (but correctable) issues with the current handling of S-wave polarization for curved ray paths, which will affect channel apportionment.  Additionally, the authors would like to do a close review of the energy apportionment when rays reflect off the surface.  We have a greater degree of confidence in the timing of phase arrivals and in the summed (three-component) energy arriving in any given time window, though these must also be subject to the validation process.
 
-==== Portability ====
+#### Portability
 Radiative3D should compile and run under multiple platforms (Linux, OS X, Windows...), however at present the scripts and visualization routines are not platform-independent. The automation scripts are in Bash, and use some commands that are not standard on OS X, which means Linux is the only 100% supported platform.  The graphics are produced using GNU Octave, which, while nominally platform-independent, it has been our empirical observation that graphical results differ from one platform to another, and even from one Linux distribution to another.  The graphics subsystem in Octave seems to be in a continual state of flux.
 
 For this reason, it is our belief that reimplementing our graphics and automation scripts in a more consistently cross-platform language, such as Python, would be a very good idea.  For now, though, this is on our to-do list, but is not a top priority.  
 
-</blockquote>
-
-=== AUTHORS ===
-<blockquote>
+### AUTHORS
 [[Radiative3D]] is written by [[User:ChristopherSanborn|Christopher J. Sanborn]] and the [[Solid Earth Geophysics Research Group]] at UConn, including significant contributions by [[User:Swalsh|Steven Walsh]].  The code implements algorithms and takes inspiration from two major forerunner projects: [[Raytrace3d]] by William Menke and [[PSPhonon]] by Shearer and Earle.
-</blockquote>
 
-=== COPYRIGHT ===
-<blockquote>
+### COPYRIGHT
 The authors have yet to decide on an official copyright to use.  For now, if you have been given a copy of the code by one of the authors, you can assume you have permission to use it and publish results from it.  If you wish to share the code with others, please contact the authors first for permission.  The authors retain ALL RIGHTS to the code and disclaim ALL LIABILITIES for use of the code.
-</blockquote>
