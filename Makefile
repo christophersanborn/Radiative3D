@@ -1,6 +1,7 @@
 CC=gcc
 CPP=g++
 FLAGS=-O0 -g -Wall 
+DEFINES=
 
 OUT_EXEC = main
 objects  = geom_s2.o geom_r3.o geom_r4.o probability.o sources.o \
@@ -8,11 +9,36 @@ objects  = geom_s2.o geom_r3.o geom_r4.o probability.o sources.o \
 	   rtcoef.o dataout.o scatparams.o cmdline.o user.o global.o \
            ecs.o elastic.o main.o
 
-branch = $(shell basename "`svn info | grep '^URL:'`")
-revision = "\"$(branch)@$(shell svnversion) (svn)\""
-
 .PHONY : default cleanall clean neat anyway .FORCE
 default : $(OUT_EXEC)
+
+
+##//////
+## Versioning:
+##
+ifneq ($(wildcard .git),)
+  gitstatus = $(shell git status --untracked-files=no --porcelain)
+  ifneq ($(gitstatus),)
+    gitstatus = , with local modifications
+  endif
+  revision = "\"$(shell git rev-parse --short HEAD)$(gitstatus) (git)\""
+else ifneq ($(wildcard .svn),)
+  branch = $(shell basename "`svn info | grep '^URL:'`")
+  revision = "\"$(branch)@$(shell svnversion) (svn)\""
+else
+  revision =
+endif
+ifneq ($(revision),)
+  DEFINES += -DREVISION_NUM=$(revision)
+endif
+
+##//////
+## Platform-Specific Stuff:
+##
+machine = $(shell uname -m)
+ifeq ($(machine),armv7l)
+  FLAGS += -Wno-psabi   # Silence ABI warnings on Raspberry Pi
+endif
 
 
 ##//////
@@ -108,7 +134,7 @@ $(OUT_EXEC) : $(objects)
 	$(CPP) $^ -o $@ $(FLAGS)
 
 anyway : $(objects)
-	$(CPP) -c main.cpp $(FLAGS) -DREVISION_NUM=$(revision)
+	$(CPP) -c main.cpp $(FLAGS) $(DEFINES)
 	$(CPP) $^ -o $(OUT_EXEC) $(FLAGS)
 
 
