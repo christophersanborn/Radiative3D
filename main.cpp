@@ -150,7 +150,7 @@ void print_banner() {
        << "**  Radiative3D - "
        << "A code for radiative transport in 3D Earth models" << std::endl
        << "**" << std::endl
-       << "**  (c) 2017 Christopher J. Sanborn and the" << std::endl
+       << "**  (c) 2020 Christopher J. Sanborn and the" << std::endl
        << "**           Solid Earth Geophysics Team" << std::endl
        << "**           at the University of Connecticut, Storrs, CT." 
                         << std::endl
