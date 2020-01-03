@@ -10,7 +10,17 @@
 ##
 ##
 
- 
+######
+## Helpers:
+##
+function SecondsToHours {
+    printf %.2f\\n "$((10**9 * $1/3600))e-9"
+}
+function SecondsDeltaToHours {
+    local Delta=$(($1 - $2))
+    echo $(SecondsToHours $Delta)
+}
+
 ######
 ## FUNCTION:  PopDefaults()
 ##
@@ -386,7 +396,7 @@ $R3D_EXE --reports=$REPORTS \
     eval "$R3D_CMDLN" | tee "$outdir"/stdout.txt
     echo End__ Radiative3D Run: `date +"%Y.%m.%d-%H:%M:%S"` >> "$LOGFILE"
     local TIMEEND=`date +"%s"`
-    local TIMEELAPSED=`echo "scale=2; ($TIMEEND-$TIMEBEGIN)/3600" | bc`
+    local TIMEELAPSED=$(SecondsDeltaToHours $TIMEEND $TIMEBEGIN)
     echo "($TIMEELAPSED Hours Run-Time)" >> "$LOGFILE"
 
 }
