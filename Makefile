@@ -1,6 +1,6 @@
 CC=gcc
 CPP=g++
-FLAGS=-O0 -g -Wall 
+FLAGS=-O3 -g -Wall
 DEFINES=
 
 OUT_EXEC = main
@@ -213,14 +213,14 @@ main.o : main.cpp  $(params_hpp) $(model_hpp) $(dataout_hpp) \
 ##
 cleanall :
 	rm -f $(configopt_files)
-	rm -f $(objects) 
+	rm -f $(objects)
 	rm -f $(OUT_EXEC)
 
 clean :
 	@echo "*NOTE: 'Make clean' removes object files and target exe, but"
 	@echo "        does NOT remove auto-generated config files.  To remove"
 	@echo "        these too, do 'make cleanall'."
-	rm -f $(objects) 
+	rm -f $(objects)
 	rm -f $(OUT_EXEC)
 
 neat :
