@@ -43,6 +43,16 @@ function VCSStatusInfo {
         echo "Unversioned directory"
     fi
 }
+function RealPath {
+    # realpath not a base install on Mac (although can be added with
+    # `brew install coreutils`). We fall back to just echoing the path if
+    # not installed.
+    if which realpath > /dev/null; then
+        realpath "$1"
+    else
+        echo "$1"
+    fi
+}
 
 ######
 ## FUNCTION:  PopDefaults()
@@ -316,7 +326,7 @@ function CreateOutputDirectory {
     outdir="$OUT_BASE/$outdirname"
     mkdir -p "$outdir"
     local rcptfile="`basename ${0%.sh}`.$$.runrcpt"
-    echo `hostname`:`realpath "$outdir"` >> $rcptfile
+    echo `hostname`:`RealPath "$outdir"` >> $rcptfile
 
     if [ -L "$OUT_BASE/previous" ]; then    # Generate "latest" and "previous"
         rm "$OUT_BASE/previous"             # links to make it easier to cd
