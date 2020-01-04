@@ -20,6 +20,29 @@ function SecondsDeltaToHours {
     local Delta=$(($1 - $2))
     echo $(SecondsToHours $Delta)
 }
+function VCSVersion {
+    if [ -d .svn ]; then
+        svnversion
+    elif [ -d .git ]; then
+        git rev-parse --short HEAD
+    else
+        echo "Unversioned directory"
+    fi
+}
+function VCSStatusInfo {
+    if [ -d .svn ]; then
+        echo "Revision number (svnversion): $(svnversion)"
+        svn info
+        svn st
+        svn diff
+    elif [ -d .git ]; then
+        echo "Revision number (git): $(git rev-parse --short HEAD)"
+        git status
+        git diff
+    else
+        echo "Unversioned directory"
+    fi
+}
 
 ######
 ## FUNCTION:  PopDefaults()
@@ -183,11 +206,7 @@ function CreateBatchDirectory {
     echo "(BRIEF description of batch goes here.)" > "$outdir"/description.txt
     [ -z "$INTENT" ] || echo "$INTENT" >> "$outdir"/description.txt
     [ -z "$CAMPAIGN" ] || echo "$CAMPAIGN" >> "$outdir"/description.txt
-    echo "Revision number (svnversion): " \
-        `svnversion` > "$outdir"/svn-info.txt # Record detailed revision info
-    svn info >>"$outdir"/svn-info.txt       #
-    svn st >> "$outdir"/svn-info.txt        #
-    svn diff >> "$outdir"/svn-info.txt
+    VCSStatusInfo > "$outdir"/svn-info.txt # Record detailed revision info
     cp vis/seisplot/*.m "$revdir"/          # Used in post-process
     cp vis/scattervid/*.m "$revdir"/        #      ''
     cp vis/scattervid/preprocess.sh "$revdir"/ #   ''
@@ -201,7 +220,7 @@ function CreateBatchDirectory {
     > "$LOGFILE"
     echo "Machine: " `hostname` >> "$LOGFILE"
     echo "User: " `whoami` >> "$LOGFILE"
-    echo "Revision: " `svnversion` >> "$LOGFILE"
+    echo "Revision: " `VCSVersion` >> "$LOGFILE"
 
     # Carve-off and save the template part so we can stream-edit it after:
     TMPL_SRC="$outdir"/"do-template-src"
@@ -248,7 +267,7 @@ function CreateBatchSubDirectory {
     > "$LOGFILE"
     echo "Machine: " `hostname` >> "$LOGFILE"
     echo "User: " `whoami` >> "$LOGFILE"
-    echo "Revision: " `svnversion` >> "$LOGFILE"
+    echo "Revision: " `VCSVersion` >> "$LOGFILE"
 
     # Carve-off and save figure-generation part of do-script in case
     # we want to re-run the figures later (as might happen if we
@@ -314,11 +333,7 @@ function CreateOutputDirectory {
     echo "(BRIEF description of run goes here.)" > "$outdir"/description.txt
     [ -z "$INTENT" ] || echo "$INTENT" >> "$outdir"/description.txt
     [ -z "$CAMPAIGN" ] || echo "$CAMPAIGN" >> "$outdir"/description.txt
-    echo "Revision number (svnversion): " \
-        `svnversion` > "$outdir"/svn-info.txt # Record detailed revision info
-    svn info >>"$outdir"/svn-info.txt       #
-    svn st >> "$outdir"/svn-info.txt        #
-    svn diff >> "$outdir"/svn-info.txt
+    VCSStatusInfo > "$outdir"/svn-info.txt # Record detailed revision info
     cp vis/seisplot/*.m "$outdir"/          # Used in post-process
     cp vis/scattervid/*.m "$outdir"/        #      ''
     cp vis/scattervid/preprocess.sh "$outdir"/ #   ''
@@ -328,7 +343,7 @@ function CreateOutputDirectory {
     > "$LOGFILE"
     echo "Machine: " `hostname` >> "$LOGFILE"
     echo "User: " `whoami` >> "$LOGFILE"
-    echo "Revision: " `svnversion` >> "$LOGFILE"
+    echo "Revision: " `VCSVersion` >> "$LOGFILE"
 
     # Carve-off and save figure-generation part of do-script in case
     # we want to re-run the figures later (as might happen if we
@@ -402,7 +417,7 @@ $R3D_EXE --reports=$REPORTS \
 }
 
 ######
-## FUNTCION:  SpiralIndex n=$1 i0=$2 j0=$3
+## FUNCTION:  SpiralIndex n=$1 i0=$2 j0=$3
 ##
 ##  Given an index n as a counter in an i,j index space, return "i j" after
 ##  tracing a spiral path from centerpoint index pair (i0,j0). This is used
