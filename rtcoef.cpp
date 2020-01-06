@@ -610,8 +610,8 @@ Real RTCoef::GetChosenRayPhase() const {
   // thinking-through.  /* TODO: FIX */
   //
 
-  *(int*)(0) = 0;  // Force a segfault (brutal exit).
-  return 0;        // Bogus return to suppress compile warning
+  std::cerr << "Not implemented yet.\n";
+  throw std::exception();
 
 }
 

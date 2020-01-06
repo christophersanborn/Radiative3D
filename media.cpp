@@ -572,9 +572,8 @@ CellFace & RCUCylinder::Face(CellFace::face_id_e face_id) {
   case CellFace::F_BOTTOM:
     return mBottomFace;
   default:
-    /* TODO: Need Proper error-handling here */ 
-    *((int*)0) = 1; // force segfault, kindof a brutal exit
-    return *((CellFace*)0); // Bogus return - suppresses compile warning
+    std::cerr << "Invalid CellFace id.\n";
+    throw std::exception();
   }
 }
 
