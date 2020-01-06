@@ -1101,7 +1101,7 @@ Tetra::AdvanceLength(raytype rt, Real len,
   //rotation angle to return to prime 2D system
   Real angletoX0 = atan2(CT.PrimeLoc().x(),CT.PrimeLoc().z());
   Real rotAngle = angletoX0 + (theta/2);
-  rotAngle = (rotAngle > Geometry::Pi360) ? rotAngle-=Geometry::Pi360 : rotAngle;
+  rotAngle = (rotAngle > Geometry::Pi360) ? rotAngle-Geometry::Pi360 : rotAngle;
  
   //2D new location
   R3::XYZ newLoc2D = R3::XYZ(cos(rotAngle)*newLocRot2D.x() + sin(rotAngle)*newLocRot2D.z() , 0,
