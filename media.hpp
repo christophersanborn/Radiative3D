@@ -684,6 +684,92 @@ public:
 
 
 //////
+// CLASS:  SphereShellD2
+//
+// FROM:   MediumCell
+//
+// ENCAPS:
+//
+//  Spherical shell in which the velocity inside is a degree-2 function of
+//  radius.
+//
+//  Internal representation of velocity is v = a*r^2 + c.  Density is
+//  just an inner value and an outer value, as values on surfaces are all
+//  that matter.  Q values are uniform and taken as a geometric average of
+//  the inner and outer given values.
+//
+class SphereShellD2 : public MediumCell {
+protected:
+
+  // Velocity and Elastic Structure:
+
+  Real mVelCoefA[RAY_NBT];      // Coef on r^2
+  Real mVelCoefC[RAY_NBT];      // Constant (velocity at r=0)
+  Real mDensTop;
+  Real mDensBot;
+  Real mQ[RAY_NBT];
+
+  // Geometry:
+
+  Real mRadTop;                 // Outer Radius
+  Real mRadBot;                 // Inner Radius
+
+  Scatterer          * mpScat;  // Scatterer object that operates within this
+                                // cell.  Set by Link method.  Responsibility
+                                // for constructing/destructing lies elsewhere.
+public:
+
+  // ::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Constructors  (SphereShellD2 Class)  :::
+  // ::::::::::::::::::::::::::::::::::::::::::::
+
+  SphereShellD2(Real RadTop, Real RadBot,
+                const GridData & dataC, const GridData & dataD);
+
+
+  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Property-Set Methods  (SphereShellD2 Class) :::
+  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  virtual void Link(Scatterer * pScat) {mpScat = pScat;}
+
+
+  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Property-Get Methods  (SphereShellD2 Class) :::
+  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  virtual Scatterer * GetActiveScatterer() {return mpScat;}
+
+  virtual Real GetVelocAtPoint(const R3::XYZ &, raytype) const;
+  virtual Real GetWavelengthAtPoint(const R3::XYZ &, raytype) const;
+  virtual Real GetDensityAtPoint(const R3::XYZ &) const;
+  virtual Real GetQatPoint(const R3::XYZ &, raytype) const;
+
+
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Interrogative Methods  (SphereShellD2 Class) :::
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  virtual Real IsPointInside(const R3::XYZ & loc) const;
+                // Reports whether a given point is "inside"
+                // the cell by returning a "mismatch" factor.
+
+
+  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Do-Something Methods  (SphereShellD2 Class) :::
+  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  virtual TravelRec AdvanceLength(raytype rt, Real len,
+                                  const R3::XYZ & startloc,
+                                  const S2::ThetaPhi & startdir);
+  virtual TravelRec GetPathToBoundary(raytype rt,
+                                      const R3::XYZ & startloc,
+                                      const S2::ThetaPhi & startdir);
+
+};
+
+
+//////
 // CLASS:  GCAD_RetVal
 //
 //  This class encapsulates the return value of the GetCircArcDistToFace() member function.
