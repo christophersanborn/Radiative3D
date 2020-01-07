@@ -1141,6 +1141,7 @@ void Model::WCGLinkBlocksForward(Index Block, Index Adjacent,
   }
   default:
     std::cerr << "invalid case linkblocks function" << std::endl;
+    Faces[0] = Faces[1] = Faces[2] = Faces[3] = nullptr;
   }
 
   Faces[0]->LinkTo(*Faces[1]);
