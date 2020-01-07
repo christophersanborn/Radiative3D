@@ -272,9 +272,11 @@ public:
                           //
     MOD_AUTO,             //  Unknown - guess from grid grid dims.
     MOD_CYLINDER,         //  Model made up of stacked cylinders.
-    MOD_TETRAWCG          //  Model made of tetrahedra packed in
-                          //   regular array following a warped
-  };                      //   cartesian grid (WCG).
+    MOD_TETRAWCG,         //  Model made of tetrahedra packed in regular
+                          //   array following a warped cartesian grid (WCG).
+    MOD_SPHERESHELL       //  Model made up of concentric spherical
+                          //   shells.
+  };
 
   enum gs_coords_e {      // Grid-Space Coordinates Choice:
                           //

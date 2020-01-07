@@ -400,8 +400,9 @@ private:
                     // One of several model-building helpers.  This
                     // one builds up the cell array of Cylinder
                     // cell-types.
-  
+
   void BuildCellArray_WCGTetra();
+  void BuildCellArray_SphericalShells();
 
   static Index WCGBaseIndexFromIJK(Index i, Index j, Index k,
                                    Count nI, Count nJ, Count nK);

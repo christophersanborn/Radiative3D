@@ -724,7 +724,7 @@ public:
   // ::::::::::::::::::::::::::::::::::::::::::::
 
   SphereShellD2(Real RadTop, Real RadBot,
-                const GridData & dataC, const GridData & dataD);
+                const GridData & DataTop, const GridData & DataBot);
 
 
   // :::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -745,6 +745,15 @@ public:
   virtual Real GetDensityAtPoint(const R3::XYZ &) const;
   virtual Real GetQatPoint(const R3::XYZ &, raytype) const;
 
+
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Component Reference Methods  (SphereShellD2 Class) :::
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  virtual CellFace & Face(CellFace::face_id_e face_id);
+                // Returns a read-write reference to either the
+                // top or bottom CellFace object, as determined
+                // by the value of face_id
 
   // ::::::::::::::::::::::::::::::::::::::::::::::::::::
   // ::: Interrogative Methods  (SphereShellD2 Class) :::

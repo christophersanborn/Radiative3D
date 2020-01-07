@@ -393,6 +393,13 @@ Model::Model(const ModelParams & par) {
       BuildCellArray_WCGTetra();
       break;
 
+    case Grid::MOD_SPHERESHELL: // Spherical shell model from dropline Grid:
+                                //
+      std::cout << "|  Building SPHERICAL SHELL model... \n"
+                << WaitNotice << std::flush;
+      BuildCellArray_SphericalShells();
+      break;
+
     default:
 
       TextStream NoModelHandlerMsg;
@@ -526,7 +533,7 @@ MediumCell * Model::FindCellContainingPoint(const R3::XYZ & loc) const {
   for (; cellp_it != cellp_end; cellp_it++) {
 
     Real mismatch = (*cellp_it)->IsPointInside(loc);
-    
+
     if (mismatch <= 0.) {
       best_mismatch = mismatch; // Then we're definitively inside
       best_mcellp = *cellp_it;  // Return this cell
@@ -664,7 +671,7 @@ void Model::BuildCellArray_Cylinder() {
     //            layer k+1
     const GridData GD_Top = mGrid.Node(0,0,k).Data(GridNode::GN_BELOW);
     const GridData GD_Bot = mGrid.Node(0,0,k+1).Data(GridNode::GN_ABOVE);
-    
+
     mCellArray.push_back(               // Construct the cell
         new RCUCylinder(mGrid.Node(0,0,k).Loc(),
                         mGrid.Node(1,0,k).Loc(),
@@ -681,6 +688,80 @@ void Model::BuildCellArray_Cylinder() {
     mCellArray[k]->Link(pscat);
   }// end for(k)
   //  
+
+  // ::::::
+  // :: Walk the Cylinder-stack from top to bottom and link the
+  // :: interfaces between them along the way:
+  // :
+
+  for (unsigned k = 1; k < array_num_cells; k++) {
+    // CellFace References:
+    //   upper: the BOTTOM face of the cell ABOVE
+    //   lower: the TOP face of the cell BELOW
+    CellFace & upper = mCellArray[k-1]->Face(CellFace::F_BOTTOM);
+    CellFace & lower = mCellArray[k]  ->Face(CellFace::F_TOP);
+    bool dis = mGrid.Node(0,0,k).IsDiscontinuous();
+    upper.LinkTo(lower, dis);  // Lets the faces know about each
+                               // other, and sets the appropriate
+                               // connectivity flags
+  }
+
+  // ::::::
+  // :: Set collection and reflection status at the top boundary
+  // :: of the model:
+  // :
+
+  CellFace & ModelTop = mCellArray[0]->Face(CellFace::F_TOP);
+  //CellFace & ModelBot = mCellArray.back()->Face(CellFace::F_BOTTOM);
+
+  ModelTop.SetCollect(true);
+  ModelTop.SetReflect(true);
+
+  mSurfaceFaces.push_back(&ModelTop);   // Add to surface face list,
+                                        // for surface-finding routine
+                                        // in FindSurface().
+
+}
+
+
+//////
+// METHOD:  Model :: BuildCellArray_SphericalShells()
+//
+//   Builds out the cell array using SphereShellXX cell types.
+//
+void Model::BuildCellArray_SphericalShells() {
+
+  // Reserve space in the cell array:
+  unsigned int array_num_cells;
+  array_num_cells = mGrid.Nk() - 1;
+  mCellArray.reserve(array_num_cells);
+
+  // ::::::
+  // :: Walk the grid from top-to-bottom (along k-index) and create
+  // :: MediumCells along the way:
+  // :
+
+  for (unsigned k = 0; k < array_num_cells; k++) {
+    //  GridData: Cell is bounded on top by the underside of grid
+    //            layer k, and on bottom by the above-side grid
+    //            layer k+1
+    const GridData GD_Top = mGrid.Node(0,0,k).Data(GridNode::GN_BELOW);
+    const GridData GD_Bot = mGrid.Node(0,0,k+1).Data(GridNode::GN_ABOVE);
+
+    // TODO: IMPORTANT: Assert or ensure that GridNode.Loc() will put
+    // Earth center at 0,0,0 (not 0,0,-RadE), else radii will be wrong.
+
+    mCellArray.push_back(               // Construct the cell
+        new SphereShellD2(mGrid.Node(0,0,k).Loc().Mag(),
+                          mGrid.Node(0,0,k+1).Loc().Mag(),
+                          GD_Top, GD_Bot)
+    );
+
+    ScatterParams scatpar(GD_Top.getV(), GD_Top.getHS());
+    Scatterer * pscat = Scatterer::GetScattererMatchingParams(scatpar);
+    mCellArray[k]->Link(pscat);
+  }// end for(k)
+  //
 
   // ::::::
   // :: Walk the Cylinder-stack from top to bottom and link the

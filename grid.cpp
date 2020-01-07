@@ -357,6 +357,8 @@ Grid::model_target_e Grid::GetModelType() const {
   } else {
     if ((mNi==3) && (mNj==1) && (mNk>1)) {
       return MOD_CYLINDER;
+    } else if ((mNi==1) && (mNj==1) && (mNk>1)) {
+      return MOD_SPHERESHELL;
     } else {
       return MOD_TETRAWCG;
     }
