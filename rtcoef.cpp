@@ -29,7 +29,7 @@
 //
 RTCoef::RTCoef(const R3::XYZ & fnorm_, const R3::XYZ & phdir)
   : NoTransmit(false), fnorm(fnorm_) {
-  
+
   fpara = fnorm.GetInPlaneUnitPerpendicular(phdir);
                 // Gets a perpendicular to fnorm that is in the
                 // incidence plane and projects in same direction as
@@ -74,7 +74,7 @@ RTCoef::RTCoef(const R3::XYZ & fnorm_, const R3::XYZ & phdir)
 //   of zero is OK though.)
 //
 void RTCoef::GetCoefs(raytype intype) {
-  
+
   switch (intype) {
   case RAY_P:
     mDefChoice = R_P;
@@ -89,8 +89,8 @@ void RTCoef::GetCoefs(raytype intype) {
     GetCoefs_PSV(RAY_SV);
     break;
   default:
-    // Shouldn't ever get here. 
-    // TODO: throw error if we do.
+    // Shouldn't ever get here.
+    throw std::exception();
     break;
   }
 
@@ -161,7 +161,7 @@ void RTCoef::GetCoefs_PSV(raytype intype) {
     // :: P\ -> S\  (Transmit as S)
     mAmp[T_SV] = Term1 * mAki.H * mAki.p / (beta2 * mAki.D);
 
-  } 
+  }
   else {  // (else intype is RAY_SV)
 
     // :: S\ -> P/  (Reflect as P)
@@ -295,7 +295,7 @@ void RTCoef::GetSinesCosinesAndParamsPSV(raytype intype) {
   const Real beta1  = VelocR[RAY_S];
   const Real beta2  = VelocT[RAY_S];
 
-  const raytype 
+  const raytype
     rtyp = (intype==RAY_P) ? RAY_P    // Squash SV/SH to
                            : RAY_S;   // just plain S
 
@@ -626,10 +626,10 @@ void RTCoef::PrintChosenRaytype() const {
 
   int width = 14;
   static bool header = false;
-  
+
   if ((!header) || (mSini==0.)) {
     header = true;
-    std::cout << "##" 
+    std::cout << "##"
               << std::setw(width) << "Sine_in"
               << std::setw(width) << "Prob_R_P"
               << std::setw(width) << "Prob_T_P"
@@ -638,9 +638,9 @@ void RTCoef::PrintChosenRaytype() const {
               << std::setw(width) << "Prob_R_SH"
               << std::setw(width) << "Prob_T_SH"
               << "    Result" << std::endl << std::endl;
-  }    
+  }
 
-  std::cout << "  " 
+  std::cout << "  "
             << std::setw(width) << mSini
             << std::setw(width) << mProb[R_P]
             << std::setw(width) << mProb[T_P]
@@ -671,7 +671,7 @@ void RTCoef::PrintChosenRaytype() const {
     break;
   default:
     // Shouldn't ever get here.
-    // TODO: Throw error if we do.
+    throw std::exception();
     break;
   }
 
@@ -684,7 +684,7 @@ void RTCoef::PrintChosenRaytype() const {
 //   Run through a set of input angles for a given set of material
 //   parameters and output the resultant set of outcome probabilities.
 //
-void RTCoef::RunRTCoefTest(Count nSini, 
+void RTCoef::RunRTCoefTest(Count nSini,
                            Real rho1, Real alpha1, Real beta1,
                            Real rho2, Real alpha2, Real beta2) {
 
@@ -697,7 +697,7 @@ void RTCoef::RunRTCoefTest(Count nSini,
     // :: Output a Header Block:
     // :
     std::cout << std::endl
-              << "##RTCoef Probability Test:" 
+              << "##RTCoef Probability Test:"
               << std::endl << "##" << std::endl;
     std::cout << "##       Input Raytype:  ";
     switch(irt) {
