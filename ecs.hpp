@@ -144,7 +144,7 @@ public:
 
     Generic(Real x1, Real x2, Real x3) :
       mX1(x1),mX2(x2),mX3(x3)
-    {}      
+    {}
 
     void SetTriple(Real x1, Real x2, Real x3) {
       mX1=x1; mX2=x2; mX3=x3;
@@ -194,6 +194,14 @@ public:
                       //   point xyz=0,0,-mRadE. At origin, North is in +y
                       //   direction, East is in +x direction, and azimuth is
                       //   measured in degrees east of north.
+    RAE_SPHERICAL,    // Range, Azimuth, Elevation. ECS origin is taken to be
+                      //   equatorial zero-longitude (i.e. "Null Island" or
+                      //   "Anker's Point" in the Gulf of Guinea).  In the ICS,
+                      //   we map this point to xyz=0,0,mRadE.  We take the ICS
+                      //   origin to be the Earth's radial center, and we make
+                      //   +y the polar axis, so that the North Pole is as ICS
+                      //   xyz=0,mRadE,0.  Azimuth is measured in degrees east
+                      //   of north.
     MAP_UNSUPPORTED   // Will trigger exception if used.
                       //
   };
@@ -214,13 +222,6 @@ public:
                       //   not, then this produces the same results as
                       //   OUT_NOTRANSFORM.)
   };
-
-  enum curvature_e {  // Return value type from Curvature() getter method.
-    ORTHO,            //   Specifies how Earth curvature is handled by the
-    FLATTENED,        //   current ECS setup.
-    CURVED            // 
-  };                  //  (TODO: Write Curvature() method and use in
-                      //  OutConvert() to simplify decision tree there.)
 
 
 private:
