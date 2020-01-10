@@ -153,6 +153,8 @@ public:
     Real x1() const { return mX1; }
     Real x2() const { return mX2; }
     Real x3() const { return mX3; }
+    Real Radius(const EarthCoords& ecs) const { return ecs.ExtractRadius(*this); }
+         // We can ask it its radius if we give it an ECS to interpret it by.
     bool IsNull() const {
       return ((mX1==0.0) && (mX2==0.0) && (mX3==0.0));
     }
@@ -309,6 +311,7 @@ public:
   //
 
   Real ExtractElevation(Generic ecs_loc) const;
+  Real ExtractRadius(Generic ecs_loc) const;
 
 
   // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

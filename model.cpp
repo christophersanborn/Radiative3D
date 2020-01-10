@@ -748,12 +748,9 @@ void Model::BuildCellArray_SphericalShells() {
     const GridData GD_Top = mGrid.Node(0,0,k).Data(GridNode::GN_BELOW);
     const GridData GD_Bot = mGrid.Node(0,0,k+1).Data(GridNode::GN_ABOVE);
 
-    // TODO: IMPORTANT: Assert or ensure that GridNode.Loc() will put
-    // Earth center at 0,0,0 (not 0,0,-RadE), else radii will be wrong.
-
     mCellArray.push_back(               // Construct the cell
-        new SphereShellD2(mGrid.Node(0,0,k).Loc().Mag(),
-                          mGrid.Node(0,0,k+1).Loc().Mag(),
+        new SphereShellD2(mGrid.Node(0,0,k).GetRawLoc().Radius(ECS),
+                          mGrid.Node(0,0,k+1).GetRawLoc().Radius(ECS),
                           GD_Top, GD_Bot)
     );
 

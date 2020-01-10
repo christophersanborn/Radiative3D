@@ -1272,4 +1272,83 @@ bool GCAD_RetVal::IsProper (const GCAD_RetVal & a, const GCAD_RetVal & b, const 
     return false;
 
 }  
- 
+
+
+//////
+// CONSTRUCTOR:  SphereShellD2()
+//
+SphereShellD2::SphereShellD2(Real RadTop, Real RadBot,
+                             const GridData & DataTop, const GridData & DataBot) :
+                             mRadTop(RadTop), mRadBot(RadBot)
+{
+
+  std::cerr << "~~> Wants to make SphereShell > Inner: " << mRadBot << "  Outer: " << mRadTop << "\n";
+
+
+}//
+//
+
+//////
+// METHOD:   SphereShellD2 :: Face()
+//
+//   Returns a read-write reference to either the top or bottom
+//   CellFace object, as determined by the value of face_id
+//
+CellFace & SphereShellD2::Face(CellFace::face_id_e face_id) {
+  CellFace * ptr = nullptr;
+  return (CellFace &) (*ptr); //mFaces[face_id];
+  std::cerr << "**FIXME**\n";
+}
+
+//////
+// METHOD:   SphereShellD2 :: GetVelocAtPoint()
+// METHOD:   SphereShellD2 :: GetWavelengthAtPoint()
+// METHOD:   SphereShellD2 :: GetDensityAtPoint()
+// METHOD:   SphereShellD2 :: GetQatPoint()
+//
+Real SphereShellD2::GetVelocAtPoint(const R3::XYZ & loc, raytype type) const {
+  throw std::runtime_error("UnimpSphereShellD2");
+  return  0;//loc.Dot(mVelGrad[type]) + mVel0[type];
+}
+//
+Real SphereShellD2::GetWavelengthAtPoint(const R3::XYZ & loc, raytype type) const {
+  throw std::runtime_error("UnimpSphereShellD2");
+  return  0;//(GetVelocAtPoint(loc,type)/ cmPhononFreq);
+}
+//
+Real SphereShellD2::GetDensityAtPoint(const R3::XYZ & loc) const {
+  throw std::runtime_error("UnimpSphereShellD2");
+  return  0;//loc.Dot(mDensGrad) + mDens0;
+}
+//
+Real SphereShellD2::GetQatPoint(const R3::XYZ & loc, raytype type) const {
+  throw std::runtime_error("UnimpSphereShellD2");
+  return 0;//mQ[type];
+}
+
+//////
+// METHOD:   SphereShellD2 :: GetPathToBoundary()
+//
+TravelRec
+SphereShellD2::GetPathToBoundary(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
+  throw std::runtime_error("UnimpSphereShellD2");
+  return TravelRec(); // **FIXME**
+}
+
+//////
+// METHOD:   SphereShellD2 :: AdvanceLength()
+//
+TravelRec
+SphereShellD2::AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc,
+                     const S2::ThetaPhi & startdir) {
+  throw std::runtime_error("UnimpSphereShellD2");
+  return TravelRec(); // **FIXME**
+}
+
+//////
+// METHOD:   SphereShellD2 :: IsPointInside()
+//
+Real SphereShellD2::IsPointInside(const R3::XYZ & loc) const {
+  throw std::runtime_error("UnimpSphereShellD2");
+  return 0; // **FIXME**
+}

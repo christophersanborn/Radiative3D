@@ -58,6 +58,36 @@ Real EarthCoords::ExtractElevation(Generic ecs_loc) const {
 
 
 //////
+// METHOD:  EarthCoords :: ExtractRadius()
+//
+//   Extracts Radius, defined as distance from the Earth's Center,
+//   from an ECS coord tuple.  The method to extract this coordinate
+//   depends on the encoding scheme of the tuple (I.e., the coordinate
+//   system chosen), and may not exist for some mappings.
+//
+Real EarthCoords::ExtractRadius(Generic ecs_loc) const {
+
+  switch (mMapCode) {
+
+  case ENU_ORTHO:
+  case RAE_ORTHO:
+    throw ECSMappingError("ExtractRadius");
+    break;
+
+  case RAE_CURVED:
+  case RAE_SPHERICAL:
+    return mRadE + ecs_loc.x3();
+    break;
+
+  default:
+    throw UnknownMapCode("ExtractElevation");
+    break;
+
+  }
+}
+
+
+//////
 // METHOD:  EarthCoords :: RefreshCache()
 //
 //  Precompute all the ICS fixed reference locations and directions.
