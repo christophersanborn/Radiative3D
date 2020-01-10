@@ -17,8 +17,15 @@ Unimplemented::Unimplemented(std::string method_name) :
 ////
 EarthCoords::
 UnknownMapCode::UnknownMapCode(std::string method_name) :
-  std::invalid_argument(std::string("EarthCoords ") + method_name + 
+  std::invalid_argument(std::string("EarthCoords ") + method_name +
                         std::string(": Unknown Map Code"))
+{}////
+////
+EarthCoords::
+ECSMappingError::ECSMappingError(std::string method_name) :
+  std::logic_error(
+      std::string("Invalid Mapping Operation in current map mode: ") + method_name
+    )
 {}////
 ////
 
@@ -38,6 +45,7 @@ Real EarthCoords::ExtractElevation(Generic ecs_loc) const {
   case ENU_ORTHO:         // All supported mapping thus far pack elevation
   case RAE_ORTHO:         // as third position in tuple.
   case RAE_CURVED:        //
+  case RAE_SPHERICAL:
     return ecs_loc.x3();
     break;
 
@@ -46,24 +54,43 @@ Real EarthCoords::ExtractElevation(Generic ecs_loc) const {
     break;
 
   }
-
 }
 
 
 //////
-// METHOD:  EarthCoords :: GetEarthCenter()
+// METHOD:  EarthCoords :: RefreshCache()
 //
-R3::XYZ EarthCoords::GetEarthCenter() const {
-  
+//  Precompute all the ICS fixed reference locations and directions.
+//
+void EarthCoords::RefreshCache() {
+
+  mCacheValid = false;
+
   switch (mMapCode) {
 
   case ENU_ORTHO:
   case RAE_ORTHO:
-    throw Unimplemented("GetEarthCenter");
+    // Do nothing; leave mCacheValid false
     break;
 
   case RAE_CURVED:
-    return R3::XYZ(0,0,-mRadE);
+    mCacheEarthCenter = R3::XYZ(0,0,-mRadE);
+    mCacheNorthPole = R3::XYZ(0,mRadE,-mRadE);
+    mCacheNullIsland = R3::XYZ(0,0,0);
+    mCacheEasternPode = R3::XYZ(mRadE,0,-mRadE);
+    mCacheSingularEast = R3::XYZ(1,0,0);
+    mCacheSingularUp = R3::XYZ(0,1,0);
+    mCacheValid = true;
+    break;
+
+  case RAE_SPHERICAL:
+    mCacheEarthCenter = R3::XYZ(0,0,0);
+    mCacheNorthPole = R3::XYZ(0,mRadE,0);
+    mCacheNullIsland = R3::XYZ(0,0,mRadE);
+    mCacheEasternPode = R3::XYZ(mRadE,0,0);
+    mCacheSingularEast = R3::XYZ(1,0,0);
+    mCacheSingularUp = R3::XYZ(0,1,0);
+    mCacheValid = true;
     break;
 
   default:
@@ -71,45 +98,17 @@ R3::XYZ EarthCoords::GetEarthCenter() const {
     break;
 
   }
-
 }
-
-
-//////
-// METHOD:  EarthCoords :: GetNorthPole()
-//
-R3::XYZ EarthCoords::GetNorthPole() const {
-  
-  switch (mMapCode) {
-
-  case ENU_ORTHO:
-  case RAE_ORTHO:
-    throw Unimplemented("GetNorthPole");
-    break;
-
-  case RAE_CURVED:                  // NOTE: This assumes the ECS origin is at
-    return R3::XYZ(0,mRadE,-mRadE); // the prime meridian equator intersec-
-    break;                          // tion, which rather than an assumption
-                                    // should be a user choice.  TODO: Provide
-                                    // this functionality.
-
-  default:
-    throw UnknownMapCode("GetNorthPole");
-    break;
-
-  }
-
-}
-
 
 //////
 // METHOD:  EarthCoords :: GetUp()
 //
 //   Given an ICS coordinate in the current ECS mapping scheme, return
-//   an ICS vector pointing in upward (skyward) direction.
+//   an ICS unit vector pointing in the upward (skyward) direction. If
+//   result is singular then a fallback value is returned.
 //
 R3::XYZ EarthCoords::GetUp(const R3::XYZ loc) const {
-  
+
   switch (mMapCode) {
 
   case ENU_ORTHO:
@@ -118,7 +117,8 @@ R3::XYZ EarthCoords::GetUp(const R3::XYZ loc) const {
     break;
 
   case RAE_CURVED:
-    return (GetEarthCenter().VectorTo(loc)).Unit();
+  case RAE_SPHERICAL:
+    return GetEarthCenter().VectorTo(loc).UnitElse(GetSingularUp());
     break;
 
   default:
@@ -137,7 +137,7 @@ R3::XYZ EarthCoords::GetUp(const R3::XYZ loc) const {
 //   an ICS vector pointing in the northward direction.
 //
 R3::XYZ EarthCoords::GetNorth(const R3::XYZ loc) const {
-  
+
   switch (mMapCode) {
 
   case ENU_ORTHO:
@@ -165,7 +165,7 @@ R3::XYZ EarthCoords::GetNorth(const R3::XYZ loc) const {
 //   an ICS vector pointing in the eastward direction.
 //
 R3::XYZ EarthCoords::GetEast(const R3::XYZ loc) const {
-  
+
   switch (mMapCode) {
 
   case ENU_ORTHO:
@@ -173,9 +173,13 @@ R3::XYZ EarthCoords::GetEast(const R3::XYZ loc) const {
     return R3::XYZ(+1,0,0);
     break;
 
-  case RAE_CURVED: {
+  case RAE_CURVED:
+  case RAE_SPHERICAL:
+  {
     const R3::XYZ ChordNorth = loc.VectorTo(GetNorthPole());
-    return (ChordNorth.Cross(GetUp(loc))).Unit();
+    const R3::XYZ upward = GetEarthCenter().VectorTo(loc);
+    const R3::XYZ eastward = ChordNorth.Cross(upward);
+    return eastward.UnitElse(GetSingularEast());
   } break;
 
   default:
@@ -204,7 +208,8 @@ R3::XYZ EarthCoords::GetRadial(const R3::XYZ ref, const R3::XYZ loc) const {
   case ENU_ORTHO:   // Works the same
   case RAE_ORTHO:   // whether curved
   case RAE_CURVED:  // or not.
-    return GetTransverse(ref,loc).Cross(GetUp(loc));
+  case RAE_SPHERICAL:
+    return GetUp(loc).Cross(GetTransverse(ref,loc));
     break;
 
   default:
@@ -224,17 +229,17 @@ R3::XYZ EarthCoords::GetRadial(const R3::XYZ ref, const R3::XYZ loc) const {
 //   erence location.  (I.e., it points in the direction of stationary
 //   (unchanging) "range" from the reference.)  The reference location
 //   would typically be an event source (e.g. an earthquake location)
-//   and the resultant transvers direction would be as-defined at a
+//   and the resultant transverse direction would be as-defined at a
 //   seismometer location, for example.
 //
 //   Note that the Transverse direction can be defined to point in
-//   either a clockwise or counter-clockwise direction w.r.t. the
-//   reference location.  We choose the counter-clockwise direction
-//   here, as this results in (Radial, Transverse, Z) forming a
-//   Right-Hand basis, however I believe the seismology community
-//   might use the clockwise orientation.  For our purposes, this is
-//   irrelevant, as Radiative3D computes envelopes, not plain
-//   seismograms, and thus the sign of the trace is not changed by
+//   either a clockwise or counter-clockwise direction w.r.t. the ref-
+//   erence location.  We choose the clockwise direction here, even
+//   though as this results in (Radial, Transverse, Z) forming a left-
+//   hand basis, as this seems to be the convention in the seismology
+//   community.  For our purposes, this choice has little practical
+//   relevance, as Radiative3D computes envelopes, not plain seis-
+//   mograms, and thus the sign of the trace is not changed by
 //   negating the recording axis.
 //
 R3::XYZ EarthCoords::GetTransverse(const R3::XYZ ref,
@@ -244,11 +249,12 @@ R3::XYZ EarthCoords::GetTransverse(const R3::XYZ ref,
 
   case ENU_ORTHO:     // Math works regardless of curvature. (The only part
   case RAE_ORTHO:     // that depends on curvature is the "up" direction,
-  case RAE_CURVED: {  // and that's handled appropriately by GetUp().)
+  case RAE_CURVED:    // and that's handled appropriately by GetUp().)
+  case RAE_SPHERICAL: {
     R3::XYZ ChordRadial = ref.VectorTo(loc);
-    R3::XYZ UnscaledTransverse = GetUp(loc).Cross(ChordRadial);
+    R3::XYZ UnscaledTransverse = ChordRadial.Cross(GetUp(loc));
     if (UnscaledTransverse.IsSquaredZero()) { // If not well resolved,
-      UnscaledTransverse = GetNorth(loc);     // then fall back on North.
+      UnscaledTransverse = GetSouth(loc);     // then fall back on South.
     }                                         // (Happens if loc on top of ref)
     return (UnscaledTransverse.Unit());
   } break;
@@ -296,14 +302,15 @@ R3::XYZ EarthCoords::Convert(Generic ecs_loc) const {
     } break;
 
 
-  case RAE_CURVED: {              // *** Range, Azimuth, Elevation
+  case RAE_CURVED:
+  case RAE_SPHERICAL: {           // *** Range, Azimuth, Elevation
     Real range = ecs_loc.x1();    // ***
     Real theta = range/mRadE;
     Real phi = Geometry::DtoR * (90.0 - ecs_loc.x2());
     Real r = mRadE + ecs_loc.x3();
     X = r * sin(theta) * cos(phi);
     Y = r * sin(theta) * sin(phi);
-    Z = (r * cos(theta)) - mRadE;
+    Z = (r * cos(theta)) + GetEarthCenter().z();
     } break;
 
 
@@ -363,7 +370,7 @@ EarthCoords::Generic EarthCoords::OutConvert(const R3::XYZ int_loc) const {
   if (CurvedCoords()) {
     Real x = int_loc.x();               // x wrt Earth center and Model origin
     Real y = int_loc.y();               // y wrt Earth center and Model origin
-    Real zeta = int_loc.z() + mRadE;    // z wrt Earth center (at 0,0,-mRadE)
+    Real zeta = int_loc.z() - GetEarthCenter().z();    // z wrt Earth center
     Real r = sqrt(x*x + y*y + zeta*zeta);  // radius from Earth center
     Real rxy = sqrt(x*x + y*y);            // perp. radius from polar axis
     Real ranges = mRadE * acos(zeta/r);    // range at Earth surface

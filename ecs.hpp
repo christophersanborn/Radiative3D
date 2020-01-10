@@ -174,6 +174,10 @@ public:
     UnknownMapCode(std::string method_name);
   };
 
+  class ECSMappingError : public std::logic_error {
+  public:
+    ECSMappingError(std::string token);
+  };
 
   // ::::::::::::::::::::::::::::::::::
   // ::: Enums  (EarthCoords Class) :::
@@ -239,6 +243,18 @@ private:
                             // transformation (ignored for CURVED mappings)
   Real              mRadE;  // Radius of the Earth
 
+      // Fixed point and fixed direction cache: must update whenever
+      // mRadE or mMapCode changes.
+
+  R3::XYZ   mCacheEarthCenter;  // Locations...
+  R3::XYZ     mCacheNorthPole;  //
+  R3::XYZ    mCacheNullIsland;
+  R3::XYZ   mCacheEasternPode;
+  R3::XYZ  mCacheSingularEast;  // Directions (unit vectors)...
+  R3::XYZ    mCacheSingularUp;
+  bool            mCacheValid;  // (False in mappings where these locations are meaningless)
+
+  void RefreshCache();
 
 public:
   ;
@@ -251,21 +267,20 @@ public:
     mOutCode ( OUT_ENU_ORTHO ),
     mFlatten ( false         ),
     mRadE    ( 6371.0        )
-  {}
+  { RefreshCache(); }
 
 
   // ::::::::::::::::::::::::::::::::::::::::
   // ::: Set-Methods  (EarthCoords Class) :::
   // ::::::::::::::::::::::::::::::::::::::::
   //
-  //            These methods form the interface by which the user of
-  //            the class selects the desired coordinate and
-  //            transformation system.
+  //        These methods form the interface by which the user of the class
+  //        selects the desired coordinate and transformation system.
   //
 
   void SetEarthFlattening(bool truefalse) {mFlatten = truefalse;}
-  void SetEarthRadius(Real erad) {mRadE = erad;}
-  void SetMapping(earthcoords_e maptype) {mMapCode = maptype;}
+  void SetEarthRadius(Real erad) {mRadE = erad; RefreshCache();}
+  void SetMapping(earthcoords_e maptype) {mMapCode = maptype; RefreshCache();}
   void SetOCSMapping(outcoords_e maptype) {mOutCode = maptype;}
 
 
@@ -273,24 +288,24 @@ public:
   // ::: Get-Methods  (EarthCoords class) :::
   // ::::::::::::::::::::::::::::::::::::::::
 
-  bool IsEarthFlattening() const {return mFlatten;}
-  bool CurvedCoords() const {           // Returns true if selected mapping
-    return (mMapCode == RAE_CURVED);    // involves curvature.
-  }                                     //
   Real GetEarthRadius() const {return mRadE;}
+  bool IsEarthFlattening() const {return mFlatten;}
+  bool CurvedCoords() const {
+    // Returns true if selected mapping involves curvature.
+    return (mMapCode == RAE_CURVED || mMapCode == RAE_SPHERICAL);
+  }
 
 
   // ::::::::::::::::::::::::::::::::::::::::::::
   // ::: Extract Methods  (EarthCoords Class) :::
   // ::::::::::::::::::::::::::::::::::::::::::::
   //
-  //            These extract named coordinates from the coordinate
-  //            tuple in the currently selected coordinate system.
-  //            Note: there are no coordinate-space to model-space
-  //            conversions here, this is just about getting a
-  //            particular coordinate from the tuple.  (Some basic
-  //            translation may occur: e.g. getting Easting from an
-  //            RAE tupple.)
+  //        These extract named coordinates from the coordinate tuple in the
+  //        currently selected ECS coordinate system.  Note: there are no
+  //        coordinate-space to model-space conversions here - we stay in
+  //        ECS. This is just about getting a particular coordinate from the
+  //        tuple.  (Some basic translation may occur, however. E.g.,
+  //        extracting "East" or "North" from an RAE tupple.)
   //
 
   Real ExtractElevation(Generic ecs_loc) const;
@@ -300,35 +315,53 @@ public:
   // ::: Get Reference Location Methods  (EarthCoords Class) :::
   // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   //
-  //            These return named locations in the internal
-  //            coordinate system.
+  //        These return named fixed locations and special fixed reference
+  //        directions in the internal coordinate system. "NullIsland"
+  //        refers to the equatorial zero (I.e. where LLE=0,0,0), and
+  //        "EasternPode" refers to LLE=0,+90,0.  "Singular East" is the
+  //        direction used for East when it is otherwise undefined (when on
+  //        the polar axis).
   //
 
-  R3::XYZ GetEarthCenter() const;
-  R3::XYZ GetNorthPole() const;
-
+  R3::XYZ GetEarthCenter() const {if (mCacheValid) return mCacheEarthCenter; else throw ECSMappingError("EarthCenter");}
+  R3::XYZ GetNorthPole() const {if (mCacheValid) return mCacheNorthPole; else throw ECSMappingError("NorthPole");}
+  R3::XYZ GetNullIsland() const {if (mCacheValid) return mCacheNullIsland; else throw ECSMappingError("NullIsland");}
+  R3::XYZ GetEasternPode() const {if (mCacheValid) return mCacheEasternPode; else throw ECSMappingError("EasternPode");}
+  R3::XYZ GetSingularEast() const {if (mCacheValid) return mCacheSingularEast; else throw ECSMappingError("SingularEast");}
+  R3::XYZ GetSingularUp() const {if (mCacheValid) return mCacheSingularUp; else throw ECSMappingError("SingularUp");}
 
   // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   // ::: Get-Local-Direction Methods  (EarthCoords Class) :::
   // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   //
-  //            These return named directions as vectors in the in-
-  //            ternal coordinate system.  For curvilinear mappings,
-  //            these directions are location-dependant.
+  //        These return named directions as vectors in the internal co-
+  //        ordinate system.  For curvilinear mappings, these directions
+  //        are location-dependant.
   //
-  //            Note that the location arguments are assumed to be in
-  //            the INTERNAL coordinate system.
+  //        Note that the location arguments are assumed to be in the
+  //        INTERNAL coordinate system.
   //
-  //            The GetRadial() and GetTransverse() methods compute
-  //            the Radial and Transverse directions (as in the
-  //            Radial, Transverse, and Z directions commonly used as
-  //            a basis in seismic analysis) defined at the location
-  //            'from' with respect to a reference location at 'ref'.
-  //            (Typically 'ref' will be the event location and 'from'
-  //            the seismometer location.)  A GetZ() method is not
-  //            provided as the direction is definitionally equivalent
-  //            to the GetUp() direction and is also not dependent on
-  //            the 'ref' location.
+  //        The GetRadial() and GetTransverse() methods compute the Radial
+  //        and Transverse directions (as in the Radial, Transverse, and Z
+  //        directions commonly used as a basis in seismic analysis) defined
+  //        at the location 'from' with respect to a reference location at
+  //        'ref'.  (Typically 'ref' will be the event location and 'from'
+  //        the seismometer location.)  A GetZ() method is not provided as
+  //        the direction is definitionally equivalent to the GetUp()
+  //        direction and is also not dependent on the 'ref' location.  Note
+  //        that in seismology, the 'transverse' coordinate typically
+  //        increases clockwise, and so we do the same here, meaning RTZ
+  //        will form a LEFT-handed coordinate system.
+  //
+  //        SINGULARITIES: Directional singluarities are removed as follows:
+  //        EAST: Along the polar axis, East is defined as paralell to the
+  //        line from the Earth's center to the Eastern Pode.  NORTH: Along
+  //        the polar axis, North is defined by Up cross East (same as it is
+  //        defined elsewhere).  UP: At the Earth's center, Up is defined as
+  //        along the line from the Earth's center to the North Pole.
+  //        TRANSVERSE: When 'ref' and 'from' are the same or above/below
+  //        each other according to local Up direction, then Transverse is
+  //        assigned to point South.
   //
 
   R3::XYZ GetUp(R3::XYZ from) const;
@@ -346,14 +379,12 @@ public:
   // ::: Coordinate Transformations  (EarthCoords Class) :::
   // :::::::::::::::::::::::::::::::::::::::::::::::::::::::
   //
-  //            To/From the internal coordinate system.  These are
-  //            generally intended to be called by GridCell objects when
-  //            queried via their Get methods, in order to convert on the
-  //            fly from ECS coordinates into internal representation.
-  //            Thus, the grid will exist in the user-chosen ECS
-  //            coordinates, but the model will be built automatically in
-  //            internal coordinates.
-  //
+  //        To/From the internal coordinate system.  These are generally
+  //        intended to be called by GridCell objects when queried via their
+  //        Get methods, in order to convert on the fly from ECS coordinates
+  //        into internal representation.  Thus, the grid will exist in the
+  //        user-chosen ECS coordinates, but the model will be built
+  //        automatically in internal coordinates.
   //
 
   R3::XYZ Convert(Generic ecs_loc) const;     // From ECS to internal
@@ -372,45 +403,37 @@ public:
   // ::: Earth-Flattening  (EarthCoords Class) :::
   // :::::::::::::::::::::::::::::::::::::::::::::
   //
-  //            These are for performing Earth-flattening algorithms a la
-  //            Aki and Richards box 9.9.  Note that the depth transform-
-  //            ation will be called automatically by the Convert() method
-  //            if the chosen ECS system includes flattening, but the
-  //            property transformations (velocity) are handled via sep-
-  //            arate functions. To facilitate property transformations,
-  //            the Convert() method is overloaded to take and return an
-  //            Elastic::HElastic object, and will flatten or not based on
-  //            the current ECS flattening settings.  If flattening is not
-  //            called for, then the Convert() method returns the HElastic
-  //            object unmodified, as the elastic properties are not
-  //            otherwise coordinate-dependent.
+  //        These are for performing Earth-flattening algorithms a la Aki
+  //        and Richards box 9.9.  Note that the depth transformation will
+  //        be called automatically by the Convert() method if the chosen
+  //        ECS system includes flattening, but the property transformations
+  //        (velocity) are handled via separate functions. To facilitate
+  //        property transformations, the Convert() method is overloaded to
+  //        take and return an Elastic::HElastic object, and will flatten or
+  //        not based on the current ECS flattening settings.  If flattening
+  //        is not called for, then the Convert() method returns the
+  //        HElastic object unmodified, as the elastic properties are not
+  //        otherwise coordinate-dependent.
   //
-  //            The Convert() function is intended to be called by the
-  //            GetData() method of the GridNode class, so that trans-
-  //            parent, on-the-fly conversion happens before the data is
-  //            passed to the MediumCell constructors that depend on the
-  //            data. (The specific flattening methods are mostly not
-  //            needed outside this class itself.)
+  //        The Convert() function is intended to be called by the GetData()
+  //        method of the GridNode class, so that transparent, on-the-fly
+  //        conversion happens before the data is passed to the MediumCell
+  //        constructors that depend on the data. (The specific flattening
+  //        methods are mostly not needed outside this class itself.)
   //
-  //            The property transforms must be supplied with the
-  //            unconverted/untransformed (ECS frame) locations at which
-  //            the properties are to be transformed, and for the reverse
-  //            transformations the internal coords must be supplied.
+  //        The property transforms must be supplied with the unconverted/
+  //        untransformed (ECS frame) locations at which the properties are
+  //        to be transformed, and for the reverse transformations the
+  //        internal coords must be supplied.
   //
   //
 
-  Elastic::HElastic Convert(Generic ecs_loc,                // From ECS
-                            Elastic::HElastic prop) const;  //     to ICS
-  Elastic::HElastic BackConvert(R3::XYZ int_loc,            // From ICS
-                            Elastic::HElastic prop) const;  //       to ECS
-  Elastic::HElastic OutConvert(R3::XYZ int_loc,             // From ICS
-                            Elastic::HElastic prop) const;  //       to OCS
+  Elastic::HElastic Convert(Generic ecs_loc, Elastic::HElastic prop) const; // From ECS to ICS
+  Elastic::HElastic BackConvert(R3::XYZ int_loc, Elastic::HElastic prop) const; // From ICS to ECS
+  Elastic::HElastic OutConvert(R3::XYZ int_loc, Elastic::HElastic prop) const; // From ICS to OCS
 
-
-  Elastic::Velocity FlattenVelocity(Generic ecs_loc,
-                          Elastic::Velocity v_sph) const;
-  Elastic::Velocity UnflattenVelocity(R3::XYZ int_loc,
-                            Elastic::Velocity v_fl) const;
+  Elastic::Velocity FlattenVelocity(Generic ecs_loc, Elastic::Velocity v_sph) const;
+  Elastic::Velocity UnflattenVelocity(R3::XYZ int_loc, Elastic::Velocity v_fl) const;
 
   Elastic::Density FlattenDensity(Generic ecs_loc, Elastic::Density rho) const;
   Elastic::Density UnflattenDensity(R3::XYZ int_l, Elastic::Density rho) const;

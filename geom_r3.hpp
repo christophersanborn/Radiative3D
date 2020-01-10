@@ -145,6 +145,13 @@ public:
     return XYZ(mX*maginv,mY*maginv,mZ*maginv);
   }
 
+  const XYZ UnitElse(const XYZ & fallback) const {
+    Real mag = Mag();                   // Return unit vector unless we are a
+    if (mag == (Real)0) return fallback;// zero-length vector, in which case
+    Real maginv = ((Real)1.0)/mag;      // return fallback.
+    return XYZ(mX*maginv,mY*maginv,mZ*maginv);
+  }
+
   const XYZ Negative() const {
     return XYZ(-mX, -mY, -mZ);
   }
