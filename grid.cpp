@@ -281,6 +281,10 @@ void Grid::SetMapping(gs_coords_e coords, curvature_e curve) {
     ECS.SetMapping(EarthCoords::RAE_CURVED);
     ECS.SetEarthFlattening(false);
   }
+  else if (coords==GC_RAE && curve==GC_SPHERICAL) {
+    ECS.SetMapping(EarthCoords::RAE_SPHERICAL);
+    ECS.SetEarthFlattening(false);
+  }
   else {
     ECS.SetMapping(EarthCoords::MAP_UNSUPPORTED);
   }

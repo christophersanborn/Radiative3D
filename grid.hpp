@@ -292,9 +292,15 @@ public:
     GC_ORTHO,             //   No curvature.  (XYZ, RAE)
     GC_FLATTENED,         //   Curvature simulated through depth
                           //    transformation.  (XYZ, RAE)
-    GC_CURVED             //   Curvilinear.  (RAE, LLE)
                           //
-  };
+    GC_CURVED,            //   Curvilinear. Use GC_CURVED when it's important
+    GC_SPHERICAL          //    that ICS origin be at ECS origin, e.g. when
+                          //    doing upper-Earth models with WCG's.  Use
+                          //    GC_SPHERICAL when it's important that ICS
+                          //    origin is at Earth Center, like when doing
+                          //    whole-Earth models with spherical
+                          //    shells.  (RAE, LLE)
+  };                      //
 
 
 private:
