@@ -3,15 +3,24 @@ CPP=g++
 FLAGS=-O3 -g -Wall
 DEFINES=
 
+build_dir = build
+objdir = $(build_dir)
+
 OUT_EXEC = main
 objects  = geom_s2.o geom_r3.o geom_r4.o probability.o sources.o \
            scatterers.o events.o phonons.o grid.o media.o model.o \
 	   rtcoef.o dataout.o scatparams.o cmdline.o user.o global.o \
            ecs.o elastic.o main.o
 
-.PHONY : default cleanall clean neat anyway .FORCE
-default : $(OUT_EXEC)
+objects := $(addprefix $(objdir)/,$(objects))
 
+.PHONY : default cleanall clean neat anyway directories .FORCE
+default : directories $(OUT_EXEC)
+
+directories : $(objdir)
+
+$(objdir) :
+	mkdir -p $@
 
 ##//////
 ## Versioning:
@@ -130,7 +139,7 @@ dataout_hpp = dataout.hpp $(geom_hpp) $(raytype_hpp) $(tensors_hpp)
 ## Executable:
 ##
 $(OUT_EXEC) : $(objects)
-	$(CPP) -c main.cpp $(FLAGS) -DREVISION_NUM=$(revision)
+	$(CPP) -c main.cpp $(FLAGS) -DREVISION_NUM=$(revision) -o $(objdir)/main.o
 	$(CPP) $^ -o $@ $(FLAGS)
 
 anyway : $(objects)
@@ -145,68 +154,68 @@ anyway : $(objects)
 comd =  # (Common Build Dependencies)
         # (If these files change, rebuild everything)
 
-geom_s2.o : geom_s2.cpp $(geom_s2_hpp) $(geom_r3_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/geom_s2.o : geom_s2.cpp $(geom_s2_hpp) $(geom_r3_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-geom_r3.o : geom_r3.cpp $(geom_r3_hpp) $(geom_s2_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/geom_r3.o : geom_r3.cpp $(geom_r3_hpp) $(geom_s2_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-geom_r4.o : geom_r4.cpp $(geom_r4_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/geom_r4.o : geom_r4.cpp $(geom_r4_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-probability.o : probability.cpp $(probability_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/probability.o : probability.cpp $(probability_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-elastic.o : elastic.cpp $(elastic_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/elastic.o : elastic.cpp $(elastic_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-sources.o : sources.cpp $(sources_hpp) $(phonons_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/sources.o : sources.cpp $(sources_hpp) $(phonons_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-events.o : events.cpp $(events_hpp) $(phonons_hpp) $(dataout_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/events.o : events.cpp $(events_hpp) $(phonons_hpp) $(dataout_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-scatparams.o : scatparams.cpp $(scatparams_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/scatparams.o : scatparams.cpp $(scatparams_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-scatterers.o : scatterers.cpp $(scatterers_hpp) $(phonons_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/scatterers.o : scatterers.cpp $(scatterers_hpp) $(phonons_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-phonons.o : phonons.cpp $(phonons_hpp) $(media_hpp) $(rtcoef_hpp) \
+$(objdir)/phonons.o : phonons.cpp $(phonons_hpp) $(media_hpp) $(rtcoef_hpp) \
                         $(scatterers_hpp) $(dataout_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-rtcoef.o : rtcoef.cpp $(rtcoef_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/rtcoef.o : rtcoef.cpp $(rtcoef_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-grid.o : grid.cpp $(grid_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/grid.o : grid.cpp $(grid_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-media.o : media.cpp $(media_hpp) $(grid_hpp) $(rtcoef_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/media.o : media.cpp $(media_hpp) $(grid_hpp) $(rtcoef_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-model.o : model.cpp $(model_hpp) $(phonons_hpp) $(dataout_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/model.o : model.cpp $(model_hpp) $(phonons_hpp) $(dataout_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-dataout.o: dataout.cpp $(dataout_hpp) $(phonons_hpp) $(media_hpp) \
+$(objdir)/dataout.o: dataout.cpp $(dataout_hpp) $(phonons_hpp) $(media_hpp) \
 	               $(ecs_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-cmdline.o: cmdline.cpp $(cmdline_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/cmdline.o: cmdline.cpp $(cmdline_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-user.o : user.cpp  $(grid_hpp) $(comd) user_*_inc.cpp
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/user.o : user.cpp  $(grid_hpp) $(comd) user_*_inc.cpp
+	$(CPP) -c $< $(FLAGS) -o $@
 
-global.o : global.cpp  $(ecs_hpp) $(dataout_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/global.o : global.cpp  $(ecs_hpp) $(dataout_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-ecs.o : ecs.cpp $(ecs_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+$(objdir)/ecs.o : ecs.cpp $(ecs_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
 
-main.o : main.cpp  $(params_hpp) $(model_hpp) $(dataout_hpp) \
+$(objdir)/main.o : main.cpp  $(params_hpp) $(model_hpp) $(dataout_hpp) \
                    $(rtcoef_hpp) $(cmdline_hpp) $(comd)
-	$(CPP) -c $< $(FLAGS)
+	$(CPP) -c $< $(FLAGS) -o $@
 
 
 ## Cleanup:
