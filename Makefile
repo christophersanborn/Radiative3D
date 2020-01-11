@@ -8,8 +8,8 @@ objdir = $(build_dir)
 
 OUT_EXEC = main
 objects  = geom_s2.o geom_r3.o geom_r4.o probability.o sources.o \
-           scatterers.o events.o phonons.o grid.o media.o model.o \
-	   rtcoef.o dataout.o scatparams.o cmdline.o user.o global.o \
+           scatterers.o events.o phonons.o grid.o media_cellface.o media.o \
+	   model.o rtcoef.o dataout.o scatparams.o cmdline.o user.o global.o \
            ecs.o elastic.o main.o
 
 objects := $(addprefix $(objdir)/,$(objects))
@@ -120,7 +120,8 @@ events_hpp  = events.hpp  $(sources_hpp) $(tensors_hpp)
 scatparams_hpp = scatparams.hpp $(geom_hpp) $(elastic_hpp)
 scatterers_hpp = scatterers.hpp $(sources_hpp) $(scatparams_hpp)
 grid_hpp    = grid.hpp    $(ecs_hpp)
-media_hpp   = media.hpp   $(raytype_hpp) $(elastic_hpp) $(geom_hpp) $(array_hpp)
+media_cellface_hpp = media_cellface.hpp $(geom_hpp)
+media_hpp   = media.hpp   $(array_hpp) $(raytype_hpp) $(elastic_hpp) $(media_cellface_hpp)
 model_hpp   = model.hpp   $(events_hpp) $(scatterers_hpp) $(grid_hpp) $(media_hpp)
 
 #
@@ -191,7 +192,10 @@ $(objdir)/rtcoef.o : rtcoef.cpp $(rtcoef_hpp) $(comd)
 $(objdir)/grid.o : grid.cpp $(grid_hpp) $(comd)
 	$(CPP) -c $< $(FLAGS) -o $@
 
-$(objdir)/media.o : media.cpp $(media_hpp) $(grid_hpp) $(rtcoef_hpp) $(comd)
+$(objdir)/media_cellface.o : media_cellface.cpp $(media_cellface_hpp) $(media_hpp) $(rtcoef_hpp) $(comd)
+	$(CPP) -c $< $(FLAGS) -o $@
+
+$(objdir)/media.o : media.cpp $(media_hpp) $(grid_hpp) $(comd)
 	$(CPP) -c $< $(FLAGS) -o $@
 
 $(objdir)/model.o : model.cpp $(model_hpp) $(phonons_hpp) $(dataout_hpp) $(comd)
