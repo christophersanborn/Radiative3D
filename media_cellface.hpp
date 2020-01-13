@@ -1,5 +1,20 @@
 // media_cellface.hpp
 //
+// The CellFace class hierarchy offers a set of classes that define the
+// bounding surfaces of MediumCell objects.  CellFace is a pure virtual base
+// class defining an interface for interacting with the bounding surfaces of
+// various geometries.
+//
+//               CellFace
+//        ./--------^--------\.
+//     PlaneFace         SphereFace
+//
+//
+// Additionaly a few supporting classes are defined here:
+//
+//     o   class GCAD_RetVal
+//
+//
 #ifndef MEDIA_CELLFACE_H_
 #define MEDIA_CELLFACE_H_
 //
@@ -123,31 +138,19 @@ protected:
 
   MediumCell * mpCell;    // Cell object to which this face belongs.
 
-  // ::::::
-  // :: Geometry:    (Determines the positioning and
-  // :                orientation of the face)
-  //
-
-  R3::XYZ mNormal;        // Surface normal pointing outward from
-                          // MediumCell (unit magnitude)
-
-  R3::XYZ mPoint;         // A location known to be on the cellface.
-
-
-public:
-
   // ::::::::::::::::::::::::::::::::::::::
   // ::: Constructors  (CellFace Class) :::
   // ::::::::::::::::::::::::::::::::::::::
-
-  CellFace (const R3::XYZ & N1, const R3::XYZ & N2, const R3::XYZ & N3,
-            MediumCell * powner);
-
-  CellFace (const R3::XYZ & N1, const R3::XYZ & N2, const R3::XYZ & N3,
-            const R3::XYZ & N4, MediumCell * powner);
-                    // First three nodes define corners of a face.
-                    // The fourth node determines which point is
-                    // outside.
+  //
+  //   (Callable only by derived class constructors.)
+  //
+  CellFace(MediumCell * pOwner) :
+    mCollect ( false  ),
+    mReflect ( false  ),
+    mAdjoin  ( false  ),
+    mGridDiscon ( false ),
+    mpOther  ( nullptr ),
+    mpCell   ( pOwner ) {}
 
 
 public:
@@ -177,17 +180,15 @@ public:
   // ::: Property-Get Methods  (CellFace Class) :::
   // ::::::::::::::::::::::::::::::::::::::::::::::
 
-  R3::XYZ Normal() const {return mNormal;}
-
   bool IsCollectionFace() const {return mCollect;}
   bool IsReflectionFace() const {return mReflect;}
   bool GridDiscontinuity() const {return mGridDiscon;}
   bool HasNeighbor() const {return mAdjoin;}
 
 
-  // :::::::::::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Component Reference Methods  (CellFace Class) :::
-  // :::::::::::::::::::::::::::::::::::::::::::::::::::::
+  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Linkage Reference Methods  (CellFace Class) :::
+  // :::::::::::::::::::::::::::::::::::::::::::::::::::
 
   MediumCell & Cell() {
     return *mpCell;
@@ -197,20 +198,13 @@ public:
     return *(mpOther->mpCell);
   }
 
-
   // :::::::::::::::::::::::::::::::::::::::::::::::
   // ::: Interrogative Methods  (CellFace Class) :::
   // :::::::::::::::::::::::::::::::::::::::::::::::
 
-  Real VelocityJump(const R3::XYZ & loc) const;
-                    // Returns a number characterizing the fractional
-                    // velocity jump across the interface.
+  virtual R3::XYZ Normal() const = 0;
 
-  Real DistToPoint(const R3::XYZ & loc) const;
-                    // Computes direct (shortest) distance from the
-                    // face to the given point.
-
-  Real DistToExitFace(const R3::XYZ & loc, const R3::XYZ & dir) const;
+  virtual Real DistToExitFace(const R3::XYZ & loc, const R3::XYZ & dir) const = 0;
                     // Computes the directed (along a ray) distance
                     // from the point to the face.  Gives finite value
                     // if ray crosses from inside-to-out (exiting).
@@ -218,22 +212,72 @@ public:
                     // either crosses from out-to-in (entering) or
                     // else fails to intersect (runs parallel).
 
-  GCAD_RetVal GetCircArcDistToFace(const Real & R, const R3::XYZ & C, const R3::Matrix & S) const;
-                    // Similar to DistToExitFace except it computes
-                    // distance along a circular arc path.
-
-  // ::::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Do-Something Methods  (CellFace Class) :::
-  // ::::::::::::::::::::::::::::::::::::::::::::::
+  Real VelocityJump(const R3::XYZ & loc) const;
+                    // Returns a number characterizing the fractional
+                    // velocity jump across the interface.
 
   RTCoef GetRTBasis(const R3::XYZ & loc, const R3::XYZ & dir) const;
-                    // Returns an RTCoef object with the basis
-                    // information (which depends on the incidence
-                    // angle to the CellFace) set
+                    // Returns an RTCoef object with the basis information
+                    // (which depends on the incidence angle to the CellFace).
+                    // NOTE: This depends on virtual method Normal(), but does
+                    // not itself need to be virtual, so it's not.
 
 };
 
 
+//////
+// CLASS:  PlaneFace
+// FROM:   CellFace
+//
+//  Planar CellFace with a fixed normal direction.  Bounds RCUCylinder
+//  and Tetra model cells.
+//
+class PlaneFace : public CellFace {
+protected:
+
+  // ::::::
+  // :: Geometry:    (Determines the positioning and
+  // :                orientation of the face)
+  //
+
+  R3::XYZ mNormal;        // Surface normal pointing outward from
+                          // MediumCell (unit magnitude)
+
+  R3::XYZ mPoint;         // A location known to be on the cellface.
+
+
+public:
+
+  // :::::::::::::::::::::::::::::::::::::::
+  // ::: Constructors  (PlaneFace Class) :::
+  // :::::::::::::::::::::::::::::::::::::::
+
+  PlaneFace (const R3::XYZ & N1, const R3::XYZ & N2, const R3::XYZ & N3,
+             MediumCell * powner);
+
+  PlaneFace (const R3::XYZ & N1, const R3::XYZ & N2, const R3::XYZ & N3,
+             const R3::XYZ & N4, MediumCell * powner);
+                    // First three nodes define corners of a face.
+                    // The fourth node determines which point is
+                    // outside.
+
+  // ::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Interrogative Methods  (PlaneFace Class) :::
+  // ::::::::::::::::::::::::::::::::::::::::::::::::
+
+  virtual R3::XYZ Normal() const {return mNormal;}
+
+  Real DistToPoint(const R3::XYZ & loc) const;
+                    // Computes direct (shortest) distance from the
+                    // face to the given point.
+
+  virtual Real DistToExitFace(const R3::XYZ & loc, const R3::XYZ & dir) const;
+
+  GCAD_RetVal GetCircArcDistToFace(const Real & R, const R3::XYZ & C, const R3::Matrix & S) const;
+                    // Similar to DistToExitFace except it computes
+                    // distance along a circular arc path.
+
+};
 
 
 ///

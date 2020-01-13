@@ -1,5 +1,10 @@
 // media_cellface.cpp
 //
+// The CellFace class hierarchy offers a set of classes that define the
+// bounding surfaces of MediumCell objects.  CellFace is a pure virtual base
+// class defining an interface for interacting with the bounding surfaces of
+// various geometries. See full commentary in media_cellface.hpp.
+//
 #include "media_cellface.hpp"
 #include "media.hpp"
 #include "rtcoef.hpp"
@@ -18,71 +23,10 @@
 //
 //   Methods Defined Here:
 //
-//     o   CellFace()
 //     o   LinkTo()
 //     o   VelocityJump()
 //     o   GetRTBasis()
-//     o   DistToPoint()
-//     o   DistToExitFace()
-//     o   GetCircArcDistToFace()
 //
-
-//////
-// CONSTRUCTOR:  CellFace()
-//
-CellFace::CellFace (const R3::XYZ & N1, const R3::XYZ & N2,
-                    const R3::XYZ & N3,
-                    MediumCell * powner) :
-  mCollect ( false  ),
-  mReflect ( false  ),
-  mAdjoin  ( false  ),
-  mGridDiscon ( false ),
-  mpOther  ( 0      ),
-  mpCell   ( powner ),
-  mPoint   ( N1     )       // Need a point on the Face. N1 is on
-                            // the face (albeit on the edge of it.)
-{
-  // The three nodes, N1, N2, and N3, define a triangle that
-  // represents the cell face.  The order of the nodes determines
-  // the orientation of the face, with the "outward" side being the
-  // side from which the nodes would be seen to trace a
-  // counter-clockwise path.
-  R3::XYZ Ray1 = N1.VectorTo(N2);
-  R3::XYZ Ray2 = N1.VectorTo(N3);
-  mNormal = Ray1.Cross(Ray2);   // Points in outward direction;
-  mNormal.Normalize();          // Set magnitude to 1.0;
-
-}
-
-
-//////
-// CONSTRUCTOR:  CellFace()
-//
-CellFace::CellFace (const R3::XYZ & N1, const R3::XYZ & N2,
-                    const R3::XYZ & N3, const R3::XYZ & N4,
-                    MediumCell * powner) :
-  mCollect ( false  ),
-  mReflect ( false  ),
-  mAdjoin  ( false  ),
-  mGridDiscon ( false ),
-  mpOther  ( 0      ),
-  mpCell   ( powner ),
-  mPoint   ( N1     )
-
-{
-  // The three nodes, N1, N2, and N3, define a triangle that
-  // represents the cell face.  The fourth node N4 is the excluded
-  // node which is used to determine the direction of the normal vector.
-  R3::XYZ Ray1 = N1.VectorTo(N2);
-  R3::XYZ Ray2 = N1.VectorTo(N3);
-  mNormal = Ray1.Cross(Ray2);
-  mNormal.Normalize();
-
-  if(DistToPoint(N4) > 0)             // Flips direction of mNormal if
-    mNormal = mNormal.ScaledBy(-1);   // pointing inward
-
-}
-
 
 //////
 // METHOD:  CellFace :: LinkTo()
@@ -196,7 +140,7 @@ RTCoef CellFace::GetRTBasis(const R3::XYZ & loc,
     rt.DensityT = 0.0;          // These values simulate a free
     rt.VelocT[RAY_P] = 1e-12;   // surface to pretty good
     rt.VelocT[RAY_S] = 1e-12;   // approximation.
-    rt.NoTransmit = true;       // 
+    rt.NoTransmit = true;       //
   }
 
   return rt;
@@ -204,8 +148,65 @@ RTCoef CellFace::GetRTBasis(const R3::XYZ & loc,
 }
 
 
+//////////////////////////////////////////////////////////////////////////
+// &&&&                                                              ****
+// ****  CLASS:  PlaneFace  (from CellFace)                          ****
+// ****                                                              ****
+//
+//   Methods Defined Here:
+//
+//     ...
+//
+
 //////
-// METHOD:  CellFace :: DistToPoint()
+// CONSTRUCTOR:  PlaneFace()
+//
+PlaneFace::PlaneFace (const R3::XYZ & N1, const R3::XYZ & N2,
+                      const R3::XYZ & N3,
+                      MediumCell * powner) :
+  CellFace(powner),
+  mPoint   ( N1     )       // Need a point on the Face. N1 is on
+                            // the face (albeit on the edge of it.)
+{
+  // The three nodes, N1, N2, and N3, define a triangle that
+  // represents the cell face.  The order of the nodes determines
+  // the orientation of the face, with the "outward" side being the
+  // side from which the nodes would be seen to trace a
+  // counter-clockwise path.
+  R3::XYZ Ray1 = N1.VectorTo(N2);
+  R3::XYZ Ray2 = N1.VectorTo(N3);
+  mNormal = Ray1.Cross(Ray2);   // Points in outward direction;
+  mNormal.Normalize();          // Set magnitude to 1.0;
+
+}
+
+
+//////
+// CONSTRUCTOR:  PlaneFace()
+//
+PlaneFace::PlaneFace (const R3::XYZ & N1, const R3::XYZ & N2,
+                      const R3::XYZ & N3, const R3::XYZ & N4,
+                      MediumCell * powner) :
+  CellFace(powner),
+  mPoint   ( N1     )
+
+{
+  // The three nodes, N1, N2, and N3, define a triangle that
+  // represents the cell face.  The fourth node N4 is the excluded
+  // node which is used to determine the direction of the normal vector.
+  R3::XYZ Ray1 = N1.VectorTo(N2);
+  R3::XYZ Ray2 = N1.VectorTo(N3);
+  mNormal = Ray1.Cross(Ray2);
+  mNormal.Normalize();
+
+  if(DistToPoint(N4) > 0)             // Flips direction of mNormal if
+    mNormal = mNormal.ScaledBy(-1);   // pointing inward
+
+}
+
+
+//////
+// METHOD:  PlaneFace :: DistToPoint()
 //
 //   Returns the direct (shortest) distance from the CellFace plane to
 //   the given point, with the return value using the following sign
@@ -221,14 +222,14 @@ RTCoef CellFace::GetRTBasis(const R3::XYZ & loc,
 //   Note: This function uses the opposite sign convention as the
 //   related function, DirectedDistToPlane()
 //
-Real CellFace::DistToPoint(const R3::XYZ & loc) const {
+Real PlaneFace::DistToPoint(const R3::XYZ & loc) const {
   //
   return mNormal.Dot(mPoint.VectorTo(loc));
 }
 
 
 //////
-// METHOD:  CellFace :: DistToExitFace()
+// METHOD:  PlaneFace :: DistToExitFace()
 //
 //   Returns the directed (along a ray) distance from the starting
 //   location ('loc') to the CellFace, under the presumption that we
@@ -262,8 +263,8 @@ Real CellFace::DistToPoint(const R3::XYZ & loc) const {
 //    -inf  -   We will NEVER exit the face, because we are already
 //              outside, and running parallel to the face.
 //
-Real CellFace::DistToExitFace(const R3::XYZ & loc,
-                              const R3::XYZ & dir) const {
+Real PlaneFace::DistToExitFace(const R3::XYZ & loc,
+                               const R3::XYZ & dir) const {
 
   Real d_sh;        // dist_shortest
 
@@ -329,12 +330,12 @@ Real CellFace::DistToExitFace(const R3::XYZ & loc,
 
 
 //////
-// METHOD:  CellFace :: GetCircArcDistToFace()
+// METHOD:  PlaneFace :: GetCircArcDistToFace()
 //
 //
 //
-GCAD_RetVal CellFace::GetCircArcDistToFace(const Real & R, const R3::XYZ & C, 
-                                    const R3::Matrix & S) const{
+GCAD_RetVal PlaneFace::GetCircArcDistToFace(const Real & R, const R3::XYZ & C,
+                                            const R3::Matrix & S) const{
 
   GCAD_RetVal retval;
   bool continuous = true;

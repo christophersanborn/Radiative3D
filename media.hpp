@@ -225,7 +225,7 @@ public:
 //
 // FROM:   MediumCell
 //
-// ENCAPS: 
+// ENCAPSULATES:
 //
 //   The RCUCylinder class encapsulates a MediumCell in the shape of a
 //   right-circular cylinder that is coaxial with the Z-axis, and with
@@ -255,8 +255,8 @@ protected:
                             // depend on ratio across boundary, so
                             // units don't matter.)
 
-  CellFace       mTopFace;  // The top endcap
-  CellFace    mBottomFace;  // The bottom endcap
+  PlaneFace      mTopFace;  // The top endcap
+  PlaneFace   mBottomFace;  // The bottom endcap
 
   Scatterer      * mpScat;  // Scatterer object that operates within
                             // this cell.  Set by Link method.
@@ -270,7 +270,7 @@ protected:
                             // this will be set in the Model() constructor
                             // via a call to SetCylinderRange()
 
-  static CellFace  cmLossFace;  // The one is where we discard the phonon,
+  static PlaneFace  cmLossFace; // The one is where we discard the phonon,
                                 // and "represents" a phonon leaving via
                                 // the cylinder wall.  All objects will
                                 // share this face.
@@ -357,7 +357,7 @@ protected:
 
 
 //////
-// CLASS:  Tetra  
+// CLASS:  Tetra
 //
 // FROM:   MediumCell
 //
@@ -366,7 +366,7 @@ protected:
 //
 class Tetra : public MediumCell {
 protected:
- 
+
   R3::XYZ   mVelGrad[RAY_NBT];  // Velocity Gradient for P and S
   R3::XYZ   mDensGrad;          // Density Gradient
   Real      mVel0[RAY_NBT];     // Velocity at (0,0,0)
@@ -374,24 +374,20 @@ protected:
   Real      mQ[2];              // Average Q of four nodes
 
 
-  Array::Quad<CellFace> mFaces; // Array consisting of 
-                                // four Cell Faces
-  
-
+  Array::Quad<PlaneFace> mFaces; // Array consisting of
+                                 // four Cell Faces
 
   Scatterer           * mpScat;  // Scatterer object that operates within
                                  // this cell.  Set by Link method.
                                  // Responsibility for constructing/
                                  // destructing lies elsewhere.
 
-  
-
 public:
 
   // ::::::::::::::::::::::::::::::::::::
   // ::: Constructors  (Tetra Class)  :::
   // ::::::::::::::::::::::::::::::::::::
-  
+
   Tetra (R3::XYZ N1, R3::XYZ N2, R3::XYZ N3, R3::XYZ N4,
          const GridData & dataA, const GridData & dataB,
          const GridData & dataC, const GridData & dataD);

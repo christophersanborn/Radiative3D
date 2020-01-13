@@ -64,11 +64,11 @@ Real MediumCell::cmPhononFreq = 1.0;    // Responsibility to set at
 Real RCUCylinder::cmRange = 1200.0;     // Responsibility to set at
 bool RCUCylinder::cmRangeSet = false;   // runtime lies with Model
                                         // constructor.
-CellFace RCUCylinder::cmLossFace(       // The CellFace through which
-         R3::XYZ(0,0,1e10),             // phonons get lost through
-         R3::XYZ(1,0,1e10),             // the cylinder sidewall.  Face
-         R3::XYZ(0,1,1e10), 0           // isn't neede to correspond to
-         );                             // actual geometry, just needed
+PlaneFace RCUCylinder::cmLossFace(      // The CellFace through which
+          R3::XYZ(0,0,1e10),            // phonons get lost through
+          R3::XYZ(1,0,1e10),            // the cylinder sidewall.  Face
+          R3::XYZ(0,1,1e10), 0          // isn't neede to correspond to
+          );                            // actual geometry, just needed
                                         // for bookkeeping purposes.
 
 //////
@@ -508,10 +508,10 @@ Tetra::Tetra(R3::XYZ N1, R3::XYZ N2, R3::XYZ N3, R3::XYZ N4,
              const GridData & dataA, const GridData & dataB,
              const GridData & dataC, const GridData & dataD):
 
-  mFaces (CellFace( N2, N3, N4,    N1, this ),
-          CellFace( N3, N4, N1,    N2, this ),
-          CellFace( N4, N1, N2,    N3, this ),
-          CellFace( N1, N2, N3,    N4, this ))
+  mFaces (PlaneFace( N2, N3, N4,    N1, this ),
+          PlaneFace( N3, N4, N1,    N2, this ),
+          PlaneFace( N4, N1, N2,    N3, this ),
+          PlaneFace( N1, N2, N3,    N4, this ))
 
   {
     //

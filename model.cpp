@@ -555,7 +555,7 @@ MediumCell * Model::FindCellContainingPoint(const R3::XYZ & loc) const {
 // METHOD:  Model :: FindSurface()
 //
 //   Given a location presumed to be near the surface, this method
-//   finds a correcsponding point on the surface that is found by
+//   finds a corresponding point on the surface that is found by
 //   following a vertical (skyward) line that intersects both the
 //   point and the surface.
 //
