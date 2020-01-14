@@ -67,6 +67,8 @@ Real EarthCoords::ExtractElevation(Generic ecs_loc) const {
 //
 Real EarthCoords::ExtractRadius(Generic ecs_loc) const {
 
+  Real tempval;
+
   switch (mMapCode) {
 
   case ENU_ORTHO:
@@ -76,11 +78,16 @@ Real EarthCoords::ExtractRadius(Generic ecs_loc) const {
 
   case RAE_CURVED:
   case RAE_SPHERICAL:
-    return mRadE + ecs_loc.x3();
+    tempval = mRadE + ecs_loc.x3();
+    if (tempval<0) {
+      throw Runtime("ECS: Elevation component implies a negative Radius component. "
+                    "Check model grid, or check that correct Earth radius specified.");
+    }
+    return tempval;
     break;
 
   default:
-    throw UnknownMapCode("ExtractElevation");
+    throw UnknownMapCode("ExtractRadius");
     break;
 
   }
@@ -339,6 +346,14 @@ R3::XYZ EarthCoords::Convert(Generic ecs_loc) const {
     Real theta = range/mRadE;
     Real phi = Geometry::DtoR * (90.0 - ecs_loc.x2());
     Real r = mRadE + ecs_loc.x3();
+    if (r<0) {
+      throw Runtime("ECS: Elevation component implies a negative Radius component. "
+                    "Check model grid, or check that correct Earth radius specified.");
+    }
+    if (theta>Geometry::Pi180) {
+      throw Runtime("ECS: Range component exceeds half-circumference. "
+                    "Check model grid, or check that correct Earth radius specified.");
+    }
     X = r * sin(theta) * cos(phi);
     Y = r * sin(theta) * sin(phi);
     Z = (r * cos(theta)) + GetEarthCenter().z();
