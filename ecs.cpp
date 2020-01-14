@@ -176,6 +176,7 @@ R3::XYZ EarthCoords::GetNorth(const R3::XYZ loc) const {
     break;
 
   case RAE_CURVED:
+  case RAE_SPHERICAL:
     return GetUp(loc).Cross(GetEast(loc));
     break;
 
