@@ -305,9 +305,9 @@ void Phonon::Refraction_Continuous(CellFace * pFace) {
 //
 void Phonon::Refraction_Bend(CellFace * pFace) {
 
-  R3::XYZ fnorm = pFace->Normal();
+  R3::XYZ fnorm = pFace->Normal(mLoc);
   // Face-Norm: Unit vec normal to exiting CellFace
-  
+
   R3::XYZ fpara = fnorm.GetInPlaneUnitPerpendicular(mDir);
   R3::XYZ fparash = fnorm.Cross(fpara);
   // Face-Parallel and Face-Parallel-SH: both these unit vectors are

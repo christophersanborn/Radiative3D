@@ -522,8 +522,8 @@ protected:
 
   // Geometry:
 
-  Real mRadTop;                 // Outer Radius
-  Real mRadBot;                 // Inner Radius
+  Array::Pair<SphereFace> mFaces; // Array consisting of
+                                  // two cell faces
 
   Scatterer          * mpScat;  // Scatterer object that operates within this
                                 // cell.  Set by Link method.  Responsibility

@@ -5,6 +5,7 @@
 // class defining an interface for interacting with the bounding surfaces of
 // various geometries. See full commentary in media_cellface.hpp.
 //
+#include <cassert>
 #include "media_cellface.hpp"
 #include "media.hpp"
 #include "rtcoef.hpp"
@@ -121,7 +122,7 @@ Real CellFace::VelocityJump(const R3::XYZ & loc) const {
 RTCoef CellFace::GetRTBasis(const R3::XYZ & loc,
                             const R3::XYZ & dir) const {
 
-  RTCoef rt(Normal(), dir);     // We will return this object
+  RTCoef rt(Normal(loc), dir);  // We will return this object
 
   MediumCell * pCellR = mpCell; // Reflection cell
   MediumCell * pCellT;          // Transmission cell
@@ -427,6 +428,43 @@ GCAD_RetVal PlaneFace::GetCircArcDistToFace(const Real & R, const R3::XYZ & C,
   return retval;
 
 
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+// &&&&                                                              ****
+// ****  CLASS:  SphereFace  (from CellFace)                         ****
+// ****                                                              ****
+//
+//   Methods Defined Here:
+//
+//     ...
+//
+
+//////
+// CONSTRUCTOR:  SphereFace()
+//
+SphereFace::SphereFace (Real radius, face_id_e toporbottom,
+                        MediumCell * powner) :
+  CellFace( powner ),
+  mRadius ( toporbottom==F_TOP ? radius : -radius ),
+  mRad2   ( radius*radius )
+{
+  assert(radius >= 0);
+  assert(toporbottom == F_TOP || toporbottom == F_BOTTOM);
+
+  std::cout << "~~~~> Wants " << (toporbottom==F_TOP ? "OUTWARD" : "INWARD")
+            << "-pointing SphereFace at radius " << mRadius << "\n";
+}
+
+R3::XYZ SphereFace::Normal(R3::XYZ loc) const {
+  return (mRadius > 0) ? loc.UnitElse(R3::XYZ(0,0,1))
+                       : loc.UnitElse(R3::XYZ(0,0,1)).Negative();
+}
+
+Real SphereFace::DistToExitFace(const R3::XYZ & loc,
+                               const R3::XYZ & dir) const {
+  throw;  // TODO: Write
 }
 
 

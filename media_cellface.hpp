@@ -202,7 +202,7 @@ public:
   // ::: Interrogative Methods  (CellFace Class) :::
   // :::::::::::::::::::::::::::::::::::::::::::::::
 
-  virtual R3::XYZ Normal() const = 0;
+  virtual R3::XYZ Normal(R3::XYZ loc) const = 0;
 
   virtual Real DistToExitFace(const R3::XYZ & loc, const R3::XYZ & dir) const = 0;
                     // Computes the directed (along a ray) distance
@@ -265,15 +265,72 @@ public:
   // ::: Interrogative Methods  (PlaneFace Class) :::
   // ::::::::::::::::::::::::::::::::::::::::::::::::
 
-  virtual R3::XYZ Normal() const {return mNormal;}
+  virtual R3::XYZ Normal(R3::XYZ loc) const override {return mNormal;}
+
+  virtual Real DistToExitFace(const R3::XYZ & loc, const R3::XYZ & dir) const override;
 
   Real DistToPoint(const R3::XYZ & loc) const;
                     // Computes direct (shortest) distance from the
                     // face to the given point.
 
+  GCAD_RetVal GetCircArcDistToFace(const Real & R, const R3::XYZ & C, const R3::Matrix & S) const;
+                    // Similar to DistToExitFace except it computes
+                    // distance along a circular arc path.
+
+};
+
+
+//////
+// CLASS:  SphereFace
+// FROM:   CellFace
+//
+//  Spherical CellFace centered on the origin. Surface normal can either point
+//  away from origin (making it an outer surface to a spherical shell) or
+//  toward origin (making it an inner surface).  Bounds SphereShell family of
+//  MediumCell classes.  The operations of this class depend intrinsicially on
+//  the sphere being centered on the origin.
+//
+class SphereFace : public CellFace {
+protected:
+
+  // ::::::
+  // :: Geometry:    (Determines the positioning and
+  // :                orientation of the face)
+  //
+
+  Real   mRadius;   // Radius of sphere. Positive => outward pointing surface
+                    // normal, negative => inward facing normal.
+  Real     mRad2;   // Precomputed Radius-Squared
+
+
+public:
+
+  // :::::::::::::::::::::::::::::::::::::::
+  // ::: Constructors  SphereFace Class) :::
+  // :::::::::::::::::::::::::::::::::::::::
+
+  SphereFace (Real radius, face_id_e toporbottom, MediumCell * powner);
+        // Construct SphereFace as an outward-normal (toporbottom==F_TOP) or
+        // inward-normal (toporbottom==F_BOTTOM) spherical surface of radius
+        // 'radius'.  Argument 'radius' must be non-negative (but can be zero).
+
+  // :::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Interrogative Methods  (SphereFace Class) :::
+  // :::::::::::::::::::::::::::::::::::::::::::::::::
+
+  virtual R3::XYZ Normal(R3::XYZ loc) const override;
+        // Returns surface normal at point 'loc'.  Does not check if 'loc' is
+        // actually on surface (generally doesn't matter).  Does not complain
+        // if loc is (0,0,0) but instead returns an arbitrary unit vector in
+        // that case.
+
   virtual Real DistToExitFace(const R3::XYZ & loc, const R3::XYZ & dir) const;
 
-  GCAD_RetVal GetCircArcDistToFace(const Real & R, const R3::XYZ & C, const R3::Matrix & S) const;
+  //Real DistToPoint(const R3::XYZ & loc) const;
+                    // Computes direct (shortest) distance from the
+                    // face to the given point.
+
+  //GCAD_RetVal GetCircArcDistToFace(const Real & R, const R3::XYZ & C, const R3::Matrix & S) const;
                     // Similar to DistToExitFace except it computes
                     // distance along a circular arc path.
 

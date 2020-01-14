@@ -819,10 +819,11 @@ Tetra::GetPathToBoundary(raytype rt,
 //
 SphereShellD2::SphereShellD2(Real RadTop, Real RadBot,
                              const GridData & DataTop, const GridData & DataBot) :
-                             mRadTop(RadTop), mRadBot(RadBot)
+  mFaces( SphereFace(RadTop, CellFace::F_TOP, this),
+          SphereFace(RadBot, CellFace::F_BOTTOM, this))
 {
 
-  std::cerr << "~~> Wants to make SphereShell > Inner: " << mRadBot << "  Outer: " << mRadTop << "\n";
+  std::cerr << "~~> Wants to make SphereShell > Inner: " << RadBot << "  Outer: " << RadTop << "\n";
 
 
 }//
