@@ -203,24 +203,30 @@ public:
   // :::::::::::::::::::::::::::::::::::::::::::::::
 
   virtual R3::XYZ Normal(R3::XYZ loc) const = 0;
+        // Outward-pointing surface normal unit vector.
+
+  virtual Real GetDistanceAboveFace(const R3::XYZ & loc) const = 0;
+        // Computes direct (shortest, straight-line) distance from the nearest
+        // point on the face to the given point. Positive result implies point
+        // lies "above" the face, negative that the point lies "below."
+        // "Above" means the side pointed to by the surface normal.
 
   virtual Real DistToExitFace(const R3::XYZ & loc, const R3::XYZ & dir) const = 0;
-                    // Computes the directed (along a ray) distance
-                    // from the point to the face.  Gives finite value
-                    // if ray crosses from inside-to-out (exiting).
-                    // Returns special values (+/-infinity) if the ray
-                    // either crosses from out-to-in (entering) or
-                    // else fails to intersect (runs parallel).
+        // Computes the directed (along a ray) distance from the point to the
+        // face.  Gives finite value if ray crosses from inside-to-out
+        // (exiting).  Returns special values (+/-infinity) if the ray either
+        // crosses from out-to-in (entering) or else fails to intersect (runs
+        // parallel).
 
   Real VelocityJump(const R3::XYZ & loc) const;
-                    // Returns a number characterizing the fractional
-                    // velocity jump across the interface.
+        // Returns a number characterizing the fractional
+        // velocity jump across the interface.
 
   RTCoef GetRTBasis(const R3::XYZ & loc, const R3::XYZ & dir) const;
-                    // Returns an RTCoef object with the basis information
-                    // (which depends on the incidence angle to the CellFace).
-                    // NOTE: This depends on virtual method Normal(), but does
-                    // not itself need to be virtual, so it's not.
+        // Returns an RTCoef object with the basis information (which depends
+        // on the incidence angle to the CellFace).  NOTE: This depends on
+        // virtual method Normal(), but does not itself need to be virtual, so
+        // it's not.
 
 };
 
@@ -266,12 +272,8 @@ public:
   // ::::::::::::::::::::::::::::::::::::::::::::::::
 
   virtual R3::XYZ Normal(R3::XYZ loc) const override {return mNormal;}
-
+  virtual Real GetDistanceAboveFace(const R3::XYZ & loc) const override;
   virtual Real DistToExitFace(const R3::XYZ & loc, const R3::XYZ & dir) const override;
-
-  Real DistToPoint(const R3::XYZ & loc) const;
-                    // Computes direct (shortest) distance from the
-                    // face to the given point.
 
   GCAD_RetVal GetCircArcDistToFace(const Real & R, const R3::XYZ & C, const R3::Matrix & S) const;
                     // Similar to DistToExitFace except it computes
@@ -319,16 +321,8 @@ public:
   // :::::::::::::::::::::::::::::::::::::::::::::::::
 
   virtual R3::XYZ Normal(R3::XYZ loc) const override;
-        // Returns surface normal at point 'loc'.  Does not check if 'loc' is
-        // actually on surface (generally doesn't matter).  Does not complain
-        // if loc is (0,0,0) but instead returns an arbitrary unit vector in
-        // that case.
-
-  virtual Real DistToExitFace(const R3::XYZ & loc, const R3::XYZ & dir) const;
-
-  //Real DistToPoint(const R3::XYZ & loc) const;
-                    // Computes direct (shortest) distance from the
-                    // face to the given point.
+  virtual Real GetDistanceAboveFace(const R3::XYZ & loc) const override;
+  virtual Real DistToExitFace(const R3::XYZ & loc, const R3::XYZ & dir) const override;
 
   //GCAD_RetVal GetCircArcDistToFace(const Real & R, const R3::XYZ & C, const R3::Matrix & S) const;
                     // Similar to DistToExitFace except it computes

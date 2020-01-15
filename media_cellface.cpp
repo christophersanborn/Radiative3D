@@ -200,14 +200,14 @@ PlaneFace::PlaneFace (const R3::XYZ & N1, const R3::XYZ & N2,
   mNormal = Ray1.Cross(Ray2);
   mNormal.Normalize();
 
-  if(DistToPoint(N4) > 0)             // Flips direction of mNormal if
+  if(GetDistanceAboveFace(N4) > 0)    // Flips direction of mNormal if
     mNormal = mNormal.ScaledBy(-1);   // pointing inward
 
 }
 
 
 //////
-// METHOD:  PlaneFace :: DistToPoint()
+// METHOD:  PlaneFace :: GetDistanceAboveFace()
 //
 //   Returns the direct (shortest) distance from the CellFace plane to
 //   the given point, with the return value using the following sign
@@ -215,15 +215,10 @@ PlaneFace::PlaneFace (const R3::XYZ & N1, const R3::XYZ & N2,
 //
 //     > 0:  Point is "above" the CellFace, with "above" being the
 //           side pointed to by the mNormal vector.
-//
 //     = 0:  Point is "on" the surface.
-//
 //     < 0:  Point is "below" the surface.
 //
-//   Note: This function uses the opposite sign convention as the
-//   related function, DirectedDistToPlane()
-//
-Real PlaneFace::DistToPoint(const R3::XYZ & loc) const {
+Real PlaneFace::GetDistanceAboveFace(const R3::XYZ & loc) const {
   //
   return mNormal.Dot(mPoint.VectorTo(loc));
 }
@@ -457,11 +452,37 @@ SphereFace::SphereFace (Real radius, face_id_e toporbottom,
             << "-pointing SphereFace at radius " << mRadius << "\n";
 }
 
+//////
+// METHOD:  SphereFace :: Normal()
+//
+//  Returns surface normal direction for the given point using sign of
+//  mRadius to determine whether "outward" us "up" or "down".
+//
 R3::XYZ SphereFace::Normal(R3::XYZ loc) const {
   return (mRadius > 0) ? loc.UnitElse(R3::XYZ(0,0,1))
                        : loc.UnitElse(R3::XYZ(0,0,1)).Negative();
 }
 
+//////
+// METHOD:  SphereFace :: GetDistanceAboveFace()
+//
+//   Returns the direct (shortest) distance from the face plane to
+//   the given point, with the return value using the following sign
+//   convention:
+//
+//     > 0:  Point is "above" the CellFace, with "above" being the
+//           side pointed to by the Normal vector.
+//     = 0:  Point is "on" the surface.
+//     < 0:  Point is "below" the surface, or "inside" of it.
+//
+Real SphereFace::GetDistanceAboveFace(const R3::XYZ & loc) const {
+  return (mRadius >= 0) ? loc.Mag() - mRadius
+                        : -(mRadius + loc.Mag());
+}
+
+
+//////
+//
 Real SphereFace::DistToExitFace(const R3::XYZ & loc,
                                const R3::XYZ & dir) const {
   throw;  // TODO: Write

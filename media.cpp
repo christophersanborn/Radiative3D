@@ -194,13 +194,13 @@ Real RCUCylinder::IsPointInside(const R3::XYZ & loc) const {
 
   max_dist = dist;              // (So far the greatest)
 
-  dist = mTopFace.DistToPoint(loc);     // Get dist outside top end-cap
-  if (dist > max_dist)                  //
-    max_dist = dist;                    //
+  dist = mTopFace.GetDistanceAboveFace(loc);    // Get dist outside top end-cap
+  if (dist > max_dist)                          //
+    max_dist = dist;                            //
 
-  dist = mBottomFace.DistToPoint(loc);  // Get dist outside bottom cap
-  if (dist > max_dist)                  //
-    max_dist = dist;                    //
+  dist = mBottomFace.GetDistanceAboveFace(loc); // Get dist outside bottom cap
+  if (dist > max_dist)                          //
+    max_dist = dist;                            //
 
   return max_dist;              // Return the max
 
@@ -627,18 +627,14 @@ CellFace & Tetra::Face(CellFace::face_id_e face_id) {
 //
 Real Tetra::IsPointInside(const R3::XYZ & loc) const {
 
-  Real distance = mFaces[0].DistToPoint(loc);
-
+  Real distance = mFaces[0].GetDistanceAboveFace(loc);
   for (int i = 1; i < 4; i++){
-
-    if(mFaces[i].DistToPoint(loc) > distance){
-
-      distance = mFaces[i].DistToPoint(loc);}
-
+    Real maybedistance = mFaces[i].GetDistanceAboveFace(loc);
+    if(maybedistance > distance){
+      distance = maybedistance;
+    }
   }
-
   return distance;
-
 
 }
 
@@ -809,9 +805,7 @@ SphereShellD2::SphereShellD2(Real RadTop, Real RadBot,
 //   CellFace object, as determined by the value of face_id
 //
 CellFace & SphereShellD2::Face(CellFace::face_id_e face_id) {
-  CellFace * ptr = nullptr;
-  return (CellFace &) (*ptr); //mFaces[face_id];
-  std::cerr << "**FIXME**\n";
+  return mFaces[face_id];
 }
 
 //////
@@ -821,22 +815,22 @@ CellFace & SphereShellD2::Face(CellFace::face_id_e face_id) {
 // METHOD:   SphereShellD2 :: GetQatPoint()
 //
 Real SphereShellD2::GetVelocAtPoint(const R3::XYZ & loc, raytype type) const {
-  throw std::runtime_error("UnimpSphereShellD2");
+  throw std::runtime_error("UnimpSphereShellD2_GetVelocAtPoint");
   return  0;//loc.Dot(mVelGrad[type]) + mVel0[type];
 }
 //
 Real SphereShellD2::GetWavelengthAtPoint(const R3::XYZ & loc, raytype type) const {
-  throw std::runtime_error("UnimpSphereShellD2");
+  throw std::runtime_error("UnimpSphereShellD2_GetWavelengthAtPoint");
   return  0;//(GetVelocAtPoint(loc,type)/ cmPhononFreq);
 }
 //
 Real SphereShellD2::GetDensityAtPoint(const R3::XYZ & loc) const {
-  throw std::runtime_error("UnimpSphereShellD2");
+  throw std::runtime_error("UnimpSphereShellD2_GetDensityAtPoint");
   return  0;//loc.Dot(mDensGrad) + mDens0;
 }
 //
 Real SphereShellD2::GetQatPoint(const R3::XYZ & loc, raytype type) const {
-  throw std::runtime_error("UnimpSphereShellD2");
+  throw std::runtime_error("UnimpSphereShellD2_GetQAtPoint");
   return 0;//mQ[type];
 }
 
@@ -845,7 +839,7 @@ Real SphereShellD2::GetQatPoint(const R3::XYZ & loc, raytype type) const {
 //
 TravelRec
 SphereShellD2::GetPathToBoundary(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
-  throw std::runtime_error("UnimpSphereShellD2");
+  throw std::runtime_error("UnimpSphereShellD2_GetPathToBoundary");
   return TravelRec(); // **FIXME**
 }
 
@@ -855,7 +849,7 @@ SphereShellD2::GetPathToBoundary(raytype rt, const R3::XYZ & loc, const S2::Thet
 TravelRec
 SphereShellD2::AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc,
                      const S2::ThetaPhi & startdir) {
-  throw std::runtime_error("UnimpSphereShellD2");
+  throw std::runtime_error("UnimpSphereShellD2_AdvanceLength");
   return TravelRec(); // **FIXME**
 }
 
@@ -863,6 +857,14 @@ SphereShellD2::AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc,
 // METHOD:   SphereShellD2 :: IsPointInside()
 //
 Real SphereShellD2::IsPointInside(const R3::XYZ & loc) const {
-  throw std::runtime_error("UnimpSphereShellD2");
-  return 0; // **FIXME**
+
+  Real distance = mFaces[0].GetDistanceAboveFace(loc);
+  for (int i = 1; i < 2; i++){
+    Real maybedistance = mFaces[i].GetDistanceAboveFace(loc);
+    if(maybedistance > distance){
+      distance = maybedistance;
+    }
+  }
+  return distance;
+
 }
