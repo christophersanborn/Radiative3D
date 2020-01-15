@@ -689,14 +689,6 @@ Tetra::AdvanceLength(raytype rt, Real len,
   //Transform the new location from 2D to 3D space
   R3::XYZ newLoc = CT.RotMat().T() * (newLoc2D + CT.Trans());
 
-
-  if(IsPointInside(newLoc) > 0.1){
-     std::cerr << "new loc " << IsPointInside(newLoc) << " km outside cell\n";
-     std::cerr << "length: " << len << std::endl;
-     std::cerr << "( " << newLoc.x() << "   " << newLoc.y() << "   " << newLoc.z() << "   )" << std::endl;
-     exit(1);
-  }
-
   ///////////////////////////////
   /// Determine New Direction ///
   ///////////////////////////////
@@ -747,10 +739,6 @@ TravelRec
 Tetra::GetPathToBoundary(raytype rt,
                          const R3::XYZ & loc,
                          const S2::ThetaPhi & dir){
-  if(IsPointInside(loc) > 0.1){
-    std::cerr << "IsPointInside: " << IsPointInside(loc) << std::endl;
-    exit(1);
-  }
 
   CoordinateTransformation CT =  CoordinateTransformation(GetVelocAtPoint(loc, rt),
                                                           mVelGrad[rt],loc,dir.XYZ());
@@ -789,21 +777,6 @@ Tetra::GetPathToBoundary(raytype rt,
       }
     }
   }
-  /*
-  std::cerr << faceID << std::endl;
-  std::cerr << len << std::endl;
-
-  std::cerr << std::setprecision(15);
-
-  std::cerr << "xo: " << ColatAngletoX0 << std::endl;
-  for(int i=0; i<4; i++){
-  std::cerr << "entry: " << retvals[i].Entry() << "  exit: " << retvals[i].Exit()
-            << " isproper: " <<  retvals[i].IsProper(retvals[(i+1)%4],retvals[(i+2)%4],retvals[(i+3)%4])
-            << " exit-xo: " << retvals[i].Exit() - ColatAngletoX0 << std::endl;
-}
-  */
-
-
 
   //Generate Travel Rec using function Advance Length
   TravelRec rec;
