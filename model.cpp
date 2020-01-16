@@ -603,8 +603,8 @@ void Model::RunSimulation() {
 
   unsigned nph_byten = mNumPhonons / 10;  // For Progress Indicator
   unsigned nph_by100 = mNumPhonons / 100; //
-  bool finegrain = (mNumPhonons > 9999);  //  threshold for hundredths
-                                          //  indicator
+  bool finegrain = (mNumPhonons > 9999);  // Threshold for hundredths indicator
+  if (nph_byten==0) nph_byten=1;          // Prevent div/0
 
   std::cout << "@@ __BEGINNING_SIMULATION__" << std::endl << std::flush;
 
