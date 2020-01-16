@@ -578,7 +578,7 @@ R3::XYZ Model::FindSurface(R3::XYZ loc) const {
 
   CellFace & sface = *mSurfaceFaces[0];
   R3::XYZ skyward = ECS.GetUp(loc);
-  Real dist = sface.DistToExitFace(loc,skyward);
+  Real dist = sface.LinearRayDistToExit(loc,skyward);
   R3::XYZ new_loc = loc + skyward.ScaledBy(dist);
 
   if (false) {   // (set true for debug output)

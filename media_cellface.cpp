@@ -225,7 +225,7 @@ Real PlaneFace::GetDistanceAboveFace(const R3::XYZ & loc) const {
 
 
 //////
-// METHOD:  PlaneFace :: DistToExitFace()
+// METHOD:  PlaneFace :: LinearRayDistToExit()
 //
 //   Returns the directed (along a ray) distance from the starting
 //   location ('loc') to the CellFace, under the presumption that we
@@ -259,8 +259,8 @@ Real PlaneFace::GetDistanceAboveFace(const R3::XYZ & loc) const {
 //    -inf  -   We will NEVER exit the face, because we are already
 //              outside, and running parallel to the face.
 //
-Real PlaneFace::DistToExitFace(const R3::XYZ & loc,
-                               const R3::XYZ & dir) const {
+Real PlaneFace::LinearRayDistToExit(const R3::XYZ & loc,
+                                    const R3::XYZ & dir) const {
 
   Real d_sh;        // dist_shortest
 
@@ -428,6 +428,143 @@ GCAD_RetVal PlaneFace::GetCircArcDistToFace(const Real & R, const R3::XYZ & C,
 
 //////////////////////////////////////////////////////////////////////////
 // &&&&                                                              ****
+// ****  CLASS:  CylinderFace  (from CellFace)                       ****
+// ****                                                              ****
+//
+//   Methods Defined Here:
+//
+//     ...
+//
+
+//////
+// CONSTRUCTOR:  CylinderFace()
+//
+CylinderFace::CylinderFace (Real radius, MediumCell * powner) :
+  CellFace( powner ),
+  mRadius ( radius ),
+  mRad2   ( radius*radius )
+{
+  assert(radius >= 0);
+  std::cout << "~~~~> Wants CylinderFace at radius " << mRadius << "\n";
+}
+
+//////
+// METHOD:  CylinderFace :: Normal()
+//
+//  Returns surface normal direction for the given point.
+//
+R3::XYZ CylinderFace::Normal(R3::XYZ loc) const {
+  R3::XYZ squashed(loc.x(), loc.y(), 0);  // Keep just zonal coords
+  return squashed.UnitElse(R3::XYZ(1,0,0));
+}
+
+//////
+// METHOD:  CylinderFace :: GetDistanceAboveFace()
+//
+//   Returns the direct (shortest) distance from the face manifold to
+//   the given point, with the return value using the following sign
+//   convention:
+//
+//     > 0:  Point is "above" the CellFace, with "above" being the
+//           side pointed to by the Normal vector.
+//     = 0:  Point is "on" the surface.
+//     < 0:  Point is "below" the surface, or "inside" of it.
+//
+Real CylinderFace::GetDistanceAboveFace(const R3::XYZ & loc) const {
+  R3::XYZ squashed(loc.x(), loc.y(), 0);  // Keep just zonal coords
+  return squashed.Mag() - mRadius;
+}
+
+
+//////
+// METHOD:  PlaneFace :: LinearRayDistToExit()
+//
+//   Returns the directed (along a ray) distance from the starting location
+//   ('loc') to the CellFace, under the presumption that we are crossing the
+//   face in the "exiting" direction. (Else return special sentinal values.
+//   See corresponding function in RCUCylinder for additional info.)
+//
+//   Returns the distance (in 3D) along a ray from a starting point to
+//   the intersection of a cylinder (treated in 2D as a circle in the
+//   XY plane centered on the origin).
+//
+// INPUTS:
+//
+//   o  loc   - Starting location;
+//   o  dir   - Unit vector in direction of travel (caller responsible
+//              for ensuring vector is unit-magnitude)
+//
+// THEORY OF OPERATION:
+//
+//   The distance travelled is the solution to a quadratic equation:
+//
+//       A*d^2 + B*d + C = 0
+//
+//   with A = D^2, B = 2*L.dot.D, and C = L^2 - R^2.  The vector D is
+//   a two-component vector containing the X and Y direcion cosines, L
+//   is a two-vector containing the X and Y location coordinates, and
+//   R is the radius of the cylinder.
+//
+//   Note that A is always positive (or zero).  B is positive whenever
+//   the direction trends radially outwards, otherwise is zero (when
+//   completely tangential) or negative (trending inwards).  And C is
+//   negative so long as the starting location is inside the cylinder
+//   radius
+//
+// RETURNS:
+//
+//   There are as many as two solutions to the quadratic.  The greater
+//   (most positive, or least negative) solution represents the one
+//   where the directed ray is exiting the cylinder along its travel
+//   path (typically this is ahead of the starting location), and the
+//   lesser solution is the one where the ray is entering the circle.
+//   If the starting location is inside the circle, there will be one
+//   positive, and one negative solution. If outside, there may be two
+//   positives, two negative, or no solution at all.
+//
+//   If the solutions exist, the function returns the greater (most
+//   positive / least negative) solution.  If no solutions exist, the
+//   function returns either +infinity (if the ray will travel forever
+//   w/o exiting the cylinder, i.e. parallel and inside the cylinder)
+//   or else it will return -infinity, as a signal that the ray never
+//   was and never will be inside the cylinder.
+//
+Real CylinderFace::LinearRayDistToExit(const R3::XYZ & loc, const R3::XYZ & dir) const {
+
+  Real A = dir.x()*dir.x() + dir.y()*dir.y();           // D^2
+  Real C = loc.x()*loc.x() + loc.y()*loc.y() - mRad2;   // L^2 - R^2
+
+  if (A==0) {             // First test for no-solution: case when
+                          // motion is parallel to cylinder wall
+    if (C <= 0) {
+      return (1./0.);     // Returns +inf, a signal meaning raypath is
+                          // parallel to cylinder and either inside or
+    }                     // on-the-surface. (ie, it will never exit)
+    else {
+      return (-1./0.);    // Returns -inf, signaling that the ray is
+                          // outside the cylinder and will never enter
+    }                     // it.
+
+  }
+
+  Real B = 2 * (loc.x()*dir.x() + loc.y()*dir.y());   // 2*L.dot.D
+  Real urad = B*B - 4*A*C;   // (urad: Under the RADical)
+
+  if (urad < 0) {         // Second test for no-solution: outside
+                          // cylinder and was never / will never enter
+    return (-1./0.);      // Returns -inf.
+  }
+
+  Real margin = sqrt(urad);
+  Real dist = (margin - B) / (2*A);   // {-B + sqrt(B^2-4AC)}/2A
+                                      // (The "positive" root)
+  return dist;
+
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+// &&&&                                                              ****
 // ****  CLASS:  SphereFace  (from CellFace)                         ****
 // ****                                                              ****
 //
@@ -483,8 +620,8 @@ Real SphereFace::GetDistanceAboveFace(const R3::XYZ & loc) const {
 
 //////
 //
-Real SphereFace::DistToExitFace(const R3::XYZ & loc,
-                               const R3::XYZ & dir) const {
+Real SphereFace::LinearRayDistToExit(const R3::XYZ & loc,
+                                     const R3::XYZ & dir) const {
   throw;  // TODO: Write
 }
 

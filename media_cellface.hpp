@@ -5,9 +5,10 @@
 // class defining an interface for interacting with the bounding surfaces of
 // various geometries.
 //
-//               CellFace
-//        ./--------^--------\.
-//     PlaneFace         SphereFace
+//                    CellFace
+//        ./-------------^-------------\.
+//         |             |             |
+//     PlaneFace   CylinderFace   SphereFace
 //
 //
 // Additionaly a few supporting classes are defined here:
@@ -18,6 +19,7 @@
 #ifndef MEDIA_CELLFACE_H_
 #define MEDIA_CELLFACE_H_
 //
+#include <cassert>
 #include "geom.hpp"
 
 //////
@@ -95,7 +97,8 @@ public:
                               // faces on a given MediumCell
 
     F_TOP    = 0,             // Used by two-faced cells, e.g. the
-    F_BOTTOM = 1,             // Cylinder cells
+    F_BOTTOM = 1,             // Cylinder cells, and Spherical shells.
+    F_SIDE   = 2,             // This used by Cylinder cells for loss face.
 
     FACE_A   = 0,             // Used by four-faced cells, e.g. the
     FACE_B   = 1,             // tetrahedral cells
@@ -211,12 +214,17 @@ public:
         // lies "above" the face, negative that the point lies "below."
         // "Above" means the side pointed to by the surface normal.
 
-  virtual Real DistToExitFace(const R3::XYZ & loc, const R3::XYZ & dir) const = 0;
-        // Computes the directed (along a ray) distance from the point to the
-        // face.  Gives finite value if ray crosses from inside-to-out
-        // (exiting).  Returns special values (+/-infinity) if the ray either
-        // crosses from out-to-in (entering) or else fails to intersect (runs
-        // parallel).
+  virtual Real LinearRayDistToExit(const R3::XYZ & loc, const R3::XYZ & dir) const = 0;
+        // Computes the linear, straight-line, ray-directed distance from the
+        // starting point to the point of intersection with the face, to be
+        // interpretted as a distance until exiting the volume bounded by the
+        // face.  Finite return value implies ray crosses or crossed from
+        // inside-to-out (exiting).  Positive value implies exit is in future,
+        // negative implies point has already exited (sits outside the face).
+        // Returns special value +inf if the ray either crosses from out-to-in
+        // (entering) or is inside and parallel and can never exit, or -inf if
+        // the line is outside and parallel and is/was forever outside.  (More
+        // details at PlaneFace::LinearRayDistToExit() definition).
 
   Real VelocityJump(const R3::XYZ & loc) const;
         // Returns a number characterizing the fractional
@@ -273,11 +281,59 @@ public:
 
   virtual R3::XYZ Normal(R3::XYZ loc) const override {return mNormal;}
   virtual Real GetDistanceAboveFace(const R3::XYZ & loc) const override;
-  virtual Real DistToExitFace(const R3::XYZ & loc, const R3::XYZ & dir) const override;
+  virtual Real LinearRayDistToExit(const R3::XYZ & loc, const R3::XYZ & dir) const override;
 
   GCAD_RetVal GetCircArcDistToFace(const Real & R, const R3::XYZ & C, const R3::Matrix & S) const;
-                    // Similar to DistToExitFace except it computes
+                    // Similar to LinearRayDistToExit except it computes
                     // distance along a circular arc path.
+
+};
+
+
+//////
+// CLASS:  CylinderFace
+// FROM:   CellFace
+//
+//  Cylindrical CellFace centered on the origin, coaxial with z-axis. Only one
+//  surface and it points cylindrically away from the axis.  Used primarily to
+//  bound the outer "loss" edge of the RCUCylinder derivative of the MediumCell
+//  classes.
+//
+class CylinderFace : public CellFace {
+protected:
+
+  // ::::::
+  // :: Geometry:    (Determines the positioning and
+  // :                orientation of the face)
+  //
+
+  Real   mRadius;   // Radius of cylinder.
+  Real     mRad2;   // Precomputed Radius-Squared
+
+
+public:
+
+  // :::::::::::::::::::::::::::::::::::::::::
+  // ::: Constructors  CylinderFace Class) :::
+  // :::::::::::::::::::::::::::::::::::::::::
+
+  CylinderFace (Real radius, MediumCell * powner = nullptr);
+
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Property-Set Methods  (CylinderFace Class) :::
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  void SetRadius(Real radius) {assert(radius>0); mRadius=radius; mRad2=radius*radius;}
+        // (Use as a loss-face for RCUCylinder class creates need to set
+        // radius post-construction.)
+
+  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Interrogative Methods  (CylinderFace Class) :::
+  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  virtual R3::XYZ Normal(R3::XYZ loc) const override;
+  virtual Real GetDistanceAboveFace(const R3::XYZ & loc) const override;
+  virtual Real LinearRayDistToExit(const R3::XYZ & loc, const R3::XYZ & dir) const override;
 
 };
 
@@ -322,10 +378,10 @@ public:
 
   virtual R3::XYZ Normal(R3::XYZ loc) const override;
   virtual Real GetDistanceAboveFace(const R3::XYZ & loc) const override;
-  virtual Real DistToExitFace(const R3::XYZ & loc, const R3::XYZ & dir) const override;
+  virtual Real LinearRayDistToExit(const R3::XYZ & loc, const R3::XYZ & dir) const override;
 
   //GCAD_RetVal GetCircArcDistToFace(const Real & R, const R3::XYZ & C, const R3::Matrix & S) const;
-                    // Similar to DistToExitFace except it computes
+                    // Similar to LinearRayDistToExit except it computes
                     // distance along a circular arc path.
 
 };

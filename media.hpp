@@ -263,17 +263,16 @@ protected:
                             // Responsibility for constructing/
                             // destructing lies elsewhere.
 
-  static Real     cmRange;  // Radius of the Cylinders (class variable)
-  static bool  cmRangeSet;  // Range needs to be set prior to path
-                            // calculation. As a check, constructor will
-                            // throw exception if not set.  Typically,
+  static bool  cmRangeSet;  // Radius of loss face needs to be set prior to
+                            // path calculation. As a check, constructor
+                            // will throw exception if not set.  Typically,
                             // this will be set in the Model() constructor
                             // via a call to SetCylinderRange()
 
-  static PlaneFace  cmLossFace; // The one is where we discard the phonon,
-                                // and "represents" a phonon leaving via
-                                // the cylinder wall.  All objects will
-                                // share this face.
+  static CylinderFace cmLossFace; // The one is where we discard the phonon,
+                                  // and "represents" a phonon leaving via
+                                  // the cylinder wall.  All objects will
+                                  // share this face.
 
 public:
 
@@ -296,7 +295,7 @@ public:
   virtual void Link(Scatterer * pScat) {mpScat = pScat;}
 
   static void SetRange(Real range) {
-    cmRange = range;
+    cmLossFace.SetRadius(range);
     cmRangeSet = true;
   }
 

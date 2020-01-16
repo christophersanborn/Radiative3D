@@ -18,12 +18,6 @@
 // file.
 //
 
-// HELPER FUNCTION PROTOTYPES:
-//
-Real RayIntersectCircleXY(R3::XYZ, R3::XYZ, Real);
-                      // Used in RCUCylinder::GetPathToBoundary()
-
-
 //////////////////////////////////////////////////////////////////////////
 // &&&&                                                              ****
 // ****  CLASS:  MediumCell                                          ****
@@ -61,15 +55,13 @@ Real MediumCell::cmPhononFreq = 1.0;    // Responsibility to set at
 // Static Member Initialization:  (RCUCylinder Class)
 //
 
-Real RCUCylinder::cmRange = 1200.0;     // Responsibility to set at
-bool RCUCylinder::cmRangeSet = false;   // runtime lies with Model
-                                        // constructor.
-PlaneFace RCUCylinder::cmLossFace(      // The CellFace through which
-          R3::XYZ(0,0,1e10),            // phonons get lost through
-          R3::XYZ(1,0,1e10),            // the cylinder sidewall.  Face
-          R3::XYZ(0,1,1e10), 0          // isn't neede to correspond to
-          );                            // actual geometry, just needed
-                                        // for bookkeeping purposes.
+CylinderFace RCUCylinder::cmLossFace  // The CellFace through which phonons get
+              (1, nullptr);           // lost through the cylinder sidewall. We
+                                      // defer setting reasonable radius, and no
+                                      // MediumCell needs to be associated.
+bool RCUCylinder::cmRangeSet = false; // Responsibility to set radius at runtime
+                                      // lies with Model constructor via call to
+                                      // RCUCylinder::SetRange().
 
 //////
 // CONSTRUCTOR:  RCUCylinder()
@@ -151,9 +143,10 @@ CellFace & RCUCylinder::Face(CellFace::face_id_e face_id) {
     return mTopFace;
   case CellFace::F_BOTTOM:
     return mBottomFace;
+  case CellFace::F_SIDE:
+    return cmLossFace;
   default:
-    std::cerr << "Invalid CellFace id.\n";
-    throw std::exception();
+    throw Invalid("Invalid CellFace ID for RCUCylinder medium cell.");
   }
 }
 
@@ -187,12 +180,10 @@ Real RCUCylinder::IsPointInside(const R3::XYZ & loc) const {
 
   Real max_dist;
 
-  Real dist                     // Distance outside the
-    = sqrt(loc.x()*loc.x()      // cylinder wall
-           + loc.y()*loc.y())   //
-      - cmRange;                //
+  Real dist = cmLossFace.GetDistanceAboveFace(loc);
+        // Distance outside the cylinder wall
 
-  max_dist = dist;              // (So far the greatest)
+  max_dist = dist;  // (So far the greatest)
 
   dist = mTopFace.GetDistanceAboveFace(loc);    // Get dist outside top end-cap
   if (dist > max_dist)                          //
@@ -244,15 +235,8 @@ RCUCylinder::AdvanceLength(raytype rt, Real len,
 //   travelled, and location of boundary intersection and direction of
 //   raypath tangent at that point.
 //
-// RETURNS:
-//
-//   o  Distance travelled, as the actual return value
-//   o  The TravelRec, (received by pointer and modified)
-//
-TravelRec
-RCUCylinder::GetPathToBoundary(raytype rt,
-                               const R3::XYZ & loc,
-                               const S2::ThetaPhi & dir) {
+TravelRec RCUCylinder::GetPathToBoundary(raytype rt, const R3::XYZ & loc,
+                                                     const S2::ThetaPhi & dir) {
   TravelRec rec;
   enum exitface_e {TOP, BOTTOM, LOSS, NUM_EF};
   Real dists[NUM_EF];
@@ -271,7 +255,7 @@ RCUCylinder::GetPathToBoundary(raytype rt,
   //                at least stands a good chance of it).
   //
 
-  dists[LOSS]   = RayIntersectCircleXY(loc, dir, cmRange);
+  dists[LOSS]   = cmLossFace.LinearRayDistToExit(loc, dir);
   if (dists[LOSS] < 0) dists[LOSS] = 0; // (exclude negatives)
                     //
                     //   >0  : Implies an ordinary path to the cylinder.
@@ -285,8 +269,8 @@ RCUCylinder::GetPathToBoundary(raytype rt,
                     //         outside it.
                     //
 
-  dists[TOP]    = mTopFace.DistToExitFace(loc, dir);
-  dists[BOTTOM] = mBottomFace.DistToExitFace(loc, dir);
+  dists[TOP]    = mTopFace.LinearRayDistToExit(loc, dir);
+  dists[BOTTOM] = mBottomFace.LinearRayDistToExit(loc, dir);
   if (dists[TOP] < 0)  dists[TOP] = 0;       // Squash negatives to
   if (dists[BOTTOM] < 0)  dists[BOTTOM] = 0; // zero.
 
@@ -394,93 +378,6 @@ Real RCUCylinder::HelperAttenuation(Real cycles, Real Q) {
             );
 
 }
-
-
-//////
-// HELPER FUNCTION:  RayIntersectCircleXY()
-//
-//   Returns the distance (in 3D) along a ray from a starting point to
-//   the intersection of a cylinder (treated in 2D as a circle in the
-//   XY plane centered on the origin).
-//
-//
-// INPUTS:
-//
-//   o  loc   - Starting location;
-//   o  dir   - Unit vector in direction of travel (caller responsible
-//              for ensuring vector is unit-magnitude)
-//   o  rad   - Radius of the circle/cylinder
-//
-//
-// THEORY OF OPERATION:
-//
-//   The distance travelled is the solution to a quadratic equation:
-//
-//       A*d^2 + B*d + C = 0
-//
-//   with A = D^2, B = 2*L.dot.D, and C = L^2 - R^2.  The vector D is
-//   a two-component vector containing the X and Y direcion cosines, L
-//   is a two-vector containing the X and Y location coordinates, and
-//   R is the radius of the cylinder.
-//
-//   Note that A is always positive (or zero).  B is positive whenever
-//   the direction trends radially outwards, otherwise is zero (when
-//   completely tangential) or negative (trending inwards).  And C is
-//   negative so long as the starting location is inside the cylinder
-//   radius
-//
-//
-// RETURNS:
-//
-//   There are as many as two solutions to the quadratic.  The greater
-//   (most positive, or least negative) solution represents the one
-//   where the directed ray is exiting the cylinder along its travel
-//   path (typically this is ahead of the starting location), and the
-//   lesser solution is the one where the ray is entering the circle.
-//   If the starting location is inside the circle, there will be one
-//   positive, and one negative solution. If outside, there may be two
-//   positives, two negative, or no solution at all.
-//
-//   If the solutions exist, the function returns the greater (most
-//   positive / least negative) solution.  If no solutions exist, the
-//   function returns either +infinity (if the ray will travel forever
-//   w/o exiting the cylinder, i.e. parallel and inside the cylinder)
-//   or else it will return -infinity, as a signal that the ray never
-//   was and never will be inside the cylinder.
-//
-Real RayIntersectCircleXY(R3::XYZ loc, R3::XYZ dir, Real rad) {
-
-  Real A = dir.x()*dir.x() + dir.y()*dir.y();           // D^2
-  Real C = loc.x()*loc.x() + loc.y()*loc.y() - rad*rad; // L^2 - R^2
-
-  if (A==0) {             // First test for no-solution: case when
-                          // motion is parallel to cylinder wall
-    if (C <= 0) {
-      return (1./0.);     // Returns +inf, a signal meaning raypath is
-                          // parallel to cylinder and either inside or
-    }                     // on-the-surface. (ie, it will never exit)
-    else {
-      return (-1./0.);    // Returns -inf, signaling that the ray is
-                          // outside the cylinder and will never enter
-    }                     // it.
-
-  }
-
-  Real B = 2 * (loc.x()*dir.x() + loc.y()*dir.y());   // 2*L.dot.D
-  Real urad = B*B - 4*A*C;   // (urad: Under the RADical)
-
-  if (urad < 0) {         // Second test for no-solution: outside
-                          // cylinder and was never / will never enter
-    return (-1./0.);      // Returns -inf.
-  }
-
-  Real margin = sqrt(urad);
-  Real dist = (margin - B) / (2*A);   // {-B + sqrt(B^2-4AC)}/2A
-                                      // (The "positive" root)
-  return dist;
-
-}
-
 
 
 //////////////////////////////////////////////////////////////////////////
