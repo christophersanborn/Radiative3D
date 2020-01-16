@@ -238,68 +238,50 @@ RCUCylinder::AdvanceLength(raytype rt, Real len,
 TravelRec RCUCylinder::GetPathToBoundary(raytype rt, const R3::XYZ & loc,
                                                      const S2::ThetaPhi & dir) {
   TravelRec rec;
-  enum exitface_e {TOP, BOTTOM, LOSS, NUM_EF};
-  Real dists[NUM_EF];
+  enum exitface_e {TOP=CellFace::F_TOP,
+                   BOTTOM=CellFace::F_BOTTOM,
+                   LOSS=CellFace::F_SIDE,
+                   NUM_FACES=3};
+  Real dists[NUM_FACES];
 
   // :::
   // :: Get distances to cylinder sidewall and top/bottom faces:
   // :
-  //                Note: negative distances imply that we have
-  //                already exited through the surface. (They most
-  //                likely result from slight numberical errors.) We
-  //                squash these negative numbers to zero to avoid
-  //                engaging in retrograde motion.  The zero should
-  //                result in immediate handover (at the caller level)
-  //                to the neighboring cell, which presumably will be
-  //                the definitive home of the point in question (or
-  //                at least stands a good chance of it).
+  //        Note: negative distances imply that we have already exited
+  //        through the surface. (They most likely result from slight
+  //        numerical errors.) We squash these negative numbers to zero to
+  //        avoid engaging in retrograde motion.  The zero should result in
+  //        immediate handover (at the caller level) to the neighboring cell,
+  //        which presumably will be the definitive home of the point in
+  //        question (or at least stands a good chance of it).
   //
 
   dists[LOSS]   = cmLossFace.LinearRayDistToExit(loc, dir);
-  if (dists[LOSS] < 0) dists[LOSS] = 0; // (exclude negatives)
-                    //
-                    //   >0  : Implies an ordinary path to the cylinder.
-                    //
-                    //  ==0  : Implies on the surface and exiting or
-                    //         outside surface and not entering
-                    //
-                    //   <0  : (We should never see this value)
-                    //
-                    //  +inf : Running parallel to cylinder and not
-                    //         outside it.
-                    //
-
   dists[TOP]    = mTopFace.LinearRayDistToExit(loc, dir);
   dists[BOTTOM] = mBottomFace.LinearRayDistToExit(loc, dir);
-  if (dists[TOP] < 0)  dists[TOP] = 0;       // Squash negatives to
-  if (dists[BOTTOM] < 0)  dists[BOTTOM] = 0; // zero.
-
-                    //   >0  : Implies positive (ordinary) path to
-                    //         face.
-                    //
-                    //  ==0  : On face and exiting or else ouside face
-                    //         and not entering
-                    //
-                    //   <0  : (We should never see this)
-                    //
-                    //  +inf : Entering through face, or else running
-                    //         parallel either on or inside face.
-                    //         Interpret as "We'll hit another face
-                    //         before we hit this one."
-                    //
+  if (dists[LOSS]   < 0) dists[LOSS] = 0;      // Squash negatives to
+  if (dists[TOP]    < 0) dists[TOP] = 0;       // zero.
+  if (dists[BOTTOM] < 0) dists[BOTTOM] = 0;    //
+        //
+        //   >0  : Implies ordinary forward path to the cylinder.
+        //  ==0  : Implies on the surface and exiting or outside
+        //         surface and not entering
+        //   <0  : (We should never see this value due to squash)
+        //  +inf : Entering through face, or else running parallel either on
+        //         or inside face.  Interpret as "We'll hit another face
+        //         before we hit this one."
 
   // ::::::
   // :: Determine exit face: (Phase 1)
   // :
-  //                We default to Cylinder wall (LOSS) exit.  But
-  //                check whether Top or Bottom face have shorter
-  //                distances.
+  //        We default to Cylinder wall (LOSS) exit.  But check
+  //        whether Top or Bottom face have shorter distances.
   //
 
-  exitface_e  exf = LOSS;         // The default
+  exitface_e  exf = LOSS;         // The default,
   Real shortest = dists[LOSS];    //
-  if (dists[TOP] < shortest) {
-    exf      = TOP;
+  if (dists[TOP] < shortest) {    // But maybe we hit these
+    exf = TOP;                    // sooner...
     shortest = dists[TOP];
   }
   if (dists[BOTTOM] < shortest) {
@@ -307,25 +289,22 @@ TravelRec RCUCylinder::GetPathToBoundary(raytype rt, const R3::XYZ & loc,
     shortest = dists[BOTTOM];
   }
 
-
   // ::::::
   // :: Count the Zeros: (Phase 2)
   // :
-  //                If >1 dists are EXACTLY zero, then we are exiting
-  //                through a corner. Ditch the phonon rather than
-  //                deal with the complexity of figuring out into
-  //                which cell to inject it.
+  //        If >1 dists are EXACTLY zero, then we are exiting through a
+  //        corner. Ditch the phonon rather than deal with the complexity of
+  //        figuring out into which cell to inject it.
+  //
+  //        UPDATE: This situation is so incredibly improbable in responsibly-
+  //        designed models that the check isn't worth it.  If we've hit a
+  //        corner with the loss face, it'll be prefered anyway. If between
+  //        top and bottom... I can think of little real harm of letting it
+  //        prefer the top exit, given the already existing ambiguity implied
+  //        by a model where layer interfaces cross within the cylinder bounds.
   //
 
-  unsigned zero_count = 0;
-  for (unsigned i = 0; i < NUM_EF; i++) {
-    if (dists[i]==0) zero_count++;
-  }
-
-  if (zero_count > 1) {
-    exf      = LOSS;
-    shortest = dists[LOSS];
-  }
+  // (Corner-check code removed.)
 
   // ::::::
   // :: Populate the TravelRec and return it to the caller:
