@@ -33,6 +33,51 @@ Real MediumCell::cmPhononFreq = 1.0;    // Responsibility to set at
                                         // constructor
 
 
+//////
+// METHOD:   MediumCell :: IsPointInside()
+//
+//   Reports whether a given point is "inside" the Cylinder cell by returning
+//   a "mismatch" factor.
+//
+//   If the return value is:
+//
+//     <= 0:  then the point is definitively inside or on-the-boundary
+//            of the cell.
+//
+//      > 0:  then the point is outside the cell.  The numeric value
+//            represents the direct-distance to the nearest cell-wall.
+//
+// THEORY of operation:
+//
+//   A point is only inside the cell if it is inside ALL of the cell's bounding
+//   surfaces.  Thus for each bounding surface (two planes and a cylinder) we
+//   compute the distance "above" the surface (such that a positive value means
+//   "outside" the surface and negative means inside), and thus, among these
+//   three distances we report the "greatest" value as the mismatch, which
+//   roughly equates to the distance inside (if negative) or outside (if
+//   positive) the cell.
+//
+Real MediumCell::IsPointInside(const R3::XYZ & loc) const {
+
+  auto x_this = (MediumCell *)this; // Promise not modify...
+
+  Count nFaces = NumFaces();
+  Real distance = x_this->Face(0).GetDistanceAboveFace(loc);
+
+  for (Index i = 1; i < nFaces; i++){
+    Real maybe_distance = x_this->Face(i).GetDistanceAboveFace(loc);
+    if(maybe_distance > distance){
+      distance = maybe_distance;
+    }
+  }
+
+  std::cerr << "~~&>  Mismatch for cell " << this << " is: " << distance
+            << ";  Checked " << nFaces << " faces.\n";
+  return distance;
+
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 // &&&&                                                              ****
 // ****  CLASS:  RCUCylinder                                         ****
@@ -41,12 +86,11 @@ Real MediumCell::cmPhononFreq = 1.0;    // Responsibility to set at
 //   Methods Defined Here:
 //
 //     o   RCUCylinder()
+//     o   Face()
 //     o   GetVelocAtPoint()
 //     o   GetWavelengthAtPoint()
 //     o   GetDensityAtPoint()
 //     o   GetQatPoint()
-//     o   Face()
-//     o   IsPointInside()
 //     o   AdvanceLength()
 //     o   GetPathToBoundary()
 //
@@ -137,7 +181,7 @@ Real RCUCylinder::GetQatPoint(const R3::XYZ & loc, raytype type) const {
 //   Returns a read-write reference to either the top or bottom
 //   CellFace object, as determined by the value of face_id
 //
-CellFace & RCUCylinder::Face(CellFace::face_id_e face_id) {
+CellFace & RCUCylinder::Face(Index face_id) {
   switch (face_id) {
   case CellFace::F_TOP:
     return mTopFace;
@@ -149,54 +193,6 @@ CellFace & RCUCylinder::Face(CellFace::face_id_e face_id) {
     throw Invalid("Invalid CellFace ID for RCUCylinder medium cell.");
   }
 }
-
-
-//////
-// METHOD:   RCUCylinder :: IsPointInside()
-//
-//   Reports whether a given point is "inside" the Cylinder cell by
-//   returning a "mismatch" factor.
-//
-//   If the return value is:
-//
-//     <= 0:  then the point is definitively inside or on-the-boundary
-//            of the cell.
-//
-//      > 0:  then the point is outside the cell.  The numeric value
-//            represents the direct-distance to the nearest cell-wall.
-//
-// THEORY of operation:
-//
-//   A point is only inside the cell if it is inside ALL of the cell's
-//   bounding surfaces.  Thus for each bounding surface (two planes
-//   and a cylinder) we compute the distance "above" the surface (such
-//   that a positive value means "outside" the surface and negative
-//   means inside), and thus, among these three distances we report
-//   the "greatest" value as the mismatch, which roughly equates to
-//   the distance inside (if negative) or outside (if positive) the
-//   cell.
-//
-Real RCUCylinder::IsPointInside(const R3::XYZ & loc) const {
-
-  Real max_dist;
-
-  Real dist = cmLossFace.GetDistanceAboveFace(loc);
-        // Distance outside the cylinder wall
-
-  max_dist = dist;  // (So far the greatest)
-
-  dist = mTopFace.GetDistanceAboveFace(loc);    // Get dist outside top end-cap
-  if (dist > max_dist)                          //
-    max_dist = dist;                            //
-
-  dist = mBottomFace.GetDistanceAboveFace(loc); // Get dist outside bottom cap
-  if (dist > max_dist)                          //
-    max_dist = dist;                            //
-
-  return max_dist;              // Return the max
-
-}
-
 
 //////
 // METHOD:   RCUCylinder :: AdvanceLength()
@@ -367,12 +363,11 @@ Real RCUCylinder::HelperAttenuation(Real cycles, Real Q) {
 //   Methods Defined Here:
 //
 //     o   Tetra()
+//     o   Face()
 //     o   GetVelocAtPoint()
 //     o   GetWavelengthAtPoint()
 //     o   GetDensityAtPoint()
 //     o   GetQatPoint()
-//     o   Face()
-//     o   IsPointInside()
 //     o   AdvanceLength()
 //     o   GetPathToBoundary()
 //
@@ -472,48 +467,9 @@ Real Tetra::GetQatPoint(const R3::XYZ & loc, raytype type) const {
 //   Returns a read-write reference to either the top or bottom
 //   CellFace object, as determined by the value of face_id
 //
-CellFace & Tetra::Face(CellFace::face_id_e face_id) {
+CellFace & Tetra::Face(Index face_id) {
   return mFaces[face_id];
 }
-
-
-//////
-// METHOD:   Tetra :: IsPointInside()
-//
-//   Reports whether a given point is "inside" the Tetrahedral cell by
-//   returning a "mismatch" factor.
-//
-//   If the return value is:
-//
-//     <= 0:  then the point is definitively inside or on-the-boundary
-//            of the cell.
-//
-//      > 0:  then the point is outside the cell.  The numeric value
-//            represents the direct-distance to the nearest cell-wall.
-//
-// THEORY of operation:
-//
-//   A point is only inside the cell if it is inside ALL of the cell's
-//   bounding surfaces.  Thus for each bounding surface we compute the
-//   distance "above" the surface (such that a positive value means
-//   "outside" the surface and negative means inside), and thus, among
-//   these three distances we report the "greatest" value as the
-//   mismatch, which roughly equates to the distance inside (if
-//   negative) or outside (if positive) the cell.
-//
-Real Tetra::IsPointInside(const R3::XYZ & loc) const {
-
-  Real distance = mFaces[0].GetDistanceAboveFace(loc);
-  for (int i = 1; i < 4; i++){
-    Real maybedistance = mFaces[i].GetDistanceAboveFace(loc);
-    if(maybedistance > distance){
-      distance = maybedistance;
-    }
-  }
-  return distance;
-
-}
-
 
 //////
 // METHOD:   Tetra :: AdvanceLength()
@@ -680,7 +636,7 @@ SphereShellD2::SphereShellD2(Real RadTop, Real RadBot,
 //   Returns a read-write reference to either the top or bottom
 //   CellFace object, as determined by the value of face_id
 //
-CellFace & SphereShellD2::Face(CellFace::face_id_e face_id) {
+CellFace & SphereShellD2::Face(Index face_id) {
   return mFaces[face_id];
 }
 
@@ -727,20 +683,4 @@ SphereShellD2::AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc,
                      const S2::ThetaPhi & startdir) {
   throw std::runtime_error("UnimpSphereShellD2_AdvanceLength");
   return TravelRec(); // **FIXME**
-}
-
-//////
-// METHOD:   SphereShellD2 :: IsPointInside()
-//
-Real SphereShellD2::IsPointInside(const R3::XYZ & loc) const {
-
-  Real distance = mFaces[0].GetDistanceAboveFace(loc);
-  for (int i = 1; i < 2; i++){
-    Real maybedistance = mFaces[i].GetDistanceAboveFace(loc);
-    if(maybedistance > distance){
-      distance = maybedistance;
-    }
-  }
-  return distance;
-
 }

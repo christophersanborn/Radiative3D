@@ -201,9 +201,12 @@ public:
     return *(mpOther->mpCell);
   }
 
-  // :::::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Interrogative Methods  (CellFace Class) :::
-  // :::::::::::::::::::::::::::::::::::::::::::::::
+  // :::::::::::::::::::::::::::::::::::::::::::
+  // ::: Interface Methods  (CellFace Class) :::
+  // :::::::::::::::::::::::::::::::::::::::::::
+  //
+  //   These are what derived classes MUST define:
+  //
 
   virtual R3::XYZ Normal(R3::XYZ loc) const = 0;
         // Outward-pointing surface normal unit vector.
@@ -225,6 +228,11 @@ public:
         // (entering) or is inside and parallel and can never exit, or -inf if
         // the line is outside and parallel and is/was forever outside.  (More
         // details at PlaneFace::LinearRayDistToExit() definition).
+
+
+  // :::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Interrogative Methods  (CellFace Class) :::
+  // :::::::::::::::::::::::::::::::::::::::::::::::
 
   Real VelocityJump(const R3::XYZ & loc) const;
         // Returns a number characterizing the fractional

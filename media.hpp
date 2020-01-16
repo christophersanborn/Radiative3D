@@ -154,68 +154,100 @@ protected:
   // ::: Class-Static Member Variables  (MediumCell Base Class) :::
   // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   //
-  //          These values need runtime initialization prior to the
-  //          construction of any MediumCell-derived objects.  The
-  //          responsibility to do this initialization lies with
-  //          the Model constructor in model.cpp.  Initialization
-  //          is achieved via public property-set methods.
+  //    These values need runtime initialization prior to the construction
+  //    of any MediumCell-derived objects.  The responsibility to do this
+  //    initialization lies with the Model constructor in model.cpp.
+  //    Initialization is achieved via public property-set methods.
   //
-  
+
   static Real  cmPhononFreq;  // Phonon Frequency (Hertz)
 
+
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Base Class Member Variables  (MediumCell Base Class) :::
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  //
+  //    Base class manages Scatterer linkage.
+  //
+
+  Scatterer      * mpScat;      // Scatterer object that operates within
+                                // this cell.  Set by Link method.
+                                // Responsibility for constructing/
+                                // destructing lies elsewhere.
+  MediumCell() :
+    mpScat(nullptr){}
+
+
 public:
+
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Class-Wide Property-Set Methods  (MediumCell Base Class) :::
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  static void SetFrequencyHertz(Real freq) {cmPhononFreq = freq;}
+  static Real GetFrequencyHertz() {return cmPhononFreq;}
 
   // :::::::::::::::::::::::::::::::::::::::::::::::::::::
   // ::: Property-Set Methods  (MediumCell Base Class) :::
   // :::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-  static void SetFrequencyHertz(Real freq) {
-    cmPhononFreq = freq;
-  }
+  void Link(Scatterer * pScat) {mpScat = pScat;}
 
-  static Real GetFrequencyHertz() {
-    return cmPhononFreq; 
-  }
+  Scatterer * GetActiveScatterer() const {return mpScat;}
+
+
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Interrogative Methods  (RCUCylinder Class) :::
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  Real IsPointInside(const R3::XYZ & loc) const;
+        // Reports whether a point is "inside" the MediumCell by returning a
+        // "mismatch" factor. Positive mismatch means the point is OUTSIDE
+        // the cell, and negative values mean INSIDE.  Zero implies points
+        // is exactly on boundary.  Method makes use of virtualized Face()
+        // method to probe all CellFaces for "insideness".
 
   // :::::::::::::::::::::::::::::::::::::::::::::::::::::::
   // ::: Interface Declarations  (MediumCell Base Class) :::
   // :::::::::::::::::::::::::::::::::::::::::::::::::::::::
   //
-  //                The following pure-virtual function
-  //                declarations define a set of methods (an
-  //                "interface") that MUST be implemented by
-  //                any derived class in order to compile.
+  //    The following pure-virtual function declarations define a set of
+  //    methods (an "interface") that MUST be implemented by any derived
+  //    class in order to compile.
   //
 
-  virtual CellFace & Face(CellFace::face_id_e face_id) = 0;
-                // Returns a read-write reference to the CellFace
-                // object, presumed to be on the surface of the
-                // MediumCell, identified by face_id
+  virtual CellFace & Face(Index face_id) = 0;
+        // Returns a read-write reference to the virtual CellFace
+        // object, presumed to be on the surface of the MediumCell,
+        // identified by face_id
 
-  virtual Scatterer * GetActiveScatterer() = 0;
+  virtual Count NumFaces() const = 0;
+        // Gets number of faces bounding the MediumCell derivative.
 
-  virtual void Link(Scatterer *) = 0;
+  // :::
+  // ::  Functions defining a Cell's elastic profile:
+  // :
 
-  virtual TravelRec AdvanceLength(raytype rt, Real len, 
-                                  const R3::XYZ & startloc,
-                                  const S2::ThetaPhi & startdir) = 0;
-
-  virtual TravelRec GetPathToBoundary(raytype rt,
-                                      const R3::XYZ & startloc,
-                                      const S2::ThetaPhi & startdir) = 0;
-
-  virtual Real GetVelocAtPoint(const R3::XYZ & loc, 
-                               raytype type) const = 0;
-
-  virtual Real GetWavelengthAtPoint(const R3::XYZ & loc,
-                                    raytype type) const =0;
-
+  virtual Real GetVelocAtPoint(const R3::XYZ & loc, raytype type) const = 0;
+  virtual Real GetWavelengthAtPoint(const R3::XYZ & loc, raytype type) const =0;
   virtual Real GetDensityAtPoint(const R3::XYZ & loc) const =0;
-
   virtual Real GetQatPoint(const R3::XYZ & loc, raytype type) const =0;
 
-  virtual Real IsPointInside(const R3::XYZ & loc) const =0;
+  // :::
+  // ::  Functions that compute travel paths within the Cell:
+  // :
 
+  virtual TravelRec AdvanceLength
+  (raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) = 0;
+        // This one computes where/when a Phonon will end up if if follows
+        // it's cell-specific ray path (which could be straight-line or
+        // curved) for a given total path length 'len'.
+
+  virtual TravelRec GetPathToBoundary
+  (raytype rt, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) = 0;
+        // This one computes where/when a Phonon will end up if if
+        // follows it's cell-specific ray path until it hits a boundary
+        // of the cell.
 
 };
 
@@ -227,23 +259,21 @@ public:
 //
 // ENCAPSULATES:
 //
-//   The RCUCylinder class encapsulates a MediumCell in the shape of a
-//   right-circular cylinder that is coaxial with the Z-axis, and with
-//   end-caps located at specified Z-depths.  The end-caps can take
-//   any orientation in space, and thus can be used to model inclined
-//   interfaces between cells, such as a dipping Moho, e.g.  The top
-//   and bottom endcaps will be treated as CellFaces that can be
-//   marked for collection, reflection, transmission or loss, etc.
-//   The curved side will always be treated as a loss face, and will
-//   be mapped to a CellFace object whose location and orientation
-//   have no particular meaning (since CellFace objects do not handle
-//   curvature).
+//   The RCUCylinder class encapsulates a MediumCell in the shape of a right-
+//   circular cylinder that is coaxial with the Z-axis, and with end caps
+//   located at specified Z-depths.  The end caps can take any orientation in
+//   space, and thus can be used to model inclined interfaces between cells,
+//   such as a dipping Moho.  The top and bottom endcaps will be treated as
+//   CellFaces that can be marked for collection, reflection, transmission or
+//   loss, etc.  The curved side will always be treated as a loss face, and
+//   for efficiency a single class-wide CylinderFace object is shared between
+//   all RCUCylinder instances to serve as a common loss face.
 //
-//   It will be possible to stack RCUCylinder objects on top of each
-//   other to establish different velocity regions.
+//   It will be possible to stack RCUCylinder objects on top of each other
+//   to establish different velocity regions.
 //
-//   Seismic velocity inside the RCUCylinder is a single, spacially
-//   uniform quantity, (specified separately for P and S waves).
+//   Seismic velocity inside the RCUCylinder is a single, spacially uniform
+//   quantity, (specified separately for P and S waves).
 //
 class RCUCylinder : public MediumCell {
 protected:
@@ -257,11 +287,6 @@ protected:
 
   PlaneFace      mTopFace;  // The top endcap
   PlaneFace   mBottomFace;  // The bottom endcap
-
-  Scatterer      * mpScat;  // Scatterer object that operates within
-                            // this cell.  Set by Link method.
-                            // Responsibility for constructing/
-                            // destructing lies elsewhere.
 
   static bool  cmRangeSet;  // Radius of loss face needs to be set prior to
                             // path calculation. As a check, constructor
@@ -288,59 +313,40 @@ public:
               Elastic::Q q_top, Elastic::Q q_bot);
 
 
-  // ::::::::::::::::::::::::::::::::::::::::::::::::::
+  // :::::::::::::::::::::::::::::::::::::::::::::::::
   // ::: Property-Set Methods  (RCUCylinder Class) :::
-  // ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  virtual void Link(Scatterer * pScat) {mpScat = pScat;}
+  // :::::::::::::::::::::::::::::::::::::::::::::::::
 
   static void SetRange(Real range) {
     cmLossFace.SetRadius(range);
     cmRangeSet = true;
   }
 
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Interface-Required Public Methods  (RCUCylinder Class) :::
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  virtual CellFace & Face(Index face_id) override;
+  virtual Count NumFaces() const override {return 3;}
 
   // :::::::::::::::::::::::::::::::::::::::::::::::::
   // ::: Property-Get Methods  (RCUCylinder Class) :::
   // :::::::::::::::::::::::::::::::::::::::::::::::::
 
-  virtual Scatterer * GetActiveScatterer() {return mpScat;}
-
-  virtual Real GetVelocAtPoint(const R3::XYZ &, raytype) const;
-  virtual Real GetWavelengthAtPoint(const R3::XYZ &, raytype) const;
-  virtual Real GetDensityAtPoint(const R3::XYZ &) const;
-  virtual Real GetQatPoint(const R3::XYZ &, raytype) const;
-
-  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Component Reference Methods  (RCUCylinder Class) :::
-  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  virtual CellFace & Face(CellFace::face_id_e face_id);
-                // Returns a read-write reference to either the
-                // top or bottom CellFace object, as determined
-                // by the value of face_id
-
-
-  // ::::::::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Interrogative Methods  (RCUCylinder Class) :::
-  // ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  virtual Real IsPointInside(const R3::XYZ & loc) const;
-                // Reports whether a given point is "inside"
-                // the cell by returning a "mismatch" factor.
-
+  virtual Real GetVelocAtPoint(const R3::XYZ &, raytype) const override;
+  virtual Real GetWavelengthAtPoint(const R3::XYZ &, raytype) const override;
+  virtual Real GetDensityAtPoint(const R3::XYZ &) const override;
+  virtual Real GetQatPoint(const R3::XYZ &, raytype) const override;
 
   // :::::::::::::::::::::::::::::::::::::::::::::::::
   // ::: Do-Something Methods  (RCUCylinder Class) :::
   // :::::::::::::::::::::::::::::::::::::::::::::::::
 
-  virtual TravelRec AdvanceLength(raytype rt, Real length, 
-                                  const R3::XYZ & startloc,
-                                  const S2::ThetaPhi & startdir);
+  virtual TravelRec AdvanceLength(raytype rt, Real length, const R3::XYZ & startloc,
+                                  const S2::ThetaPhi & startdir) override;
 
-  virtual TravelRec GetPathToBoundary(raytype rt,
-                                      const R3::XYZ & startloc,
-                                      const S2::ThetaPhi & startdir);
+  virtual TravelRec GetPathToBoundary(raytype rt, const R3::XYZ & startloc,
+                                      const S2::ThetaPhi & startdir) override;
 
 
 protected:
@@ -360,8 +366,12 @@ protected:
 //
 // FROM:   MediumCell
 //
-// ENCAPS:
+// ENCAPSULATES:
 //
+//   A tetrahedral medium cell bounded by four planar PlaneFace CellFaces.
+//   The velocites and densities internal to the cell follow linear gradients,
+//   that are computed from the values of the four corners of the cell, and
+//   thus imply circular curved ray paths.
 //
 class Tetra : public MediumCell {
 protected:
@@ -376,11 +386,6 @@ protected:
   Array::Quad<PlaneFace> mFaces; // Array consisting of
                                  // four Cell Faces
 
-  Scatterer           * mpScat;  // Scatterer object that operates within
-                                 // this cell.  Set by Link method.
-                                 // Responsibility for constructing/
-                                 // destructing lies elsewhere.
-
 public:
 
   // ::::::::::::::::::::::::::::::::::::
@@ -391,56 +396,106 @@ public:
          const GridData & dataA, const GridData & dataB,
          const GridData & dataC, const GridData & dataD);
 
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Interface-Required Public Methods  (Tetra Class) :::
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-  // :::::::::::::::::::::::::::::::::::::::::::
-  // ::: Property-Set Methods  (Tetra Class) :::
-  // :::::::::::::::::::::::::::::::::::::::::::
-  
-  virtual void Link(Scatterer * pScat) {mpScat = pScat;}
-
+  virtual CellFace & Face(Index face_id) override;
+  virtual Count NumFaces() const override {return 4;}
 
   // :::::::::::::::::::::::::::::::::::::::::::
   // ::: Property-Get Methods  (Tetra Class) :::
   // :::::::::::::::::::::::::::::::::::::::::::
-  
-  virtual Scatterer * GetActiveScatterer() {return mpScat;}
 
-  virtual Real GetVelocAtPoint(const R3::XYZ &, raytype) const;
-  virtual Real GetWavelengthAtPoint(const R3::XYZ &, raytype) const;
-  virtual Real GetDensityAtPoint(const R3::XYZ &) const;
-  virtual Real GetQatPoint(const R3::XYZ &, raytype) const;
-
-
-  // ::::::::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Component Reference Methods  (Tetra Class) :::
-  // ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  virtual CellFace & Face(CellFace::face_id_e face_id);
-                // Returns a read-write reference to either the
-                // top or bottom CellFace object, as determined
-                // by the value of face_id
-
-  // ::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Interrogative Methods  (Tetra Class) :::
-  // ::::::::::::::::::::::::::::::::::::::::::::
-
-  virtual Real IsPointInside(const R3::XYZ & loc) const;
-                // Reports whether a given point is "inside"
-                // the cell by returning a "mismatch" factor.
-
+  virtual Real GetVelocAtPoint(const R3::XYZ &, raytype) const override;
+  virtual Real GetWavelengthAtPoint(const R3::XYZ &, raytype) const override;
+  virtual Real GetDensityAtPoint(const R3::XYZ &) const override;
+  virtual Real GetQatPoint(const R3::XYZ &, raytype) const override;
 
   // :::::::::::::::::::::::::::::::::::::::::::
   // ::: Do-Something Methods  (Tetra Class) :::
   // :::::::::::::::::::::::::::::::::::::::::::
 
-  virtual TravelRec AdvanceLength(raytype rt, Real len, 
-                                  const R3::XYZ & startloc,
-                                  const S2::ThetaPhi & startdir);
-  virtual TravelRec GetPathToBoundary(raytype rt,
-                                      const R3::XYZ & startloc,
-                                      const S2::ThetaPhi & startdir);
+  virtual TravelRec AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc,
+                                  const S2::ThetaPhi & startdir) override;
+
+  virtual TravelRec GetPathToBoundary(raytype rt, const R3::XYZ & startloc,
+                                      const S2::ThetaPhi & startdir) override;
 };
 
+
+//////
+// CLASS:  SphereShellD2
+//
+// FROM:   MediumCell
+//
+// ENCAPSULATES:
+//
+//  Spherical shell in which the velocity inside is a degree-2 function of
+//  radius.
+//
+//  Internal representation of velocity is v = a*r^2 + c.  Density is
+//  just an inner value and an outer value, as values on surfaces are all
+//  that matter.  Q values are uniform and taken as a geometric average of
+//  the inner and outer given values.
+//
+class SphereShellD2 : public MediumCell {
+protected:
+
+  // Velocity and Elastic Structure:
+
+  Real mVelCoefA[RAY_NBT];      // Coef on r^2
+  Real mVelCoefC[RAY_NBT];      // Constant (velocity at r=0)
+  Real mDensTop;
+  Real mDensBot;
+  Real mQ[RAY_NBT];
+
+  // Geometry:
+
+  Array::Pair<SphereFace> mFaces; // Array consisting of
+                                  // two cell faces
+
+public:
+
+  // ::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Constructors  (SphereShellD2 Class)  :::
+  // ::::::::::::::::::::::::::::::::::::::::::::
+
+  SphereShellD2(Real RadTop, Real RadBot,
+                const GridData & DataTop, const GridData & DataBot);
+
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Interface-Required Public Methods  (SphereShellD2 Class) :::
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  virtual CellFace & Face(Index face_id) override;
+  virtual Count NumFaces() const override {return 2;}
+
+  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Property-Get Methods  (SphereShellD2 Class) :::
+  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  virtual Real GetVelocAtPoint(const R3::XYZ &, raytype) const override;
+  virtual Real GetWavelengthAtPoint(const R3::XYZ &, raytype) const override;
+  virtual Real GetDensityAtPoint(const R3::XYZ &) const override;
+  virtual Real GetQatPoint(const R3::XYZ &, raytype) const override;
+
+  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Do-Something Methods  (SphereShellD2 Class) :::
+  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  virtual TravelRec AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc,
+                                  const S2::ThetaPhi & startdir) override;
+
+  virtual TravelRec GetPathToBoundary(raytype rt, const R3::XYZ & startloc,
+                                      const S2::ThetaPhi & startdir) override;
+
+};
+
+
+//////
+// CLASS:  CoordinateTransformation
+//
 class CoordinateTransformation {
 
 private:
@@ -491,102 +546,6 @@ public:
 
 
 };
-
-
-//////
-// CLASS:  SphereShellD2
-//
-// FROM:   MediumCell
-//
-// ENCAPS:
-//
-//  Spherical shell in which the velocity inside is a degree-2 function of
-//  radius.
-//
-//  Internal representation of velocity is v = a*r^2 + c.  Density is
-//  just an inner value and an outer value, as values on surfaces are all
-//  that matter.  Q values are uniform and taken as a geometric average of
-//  the inner and outer given values.
-//
-class SphereShellD2 : public MediumCell {
-protected:
-
-  // Velocity and Elastic Structure:
-
-  Real mVelCoefA[RAY_NBT];      // Coef on r^2
-  Real mVelCoefC[RAY_NBT];      // Constant (velocity at r=0)
-  Real mDensTop;
-  Real mDensBot;
-  Real mQ[RAY_NBT];
-
-  // Geometry:
-
-  Array::Pair<SphereFace> mFaces; // Array consisting of
-                                  // two cell faces
-
-  Scatterer          * mpScat;  // Scatterer object that operates within this
-                                // cell.  Set by Link method.  Responsibility
-                                // for constructing/destructing lies elsewhere.
-public:
-
-  // ::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Constructors  (SphereShellD2 Class)  :::
-  // ::::::::::::::::::::::::::::::::::::::::::::
-
-  SphereShellD2(Real RadTop, Real RadBot,
-                const GridData & DataTop, const GridData & DataBot);
-
-
-  // :::::::::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Property-Set Methods  (SphereShellD2 Class) :::
-  // :::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  virtual void Link(Scatterer * pScat) {mpScat = pScat;}
-
-
-  // :::::::::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Property-Get Methods  (SphereShellD2 Class) :::
-  // :::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  virtual Scatterer * GetActiveScatterer() {return mpScat;}
-
-  virtual Real GetVelocAtPoint(const R3::XYZ &, raytype) const;
-  virtual Real GetWavelengthAtPoint(const R3::XYZ &, raytype) const;
-  virtual Real GetDensityAtPoint(const R3::XYZ &) const;
-  virtual Real GetQatPoint(const R3::XYZ &, raytype) const;
-
-
-  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Component Reference Methods  (SphereShellD2 Class) :::
-  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  virtual CellFace & Face(CellFace::face_id_e face_id);
-                // Returns a read-write reference to either the
-                // top or bottom CellFace object, as determined
-                // by the value of face_id
-
-  // ::::::::::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Interrogative Methods  (SphereShellD2 Class) :::
-  // ::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  virtual Real IsPointInside(const R3::XYZ & loc) const;
-                // Reports whether a given point is "inside"
-                // the cell by returning a "mismatch" factor.
-
-
-  // :::::::::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Do-Something Methods  (SphereShellD2 Class) :::
-  // :::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  virtual TravelRec AdvanceLength(raytype rt, Real len,
-                                  const R3::XYZ & startloc,
-                                  const S2::ThetaPhi & startdir);
-  virtual TravelRec GetPathToBoundary(raytype rt,
-                                      const R3::XYZ & startloc,
-                                      const S2::ThetaPhi & startdir);
-
-};
-
 
 ///
 #endif //#ifndef MEDIA_H_
