@@ -727,7 +727,7 @@ void Model::BuildCellArray_Cylinder() {
 //////
 // METHOD:  Model :: BuildCellArray_SphericalShells()
 //
-//   Builds out the cell array using SphereShellXX cell types.
+//   Builds out the cell array using SphereShell cell types.
 //
 void Model::BuildCellArray_SphericalShells() {
 
@@ -749,9 +749,9 @@ void Model::BuildCellArray_SphericalShells() {
     const GridData GD_Bot = mGrid.Node(0,0,k+1).Data(GridNode::GN_ABOVE);
 
     mCellArray.push_back(               // Construct the cell
-        new SphereShellD2(mGrid.Node(0,0,k).GetRawLoc().Radius(ECS),
-                          mGrid.Node(0,0,k+1).GetRawLoc().Radius(ECS),
-                          GD_Top, GD_Bot)
+        new SphereShell(mGrid.Node(0,0,k).GetRawLoc().Radius(ECS),
+                        mGrid.Node(0,0,k+1).GetRawLoc().Radius(ECS),
+                        GD_Top, GD_Bot)
     );
 
     ScatterParams scatpar(GD_Top.getV(), GD_Top.getHS());

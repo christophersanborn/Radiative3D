@@ -74,6 +74,7 @@ class GridData;   /* Passed by constant reference to Tetra constructor */
 //   o  class MediumCell
 //   o  class RCUCylinder
 //   o  class Tetra
+//   o  class SphereShell
 //   o  class GCAD_RetVal
 //
 
@@ -425,29 +426,28 @@ public:
 
 
 //////
-// CLASS:  SphereShellD2
+// CLASS:  SphereShell
 //
 // FROM:   MediumCell
 //
 // ENCAPSULATES:
 //
-//  Spherical shell in which the velocity inside is a degree-2 function of
-//  radius.
+//  Spherical shell in which the velocity inside is either a degree-0 or
+//  degree-2 function of radius.  (Either straight-line ray paths or circular
+//  arc raypaths.)
 //
-//  Internal representation of velocity is v = a*r^2 + c.  Density is
-//  just an inner value and an outer value, as values on surfaces are all
-//  that matter.  Q values are uniform and taken as a geometric average of
-//  the inner and outer given values.
+//  Internal representation of velocity is v = a*r^2 + c, and likewise for
+//  density.  Q values are uniform and taken from the top-surface grid data.
 //
-class SphereShellD2 : public MediumCell {
+class SphereShell : public MediumCell {
 protected:
 
   // Velocity and Elastic Structure:
 
   Real mVelCoefA[RAY_NBT];      // Coef on r^2
   Real mVelCoefC[RAY_NBT];      // Constant (velocity at r=0)
-  Real mDensTop;
-  Real mDensBot;
+  Real mDensCoefA;
+  Real mDensCoefC;
   Real mQ[RAY_NBT];
 
   // Geometry:
@@ -457,38 +457,41 @@ protected:
 
 public:
 
-  // ::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Constructors  (SphereShellD2 Class)  :::
-  // ::::::::::::::::::::::::::::::::::::::::::::
+  // ::::::::::::::::::::::::::::::::::::::::::
+  // ::: Constructors  (SphereShell Class)  :::
+  // ::::::::::::::::::::::::::::::::::::::::::
 
-  SphereShellD2(Real RadTop, Real RadBot,
-                const GridData & DataTop, const GridData & DataBot);
+  SphereShell(Real RadTop, Real RadBot,
+              const GridData & DataTop, const GridData & DataBot);
 
-  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Interface-Required Public Methods  (SphereShellD2 Class) :::
-  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Interface-Required Public Methods  (SphereShell Class) :::
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   virtual CellFace & Face(Index face_id) override;
   virtual Count NumFaces() const override {return 2;}
 
-  // :::::::::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Property-Get Methods  (SphereShellD2 Class) :::
-  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+  // :::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Property-Get Methods  (SphereShell Class) :::
+  // :::::::::::::::::::::::::::::::::::::::::::::::::
 
   virtual Real GetVelocAtPoint(const R3::XYZ &, raytype) const override;
   virtual Real GetWavelengthAtPoint(const R3::XYZ &, raytype) const override;
   virtual Real GetDensityAtPoint(const R3::XYZ &) const override;
   virtual Real GetQatPoint(const R3::XYZ &, raytype) const override;
 
-  // :::::::::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Do-Something Methods  (SphereShellD2 Class) :::
-  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+  // :::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Do-Something Methods  (SphereShell Class) :::
+  // :::::::::::::::::::::::::::::::::::::::::::::::::
 
-  virtual TravelRec AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc,
-                                  const S2::ThetaPhi & startdir) override;
+  virtual TravelRec GetPathToBoundary(raytype rt, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) override;
 
-  virtual TravelRec GetPathToBoundary(raytype rt, const R3::XYZ & startloc,
-                                      const S2::ThetaPhi & startdir) override;
+  TravelRec GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir);
+            // GetPath handler for uniform velocity profile.
+  TravelRec GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir);
+            // GetPath handler for quadratic velocity profile.
+
+  virtual TravelRec AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) override;
 
 };
 

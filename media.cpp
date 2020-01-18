@@ -13,6 +13,7 @@
 //   o  Class MediumCell
 //   o  Class RCUCylinder
 //   o  Class Tetra
+//   o  Class SphereShell
 //
 // Search on "&&&&" to jump between class implementations in this
 // file.
@@ -573,10 +574,10 @@ Tetra::GetPathToBoundary(raytype rt,
 
 
 //////
-// CONSTRUCTOR:  SphereShellD2()
+// CONSTRUCTOR:  SphereShell()
 //
-SphereShellD2::SphereShellD2(Real RadTop, Real RadBot,
-                             const GridData & DataTop, const GridData & DataBot) :
+SphereShell::SphereShell(Real RadTop, Real RadBot,
+                           const GridData & DataTop, const GridData & DataBot) :
   mFaces( SphereFace(RadTop, CellFace::F_TOP, this),
           SphereFace(RadBot, CellFace::F_BOTTOM, this))
 {
@@ -588,55 +589,84 @@ SphereShellD2::SphereShellD2(Real RadTop, Real RadBot,
 //
 
 //////
-// METHOD:   SphereShellD2 :: Face()
+// METHOD:   SphereShell :: Face()
 //
 //   Returns a read-write reference to either the top or bottom
 //   CellFace object, as determined by the value of face_id
 //
-CellFace & SphereShellD2::Face(Index face_id) {
+CellFace & SphereShell::Face(Index face_id) {
   return mFaces[face_id];
 }
 
 //////
-// METHODS:  SphereShellD2 :: GetVelocAtPoint()
-//           SphereShellD2 :: GetWavelengthAtPoint()
-//           SphereShellD2 :: GetDensityAtPoint()
-//           SphereShellD2 :: GetQatPoint()
+// METHODS:  SphereShell :: GetVelocAtPoint()
+//           SphereShell :: GetWavelengthAtPoint()
+//           SphereShell :: GetDensityAtPoint()
+//           SphereShell :: GetQatPoint()
 //
-Real SphereShellD2::GetVelocAtPoint(const R3::XYZ & loc, raytype type) const {
-  throw std::runtime_error("UnimpSphereShellD2_GetVelocAtPoint");
-  return  0;//loc.Dot(mVelGrad[type]) + mVel0[type];
+Real SphereShell::GetVelocAtPoint(const R3::XYZ & loc, raytype type) const {
+  return mVelCoefC[type] + mVelCoefA[type]*loc.MagSquared();
 }
-Real SphereShellD2::GetWavelengthAtPoint(const R3::XYZ & loc, raytype type) const {
-  throw std::runtime_error("UnimpSphereShellD2_GetWavelengthAtPoint");
-  return  0;//(GetVelocAtPoint(loc,type)/ cmPhononFreq);
+Real SphereShell::GetWavelengthAtPoint(const R3::XYZ & loc, raytype type) const {
+  return  (GetVelocAtPoint(loc,type)/ cmPhononFreq);
 }
-Real SphereShellD2::GetDensityAtPoint(const R3::XYZ & loc) const {
-  throw std::runtime_error("UnimpSphereShellD2_GetDensityAtPoint");
-  return  0;//loc.Dot(mDensGrad) + mDens0;
+Real SphereShell::GetDensityAtPoint(const R3::XYZ & loc) const {
+  return mDensCoefC + mDensCoefA*loc.MagSquared();
 }
-Real SphereShellD2::GetQatPoint(const R3::XYZ & loc, raytype type) const {
-  throw std::runtime_error("UnimpSphereShellD2_GetQAtPoint");
-  return 0;//mQ[type];
+Real SphereShell::GetQatPoint(const R3::XYZ & loc, raytype type) const {
+  return mQ[type];
 }
 
 
 //////
-// METHOD:   SphereShellD2 :: GetPathToBoundary()
+// METHOD:   SphereShell :: GetPathToBoundary()
 //
-TravelRec
-SphereShellD2::GetPathToBoundary(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
-  throw std::runtime_error("UnimpSphereShellD2_GetPathToBoundary");
+//   Compute a ray path that extends until it hits a boundary of the cell.
+//
+//   We actually dispatch here based on whether cell codes a Degree 0 (uniform
+//   velocity) or Degree 2 (quadratic velocity) elastic profile.  The former
+//   assumes straight-line rays, the latter assumes circular arc rays.
+//
+TravelRec SphereShell::
+GetPathToBoundary(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
+  if (mVelCoefA[rt] == 0) {
+    return GetPath_Variant_D0(rt, loc, dir);
+  } else {
+    return GetPath_Variant_D2(rt, loc, dir);
+  }
+}
+
+//////
+// METHOD:   SphereShell :: GetPath_Variant_D0()
+//
+//   Handler for GetPathToBoundary() wherin we assume uniform velocity, and
+//   corresponding straight-line ray paths.
+//
+TravelRec SphereShell::
+GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
+  throw std::runtime_error("UnimpSphereShell_GetPath_D0");
+  return TravelRec(); // **FIXME**
+}
+
+//////
+// METHOD:   SphereShell :: GetPath_Variant_D2()
+//
+//   Handler for GetPathToBoundary() wherin we assume uniform velocity, and
+//   corresponding straight-line ray paths.
+//
+TravelRec SphereShell::
+GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
+  throw std::runtime_error("UnimpSphereShell_GetPath_D2");
   return TravelRec(); // **FIXME**
 }
 
 
 //////
-// METHOD:   SphereShellD2 :: AdvanceLength()
+// METHOD:   SphereShell :: AdvanceLength()
 //
 TravelRec
-SphereShellD2::AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc,
-                     const S2::ThetaPhi & startdir) {
-  throw std::runtime_error("UnimpSphereShellD2_AdvanceLength");
+SphereShell::AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc,
+                           const S2::ThetaPhi & startdir) {
+  throw std::runtime_error("UnimpSphereShell_AdvanceLength");
   return TravelRec(); // **FIXME**
 }
