@@ -135,46 +135,6 @@ RCUCylinder::RCUCylinder(
 
 }
 
-
-//////
-// METHOD:   RCUCylinder :: GetVelocAtPoint()
-//
-Real RCUCylinder::GetVelocAtPoint(const R3::XYZ & loc,
-                                  raytype type) const {
-  return mVelTop[type]; // (Pretty simple in a constant-velocity
-                        //  medium...)
-}
-
-
-//////
-// METHOD:   RCUCylinder :: GetWavelengthAtPoint()
-//
-Real RCUCylinder::GetWavelengthAtPoint(const R3::XYZ & loc,
-                                       raytype type) const {
-  return mVelTop[type] / cmPhononFreq;
-
-}
-
-
-//////
-// METHOD:   RCUCylinder :: GetDensityAtPoint()
-//
-Real RCUCylinder::GetDensityAtPoint(const R3::XYZ & loc) const {
-
-  return mDensity;
-
-}
-
-/////
-// METHOD:   RCUCylinder :: GetQatPoint()
-//
-Real RCUCylinder::GetQatPoint(const R3::XYZ & loc, raytype type) const {
-
-  return mQ[type];
-
-}
-
-
 //////
 // METHOD:   RCUCylinder :: Face()
 //
@@ -193,6 +153,26 @@ CellFace & RCUCylinder::Face(Index face_id) {
     throw Invalid("Invalid CellFace ID for RCUCylinder medium cell.");
   }
 }
+
+//////
+// METHODS:  RCUCylinder :: GetVelocAtPoint()
+//           RCUCylinder :: GetWavelengthAtPoint()
+//           RCUCylinder :: GetDensityAtPoint()
+//           RCUCylinder :: GetQatPoint()
+//
+Real RCUCylinder::GetVelocAtPoint(const R3::XYZ & loc, raytype type) const {
+  return mVelTop[type];
+}
+Real RCUCylinder::GetWavelengthAtPoint(const R3::XYZ & loc, raytype type) const {
+  return mVelTop[type] / cmPhononFreq;
+}
+Real RCUCylinder::GetDensityAtPoint(const R3::XYZ & loc) const {
+  return mDensity;
+}
+Real RCUCylinder::GetQatPoint(const R3::XYZ & loc, raytype type) const {
+  return mQ[type];
+}
+
 
 //////
 // METHOD:   RCUCylinder :: AdvanceLength()
@@ -421,55 +401,32 @@ Tetra::Tetra(R3::XYZ N1, R3::XYZ N2, R3::XYZ N3, R3::XYZ N4,
 
 
 //////
-// METHOD:   Tetra :: GetVelocAtPoint()
-//
-Real Tetra::GetVelocAtPoint(const R3::XYZ & loc,
-                            raytype type) const {
-
-  return  loc.Dot(mVelGrad[type]) + mVel0[type];
-
-}
-
-
-//////
-// METHOD:   Tetra :: GetWavelengthAtPoint()
-//
-Real Tetra::GetWavelengthAtPoint(const R3::XYZ & loc,
-                                 raytype type) const {
-
-
-  return  (GetVelocAtPoint(loc,type)/ cmPhononFreq);
-}
-
-
-//////
-// METHOD:   Tetra :: GetDensityAtPoint()
-//
-Real Tetra::GetDensityAtPoint(const R3::XYZ & loc) const {
-
-  return  loc.Dot(mDensGrad) + mDens0;
-
-}
-
-/////
-// METHOD:   Tetra :: GetQatPoint()
-//
-Real Tetra::GetQatPoint(const R3::XYZ & loc, raytype type) const {
-
-  return mQ[type];
-
-}
-
-
-//////
 // METHOD:   Tetra :: Face()
-//
-//   Returns a read-write reference to either the top or bottom
-//   CellFace object, as determined by the value of face_id
 //
 CellFace & Tetra::Face(Index face_id) {
   return mFaces[face_id];
 }
+
+
+//////
+// METHODS:  Tetra :: GetVelocAtPoint()
+//           Tetra :: GetWavelengthAtPoint()
+//           Tetra :: GetDensityAtPoint()
+//           Tetra :: GetQatPoint()
+//
+Real Tetra::GetVelocAtPoint(const R3::XYZ & loc, raytype type) const {
+  return  loc.Dot(mVelGrad[type]) + mVel0[type];
+}
+Real Tetra::GetWavelengthAtPoint(const R3::XYZ & loc, raytype type) const {
+  return  (GetVelocAtPoint(loc,type)/ cmPhononFreq);
+}
+Real Tetra::GetDensityAtPoint(const R3::XYZ & loc) const {
+  return  loc.Dot(mDensGrad) + mDens0;
+}
+Real Tetra::GetQatPoint(const R3::XYZ & loc, raytype type) const {
+  return mQ[type];
+}
+
 
 //////
 // METHOD:   Tetra :: AdvanceLength()
@@ -641,30 +598,28 @@ CellFace & SphereShellD2::Face(Index face_id) {
 }
 
 //////
-// METHOD:   SphereShellD2 :: GetVelocAtPoint()
-// METHOD:   SphereShellD2 :: GetWavelengthAtPoint()
-// METHOD:   SphereShellD2 :: GetDensityAtPoint()
-// METHOD:   SphereShellD2 :: GetQatPoint()
+// METHODS:  SphereShellD2 :: GetVelocAtPoint()
+//           SphereShellD2 :: GetWavelengthAtPoint()
+//           SphereShellD2 :: GetDensityAtPoint()
+//           SphereShellD2 :: GetQatPoint()
 //
 Real SphereShellD2::GetVelocAtPoint(const R3::XYZ & loc, raytype type) const {
   throw std::runtime_error("UnimpSphereShellD2_GetVelocAtPoint");
   return  0;//loc.Dot(mVelGrad[type]) + mVel0[type];
 }
-//
 Real SphereShellD2::GetWavelengthAtPoint(const R3::XYZ & loc, raytype type) const {
   throw std::runtime_error("UnimpSphereShellD2_GetWavelengthAtPoint");
   return  0;//(GetVelocAtPoint(loc,type)/ cmPhononFreq);
 }
-//
 Real SphereShellD2::GetDensityAtPoint(const R3::XYZ & loc) const {
   throw std::runtime_error("UnimpSphereShellD2_GetDensityAtPoint");
   return  0;//loc.Dot(mDensGrad) + mDens0;
 }
-//
 Real SphereShellD2::GetQatPoint(const R3::XYZ & loc, raytype type) const {
   throw std::runtime_error("UnimpSphereShellD2_GetQAtPoint");
   return 0;//mQ[type];
 }
+
 
 //////
 // METHOD:   SphereShellD2 :: GetPathToBoundary()
@@ -674,6 +629,7 @@ SphereShellD2::GetPathToBoundary(raytype rt, const R3::XYZ & loc, const S2::Thet
   throw std::runtime_error("UnimpSphereShellD2_GetPathToBoundary");
   return TravelRec(); // **FIXME**
 }
+
 
 //////
 // METHOD:   SphereShellD2 :: AdvanceLength()
