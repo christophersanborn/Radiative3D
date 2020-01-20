@@ -79,6 +79,29 @@ Real MediumCell::IsPointInside(const R3::XYZ & loc) const {
 }
 
 
+//////
+// METHOD:   MediumCell :: HelperUniformAttenuation()    (static)
+//
+//   Computes the amplitude attenuation factor given the number of
+//   wave cycles (traveltime * frequency) and the Q factor in effect
+//   throughout the travel arc (assumes Q is a uniform quantity).
+//
+//   Returns the exponential factor in the amplitude decay eqation:
+//
+//     A(t) = A0 exp( -omega*t / 2Q )
+//
+//   Note: (1) The factor of 2 in the denominator is because we are
+//   computing amplitude decay. When amplitude is squared to get
+//   energy, the factor of 2 goes away.  (2) Omega = 2*pi*frequency,
+//   and since we're given cycles, the factor of 2*pi must appear in
+//   the numerator of our exponent. The 2 in the numerator and the 2
+//   in the denominator cancel out, however.
+//
+Real MediumCell::HelperUniformAttenuation(Real cycles, Real Q) {
+  return exp( ((-1)*Geometry::Pi * cycles) / (Q) );
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 // &&&&                                                              ****
 // ****  CLASS:  RCUCylinder                                         ****
@@ -194,7 +217,7 @@ RCUCylinder::AdvanceLength(raytype rt, Real len,
   rec.TravelTime = len / mVelTop[rt];
   rec.NewLoc     = startloc + R3::XYZ(startdir).ScaledBy(len);
   rec.NewDir     = startdir;
-  rec.Attenuation = HelperAttenuation(rec.TravelTime * cmPhononFreq, mQ[rt]);
+  rec.Attenuation = HelperUniformAttenuation(rec.TravelTime * cmPhononFreq, mQ[rt]);
 
   return rec;
 
@@ -291,7 +314,7 @@ TravelRec RCUCylinder::GetPathToBoundary(raytype rt, const R3::XYZ & loc,
   rec.TravelTime  = shortest / mVelTop[rt];
   rec.NewLoc      = loc + R3::XYZ(dir).ScaledBy(shortest);
   rec.NewDir      = dir;
-  rec.Attenuation = HelperAttenuation(rec.TravelTime * cmPhononFreq, mQ[rt]);
+  rec.Attenuation = HelperUniformAttenuation(rec.TravelTime * cmPhononFreq, mQ[rt]);
 
   switch (exf) {
   case TOP:
@@ -305,33 +328,6 @@ TravelRec RCUCylinder::GetPathToBoundary(raytype rt, const R3::XYZ & loc,
   }
 
   return rec;
-
-}
-
-
-//////
-// METHOD:   RCUCylinder :: HelperAttenuation()
-//
-//   Computes the amplitude attenuation factor given the number of
-//   wave cycles (traveltime * frequency) and the Q factor in effect
-//   throughout the travel arc (assumes Q is a uniform quantity).
-//
-//   Returns the exponential factor in the amplitude decay eqation:
-//
-//     A(t) = A0 exp( -omega*t / 2Q )
-//
-//   Note: (1) The factor of 2 in the denominator is because we are
-//   computing amplitude decay. When amplitude is squared to get
-//   energy, the factor of 2 goes away.  (2) Omega = 2*pi*frequency,
-//   and since we're given cycles, the factor of 2*pi must appear in
-//   the numerator of our exponent. The 2 in the numerator and the 2
-//   in the denominator cancel out, however.
-//
-Real RCUCylinder::HelperAttenuation(Real cycles, Real Q) {
-
-  return exp( ((-1)*Geometry::Pi * cycles) /
-              (Q)
-            );
 
 }
 
@@ -499,7 +495,7 @@ Tetra::AdvanceLength(raytype rt, Real len,
   rec.TravelTime = travelTime;
   rec.NewLoc = newLoc;
   rec.NewDir = S2::Node(newDir.x(),newDir.y(),newDir.z());
-  rec.Attenuation = exp( ((-1) * Geometry::Pi * rec.TravelTime * cmPhononFreq) / mQ[rt] );
+  rec.Attenuation = HelperUniformAttenuation(rec.TravelTime * cmPhononFreq, mQ[rt]);
 
   return rec;
 }
@@ -582,8 +578,21 @@ SphereShell::SphereShell(Real RadTop, Real RadBot,
           SphereFace(RadBot, CellFace::F_BOTTOM, this))
 {
 
-  std::cerr << "~~> Wants to make SphereShell > Inner: " << RadBot << "  Outer: " << RadTop << "\n";
+  // **TEMP: We ignore bottom data and use only top data to make a uniform-
+  // velocity cell. In future we will make a way to flag this desire, perhaps
+  // via a contructor that takes only one grid-data value. TODO: Fix
 
+  mVelCoefA[RAY_P] = 0;  // r^2 term ignored **TEMP**
+  mVelCoefA[RAY_S] = 0;
+  mVelCoefC[RAY_P] = DataTop.Vp();  // TODO: compute properly
+  mVelCoefC[RAY_S] = DataTop.Vs();
+  mDensCoefA = 0;
+  mDensCoefC = DataTop.Rho();
+  mQ[RAY_P] = DataTop.Qp();    // TODO: avg top and bottom (c.f. Tetra)
+  mQ[RAY_S] = DataTop.Qs();
+
+  std::cerr << "~~> Wants to make SphereShell > Inner: " << RadBot << "  Outer: " << RadTop
+            << " TopVpVs: " << DataTop.Vp() << ", " << DataTop.Vs() << "\n";
 
 }//
 //
@@ -644,8 +653,33 @@ GetPathToBoundary(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
 //
 TravelRec SphereShell::
 GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
-  throw std::runtime_error("UnimpSphereShell_GetPath_D0");
-  return TravelRec(); // **FIXME**
+
+  TravelRec rec;
+  enum exitface_e {TOP=CellFace::F_TOP,
+                   BOTTOM=CellFace::F_BOTTOM,
+                   NUM_FACES=2};
+  Real dists[NUM_FACES];
+
+  dists[TOP] = mFaces[TOP].LinearRayDistToExit(loc, dir);
+  dists[BOTTOM] = mFaces[BOTTOM].LinearRayDistToExit(loc, dir);
+
+  exitface_e ef = (dists[TOP] < dists[BOTTOM]) ? TOP : BOTTOM;
+
+  // ::::::
+  // :: Populate the TravelRec and return it to the caller:
+  // :
+
+  std::cerr << "SSGPVD0: TopDist = " << dists[TOP] << " BotDist = " << dists[BOTTOM] << "\n";
+
+  rec.PathLength  = dists[ef];
+  rec.TravelTime  = dists[ef] / mVelCoefC[rt];
+  rec.NewLoc      = loc + R3::XYZ(dir).ScaledBy(dists[ef]);
+  rec.NewDir      = dir;
+  rec.Attenuation = HelperUniformAttenuation(rec.TravelTime * cmPhononFreq, mQ[rt]);
+  rec.pFace = &mFaces[ef];
+
+  return rec;
+
 }
 
 //////

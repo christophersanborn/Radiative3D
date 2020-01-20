@@ -619,10 +619,81 @@ Real SphereFace::GetDistanceAboveFace(const R3::XYZ & loc) const {
 
 
 //////
+// METHOD:  SphereFace :: LinearRayDistToExit()
+//
+//   Return the distance to the point where a straight-line ray will exit (or
+//   has exited, if value negative) the interior region of the Spherical
+//   CellFace.
+//
+// RETURNS:
+//
+//    +inf  -   We are inside the face, and will never CROSS the face in an
+//              exiting direction. (Though we may have exited previously and
+//              re-entered.  Or we might "touch" the face in a tangent without
+//              crossing.  Or we might be on the face but entering permanently)
+//              This return value can only happen for inward-normal spherical
+//              faces.
+//     > 0  -   We will exit the face at some future time.  We are not necessarily
+//              inside the face *right now*, but there is a definitive future exit.
+//    == 0  -   We are on surface and exiting.
+//     < 0  -   We have already exited and are outside the face. (Does not
+//              preclude re-entereing, e.g. if we're in the "bubble" inside an
+//              inward-normal sphere.)
+//    -inf  -   We are outside the face and will never CROSS the face, nor have we
+//              ever been definitively inside the face.  (Though it can happen that
+//              we touch the face at a tangent point.)
+//
+// SOLUTION METHOD:
+//
+//   The return value is a solution to a quadratic equation, with certain
+//   sentinal values communicated as infinities.  The quadratic equation has
+//   two solutions, d(+) and d(-), though they may be imaginary or degenerate,
+//   and these cases require special handling.  Degeneracy and existence are
+//   determing by 'urad', the "value under the radical".  Return values depend
+//   on whether we are an outward-normal face or an inward-normal face, and are
+//   given by the following table:
+//
+//                               Out-Normal     In-Normal
+//           urad < 0               -inf           +inf
+//           urad == 0              -inf           +inf
+//           urad > 0:
+//                 d(+) <= 0        d(+)           +inf
+//                 d(+) > 0         d(+)           d(-)
+//
+//   The equation:
+//
+//     d^2 + 2 loc.dot.dir d + loc^2 = R^2, with solutions:
+//     d = -(loc.dot.dir) +/- sqrt( R^2 - loc^2 + (loc.dot.dir)^2 )
 //
 Real SphereFace::LinearRayDistToExit(const R3::XYZ & loc,
                                      const R3::XYZ & dir) const {
-  throw;  // TODO: Write
+
+  Real ldd = loc.Dot(dir);
+  Real urad = mRad2 + ldd*ldd - loc.MagSquared();
+
+  std::cerr << "SPLRDTE: loc = " << loc.x()<<","<<loc.y()<<","<<loc.z()
+            << " dir = " << dir.x()<<","<<dir.y()<<","<<dir.z()
+            << " ldd = " << ldd
+            <<" mRadius = " << mRadius << " urad = " << urad << " dist = ";
+
+  if (urad <= 0) { // No intersections or degenerate
+    std::cerr << ((mRadius > 0) ? (-1./0.) : (1./0.)) << "\n";
+    return (mRadius > 0) ? (-1./0.) : (1./0.);
+  }
+
+  Real sqrad = sqrt(urad);
+  Real dplus = -ldd + sqrad;
+
+  std::cerr << dplus << " or maybe inf\n";
+
+  if (mRadius > 0) return dplus;
+  if (dplus <= 0) return (1./0.);
+
+  Real dminus = -ldd - sqrad;
+
+  std::cerr << dminus << "\n";
+  return dminus;
+
 }
 
 

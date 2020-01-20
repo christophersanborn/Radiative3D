@@ -250,6 +250,20 @@ public:
         // follows it's cell-specific ray path until it hits a boundary
         // of the cell.
 
+protected:
+
+  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Useful Helper Functions  (MediumCell Class) :::
+  // :::::::::::::::::::::::::::::::::::::::::::::::::::
+  //
+  // Kitchen sink type stuff...
+  //
+
+  static Real HelperUniformAttenuation(Real cycles, Real Q);
+        // Compute amplitude attenuation factor in uniform-Q cells. (Note: All
+        // derived cell types are currently assuming Q is uniform.) Note:
+        // Computes amplitude attenuation, NOT energy attenuation.
+
 };
 
 
@@ -348,16 +362,6 @@ public:
 
   virtual TravelRec GetPathToBoundary(raytype rt, const R3::XYZ & startloc,
                                       const S2::ThetaPhi & startdir) override;
-
-
-protected:
-
-  // :::::::::::::::::::::::::::::::::::::::::::::::::::
-  // ::: Class-Specific Helpers  (RCUCylinder Class) :::
-  // :::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  static Real HelperAttenuation(Real cycles, Real Q);
-                    // Compute amplitude attenuation factor.
 
 };
 
