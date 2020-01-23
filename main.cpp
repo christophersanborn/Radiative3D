@@ -145,22 +145,22 @@ int main(int argc, char *argv[]) {
 void print_banner() {
 
   std::ostream * out = &std::cout;
-  
+
   *out << "**" << std::endl
        << "**  Radiative3D - "
        << "A code for radiative transport in 3D Earth models" << std::endl
        << "**" << std::endl
        << "**  (c) 2020 Christopher J. Sanborn and the" << std::endl
        << "**           Solid Earth Geophysics Team" << std::endl
-       << "**           at the University of Connecticut, Storrs, CT." 
+       << "**           at the University of Connecticut, Storrs, CT."
                         << std::endl
-       << "**           http://rainbow.phys.uconn.edu/geophysics/wiki" 
+       << "**           https://github.com/christophersanborn/Radiative3D"
                         << std::endl
        << "**" << std::endl;
   *out << "**  BUILD STATS:  "
        << "Revision number: " << REVISION_NUM << std::endl
        << "**                "
-       << "Floating-point representation: " << (8*sizeof(Real)) 
+       << "Floating-point representation: " << (8*sizeof(Real))
        << "-bit" << std::endl
        << "**" << std::endl
        << "**" << std::endl;
@@ -177,10 +177,9 @@ void print_banner() {
 void print_help() {
 
   std::ostream * out = &std::cout;
-  
+
   *out << "\nRadiative3D Manual Page is available at:\n"
-       << "http://rainbow.phys.uconn.edu/geowiki/"
-       << "Radiative3D_Manual_Page\n\n";
+       << "https://github.com/christophersanborn/Radiative3D/blob/master/doc/MANUAL.md\n\n";
 
   *out << "Recognized command-line options:\n\n";
 
