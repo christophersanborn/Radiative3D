@@ -584,9 +584,6 @@ SphereFace::SphereFace (Real radius, face_id_e toporbottom,
 {
   assert(radius >= 0);
   assert(toporbottom == F_TOP || toporbottom == F_BOTTOM);
-
-  std::cout << "~~~~> Wants " << (toporbottom==F_TOP ? "OUTWARD" : "INWARD")
-            << "-pointing SphereFace at radius " << mRadius << "\n";
 }
 
 //////
@@ -596,8 +593,8 @@ SphereFace::SphereFace (Real radius, face_id_e toporbottom,
 //  mRadius to determine whether "outward" us "up" or "down".
 //
 R3::XYZ SphereFace::Normal(R3::XYZ loc) const {
-  return (mRadius > 0) ? loc.UnitElse(R3::XYZ(0,0,1))
-                       : loc.UnitElse(R3::XYZ(0,0,1)).Negative();
+  return IsOutwardNormal() ? loc.UnitElse(R3::XYZ(0,0,1))
+                           : loc.UnitElse(R3::XYZ(0,0,1)).Negative();
 }
 
 //////
@@ -613,8 +610,8 @@ R3::XYZ SphereFace::Normal(R3::XYZ loc) const {
 //     < 0:  Point is "below" the surface, or "inside" of it.
 //
 Real SphereFace::GetDistanceAboveFace(const R3::XYZ & loc) const {
-  return (mRadius >= 0) ? loc.Mag() - mRadius
-                        : -(mRadius + loc.Mag());
+  return (mRadius > 0) ? loc.Mag() - mRadius
+                       : -(mRadius + loc.Mag());
 }
 
 
@@ -657,8 +654,8 @@ Real SphereFace::GetDistanceAboveFace(const R3::XYZ & loc) const {
 //           urad < 0               -inf           +inf
 //           urad == 0              -inf           +inf
 //           urad > 0:
-//                 d(+) <= 0        d(+)           +inf
-//                 d(+) > 0         d(+)           d(-)
+//                midpt <= 0        d(+)           +inf
+//                midpt > 0         d(+)           d(-)
 //
 //   The equation:
 //
@@ -668,30 +665,21 @@ Real SphereFace::GetDistanceAboveFace(const R3::XYZ & loc) const {
 Real SphereFace::LinearRayDistToExit(const R3::XYZ & loc,
                                      const R3::XYZ & dir) const {
 
-  Real ldd = loc.Dot(dir);
-  Real urad = mRad2 + ldd*ldd - loc.MagSquared();
-
-  std::cerr << "SPLRDTE: loc = " << loc.x()<<","<<loc.y()<<","<<loc.z()
-            << " dir = " << dir.x()<<","<<dir.y()<<","<<dir.z()
-            << " ldd = " << ldd
-            <<" mRadius = " << mRadius << " urad = " << urad << " dist = ";
+  Real midpt = -loc.Dot(dir);
+  Real urad = mRad2 + midpt*midpt - loc.MagSquared();
 
   if (urad <= 0) { // No intersections or degenerate
-    std::cerr << ((mRadius > 0) ? (-1./0.) : (1./0.)) << "\n";
-    return (mRadius > 0) ? (-1./0.) : (1./0.);
+    return IsOutwardNormal() ? (-1./0.) : (1./0.);
   }
 
   Real sqrad = sqrt(urad);
-  Real dplus = -ldd + sqrad;
+  Real dplus = midpt + sqrad;
 
-  std::cerr << dplus << " or maybe inf\n";
+  if (IsOutwardNormal()) return dplus;
+  if (midpt <= 0) return (1./0.);
 
-  if (mRadius > 0) return dplus;
-  if (dplus <= 0) return (1./0.);
+  Real dminus = midpt - sqrad;
 
-  Real dminus = -ldd - sqrad;
-
-  std::cerr << dminus << "\n";
   return dminus;
 
 }

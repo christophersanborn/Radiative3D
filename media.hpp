@@ -489,13 +489,16 @@ public:
   // :::::::::::::::::::::::::::::::::::::::::::::::::
 
   virtual TravelRec GetPathToBoundary(raytype rt, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) override;
+  virtual TravelRec AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) override;
 
   TravelRec GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir);
-            // GetPath handler for uniform velocity profile.
+        // GetPath handler for uniform velocity profile.
   TravelRec GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir);
-            // GetPath handler for quadratic velocity profile.
-
-  virtual TravelRec AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) override;
+        // GetPath handler for quadratic velocity profile.
+  TravelRec AdvanceLength_Variant_D0(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir);
+        // AdvanceLength handler for uniform velocity profile.
+  TravelRec AdvanceLength_Variant_D2(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir);
+        // AdvanceLength handler for quadratic velocity profile.
 
 };
 

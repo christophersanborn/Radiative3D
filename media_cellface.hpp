@@ -364,9 +364,10 @@ protected:
   // :                orientation of the face)
   //
 
-  Real   mRadius;   // Radius of sphere. Positive => outward pointing surface
-                    // normal, negative => inward facing normal.
-  Real     mRad2;   // Precomputed Radius-Squared
+  Real   mRadius;   // Radius of sphere. Strictly Positive implies outward-
+                    // pointing surface normal, negative or zero implies
+                    // inward-facing normal.
+  Real     mRad2;   // Precomputed Radius-Squared.
 
 
 public:
@@ -383,6 +384,12 @@ public:
   // :::::::::::::::::::::::::::::::::::::::::::::::::
   // ::: Interrogative Methods  (SphereFace Class) :::
   // :::::::::::::::::::::::::::::::::::::::::::::::::
+
+  bool IsOutwardNormal() const {return (mRadius>0);}
+
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Interface-Required Methods  (SphereFace Class) :::
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   virtual R3::XYZ Normal(R3::XYZ loc) const override;
   virtual Real GetDistanceAboveFace(const R3::XYZ & loc) const override;

@@ -664,12 +664,11 @@ GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
   dists[BOTTOM] = mFaces[BOTTOM].LinearRayDistToExit(loc, dir);
 
   exitface_e ef = (dists[TOP] < dists[BOTTOM]) ? TOP : BOTTOM;
+  if (dists[ef] < 0) dists[ef] = 0; // Squash retrograde motion
 
   // ::::::
   // :: Populate the TravelRec and return it to the caller:
   // :
-
-  std::cerr << "SSGPVD0: TopDist = " << dists[TOP] << " BotDist = " << dists[BOTTOM] << "\n";
 
   rec.PathLength  = dists[ef];
   rec.TravelTime  = dists[ef] / mVelCoefC[rt];
@@ -701,6 +700,38 @@ GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
 TravelRec
 SphereShell::AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc,
                            const S2::ThetaPhi & startdir) {
-  throw std::runtime_error("UnimpSphereShell_AdvanceLength");
+  if (mVelCoefA[rt] == 0) {
+    return AdvanceLength_Variant_D0(rt, len, startloc, startdir);
+  } else {
+    return AdvanceLength_Variant_D2(rt, len, startloc, startdir);
+  }
+}
+
+
+//////
+// METHOD:   SphereShell :: AdvanceLength_Variant_D0()
+//
+TravelRec SphereShell::
+AdvanceLength_Variant_D0(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) {
+
+  TravelRec rec;
+
+  rec.PathLength = len;
+  rec.TravelTime = len / mVelCoefC[rt];
+  rec.NewLoc     = startloc + R3::XYZ(startdir).ScaledBy(len);
+  rec.NewDir     = startdir;
+  rec.Attenuation = HelperUniformAttenuation(rec.TravelTime * cmPhononFreq, mQ[rt]);
+
+  return rec;
+
+}
+
+
+//////
+// METHOD:   SphereShell :: AdvanceLength_Variant_D2()
+//
+TravelRec SphereShell::
+AdvanceLength_Variant_D2(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) {
+  throw std::runtime_error("UnimpSphereShell_AdvanceLength_V_D2");
   return TravelRec(); // **FIXME**
 }
