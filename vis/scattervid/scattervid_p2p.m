@@ -172,7 +172,7 @@ function [hP hS] = scattervid_p2p(
 
   figwidth  = PaperWH(1);           # (Default 6.666_, reasonable for text size)
   figheight = figwidth/aspect;      # Height automatic,
-  if (length(PaperWH>1))            # unless explicit.
+  if (length(PaperWH)>1)            # unless explicit.
     figheight = PaperWH(2);
   end
   paperdpi=pixwidth/figwidth;
