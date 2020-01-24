@@ -23,21 +23,17 @@ MODIDX=30  # Spherical Toy    # Model Index: Selects from custom coded models.
                               # 5: North Sea Crust Pinch model,
                               # 8: Crust Upthrust model
 
-event=eq        # 'eq' or 'expl' - See case statement below for choices
-EQISOFRAC=0.0   # Iso fraction for EQ event (choose from range [-1.0, 1.0])
+#SOURCETYP=$(EventParams "Selby" 0)
+        # Lookup source parameters. Choices include 'expl', 'eq', 'Selby', etc.
+        # Second parameter is usually isofrac (range [-1.0,1.0] or [-90,90]).
+SOURCETYP=SDR,22.5,90,0       # Or, specify source directly.
+SOURCELOC=0,0,-10             # Event Location: Null Island: 0,0,elev
+                              #                 North Pole:  10007,0,elev
 
-##
-##  Lop Nor geography and event source parameters:
-##
-
-LOPXYZ=492.31,-263.65,1.05    # Lop Nor, Surface, site of Chinese Test 596
-XINXYZ=425.54,-169.53,0.98    # Lop Nor, Surface, site of Xinjiang Quake 030313
-MAKXYZ=-102.27,430.84,0.60    # Station MAK
-WUSXYZ=-390.04,-167.18,1.457  # Station WUS
 
 FREQ=2.0                      # Phonon frequency to model
-NUMPHONS=2K                  # Number of phonons to spray
-RECTIME=2000                  # Recording duration of seismometers.
+NUMPHONS=3K                   # Number of phonons to spray
+RECTIME=3000                  # Recording duration of seismometers.
 GATHER=40.0                   # Terminal gather radius, in kilometers.
 
 SCAT1=0.8,0.01,0.5,0.2,50     # Scat Args (nu,eps,a,kappa) and Q in sedi's
@@ -46,12 +42,9 @@ SCAT3=0.8,0.01,0.7,0.5,300    # Scat Args (nu,eps,a,kappa) and Q in mantle
                               # (Note: Q's specified are Q_s values.
                               # Q_p is computed from assumption that
                               # Q_kappa is infinite.)
-# To enable Moho structure, uncomment the following:
-SCAT3=$SCAT3,0.8,0.02,0.5,0.5,2000  # Scat Args in transition layers
-
 COMPARGS=$SCAT1,$SCAT2,$SCAT3
 
-MFPOVERRIDE=--overridemfp=15,15     # Uncomment to pin P,S Mean-Free-Paths.
+MFPOVERRIDE=--overridemfp=25,25     # Uncomment to pin P,S Mean-Free-Paths.
 NODEFLECT=--nodeflect               # Uncomment to make scattering
                                     # non-delfectionary.
 
@@ -60,39 +53,13 @@ ADDITIONAL="--ocsraw"                 # Additional params. (Such as --ocsraw,
                               # Mars: 3389, Mercury: 2440, Earth's
                               # moon: 1737
 
-#
-#   Event Parameters:
-#
-
-case "$event" in
-    expl)   # Generic explosion
-        SOURCELOC=425.54,-169.53,-1.02    # Lop Nor, 2km below surface
-        #SOURCELOC=425.54,-169.53,-5.02    # Lop Nor, 6km below surface
-        #SOURCELOC=425.54,-169.53,-31.02   # Xinjiang, 32km below surface
-        SOURCETYP=EXPL                    #
-        ;;
-    eq)     # Xinjiang earthquake
-        #SOURCELOC=425.54,-169.53,-1.02    # Lop Nor, 2km below surface
-        #SOURCELOC=425.54,-169.53,-5.02    # Xinjiang, 6km below surface
-        SOURCELOC=425.54,-169.53,-31.02   # Xinjiang, 32km below surface
-        SOURCETYP=SDR,125,40,90,$EQISOFRAC  #
-        ;;
-    *)
-        echo Event code not recognized.
-        exit
-        ;;
-esac
-
-SEISORIG1=$XINXYZ             # Array locations:
-SEISORIG2=$XINXYZ             #
-#SEISORIG3=$XINXYZ            #
-SEISDEST1=$WUSXYZ             #
-SEISDEST2=$MAKXYZ             #
-#SEISDEST3=""                 #
+SEISORIG1=0,0,0               # Array locations: (Range, Azimuth, Z)
+SEISORIG2=0,90,0              #
+SEISDEST1=1000,0,0            #
+SEISDEST2=1000,90,0           #
 SEIS1=--seis-p2p=$SEISORIG1,$SEISDEST1,1.0,2.0,$GATHER,16
 SEIS2=--seis-p2p=$SEISORIG2,$SEISDEST2,1.0,2.0,$GATHER,16
-#SEIS3=--seis-p2p=$SEISORIG3,$SEISDEST3,1.0,2.0,$GATHER,160
-BINSIZE=10.0                  # Large time-bins, not useful for trace analy-
+BINSIZE=60.0                  # Large time-bins, not useful for trace analy-
                               # sis, but makes seis files smaller. (We only
                               # want them to plot a map as the video
                               # backdrop.)
@@ -127,10 +94,10 @@ mv seis_???.octv seisfiles/ 2> /dev/null || : # (suppress error msg and code)
 
 # Text values for Wiki script:
 cat > wikify.incl <<EOF
-  STA="WUS"
-  STB="MAK"
+  STA="NOR"
+  STB="EAS"
   STC="xxx"
-  MODELCODE="LOP"
+  MODELCODE="SPH"
 EOF
 
 # Determine RunID from name of do-script:   (for labeling figs)
