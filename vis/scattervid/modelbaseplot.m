@@ -137,7 +137,7 @@ function modelbaseplot (
       zlr = ZR(j+1);
       c = vpcolor(VP(j));
       h = fill([xll xul xur xlr xll],[zll zul zur zlr zll],c);
-      set(h, "linewidth",0, "edgecolor",c);
+      set(h, "linestyle","none", "edgecolor",c);
   end
 
   ## Mark key locations:

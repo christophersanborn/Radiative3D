@@ -135,7 +135,7 @@ function [hP hS] = scattervid_above(
 
   figwidth  = PaperWH(1);
   figheight = figwidth/aspect;
-  if (length(PaperWH>1))
+  if (length(PaperWH)>1)
     figheight = PaperWH(2);
   end
   paperdpi=pixwidth/figwidth;
@@ -203,7 +203,7 @@ function [hP hS] = scattervid_above(
     text(plot_left+0.03*plot_width, plot_bot+0.97*plot_height,
          sprintf("t = %5.2f s ",(f_idx+1)*dt), "tag", "TimeCode",
          "verticalalignment", "top", "horizontalalignment", "left",
-         "fontsize", fontxylabel, "fontweight", "demi");  # Time label
+         "fontsize", fontxylabel, "fontweight", "normal");  # Time label
 
     if (makemovie_b)
       filename = sprintf("framecache/FIG__%04d.png", f_idx);

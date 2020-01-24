@@ -249,7 +249,7 @@ function [hP hS] = scattervid_p2p(
     text(plot_right, plot_bot,
               sprintf("t = %5.2f s ",(f_idx+1)*dt), "tag", "TimeCode",
               "verticalalignment", "bottom", "horizontalalignment", "right",
-              "fontsize", fontxylabel, "fontweight", "demi");  # Time label
+              "fontsize", fontxylabel, "fontweight", "normal");  # Time label
 
     set(hP2, pmarkprops(1:2:end), pmarkprops(2:2:end));
     set(hP, pmarkprops(1:2:end), pmarkprops(2:2:end));

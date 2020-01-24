@@ -203,7 +203,7 @@ function scattervid_model (
 
     text(plot_right, plot_bot, sprintf("t = %5.2f s ",(f_idx+1)*dt),
               "verticalalignment", "bottom", "horizontalalignment", "right",
-              "fontsize", fontxylabel, "fontweight", "demi");  # Time label
+              "fontsize", fontxylabel, "fontweight", "normal");  # Time label
 
     filename = sprintf("framecache/FIG__%04d.png", f_idx);
     print(filename, sprintf("-r%1.0f",paperdpi));

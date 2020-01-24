@@ -72,7 +72,7 @@ function h = fillplot(X,Y,C)
 
   h = fill([X(1); X; X(end)],
            [   0; Y; 0     ], C);
-  set(h, "linewidth",0, "edgecolor", C);
+  set(h, "linestyle","none", "edgecolor", C);
 
 end
 
