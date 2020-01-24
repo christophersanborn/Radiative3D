@@ -210,7 +210,7 @@ octave -qf <<EOF
             struct(
               "seispat",   "seisfiles/seis_%03d.octv",
               "seisrange", [0:32],
-              "loctext",   "Lop Nor",
+              "loctext",   "Null Island",
               "numframes", 300,
               "window", [-8600 8600 6400 -6400]
             )
