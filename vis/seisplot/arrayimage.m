@@ -123,7 +123,7 @@ function NS = arrayimage (           # NS is "Norm Struct"
   map = hot(64);
   map = map(end:-1:1,:);  # light to dark instead of dark to light
   colormap(map);
-  colorbar("eastoutside", "linewidth", linethin, "fontsize", fontxylabel);
+  colorbar("linewidth", linethin, "fontsize", fontxylabel, "eastoutside");
   xlabel("Range (km)", "fontsize", fontxylabel);
   ylabel("Time (s)", "fontsize", fontxylabel);
   azi_deg = ARRAY.Azimuths(end);

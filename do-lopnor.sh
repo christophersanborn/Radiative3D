@@ -220,7 +220,7 @@ for file in seisfiles/{seis_000.octv,seis_?[13579][9].octv} ; do
       seisplot("$file"); 
       papertext(0.01, 0.00, "$RUNID",   ## Plot RunID in lowerleft corner
                 "verticalalignment", "bottom", "horizontalalignment", "left",
-                "fontsize", 5, "fontweight", "demi", "color", [0 0 0]);
+                "fontsize", 5, "fontweight", "normal", "color", [0 0 0]);
       print("$ofile","-r200");
 EOF
 done
@@ -232,7 +232,7 @@ for file in seisfiles/{seis_319.octv,seis_159.octv} ; do
       seisplot("$file"); 
       hRID = papertext(0.01, 0.00, "$RUNID",   ## Plot RunID in lowerleft corner
                   "verticalalignment", "bottom", "horizontalalignment", "left",
-                  "fontsize", 5, "fontweight", "demi", "color", [0 0 0]);
+                  "fontsize", 5, "fontweight", "normal", "color", [0 0 0]);
       #set(hRID, "color", [1 1 1]);  # Invisible but selectable in pdf version
       #title("");  # Kill title, and Kill 1/4-inch extra margin it claims:
       #set(gcf(),"paperposition", get(gcf(),"paperposition")-[0 0 0 0.25])
@@ -276,14 +276,14 @@ produce_ttcurves() {  # $1:     station code
     annotate_array();
     hRID = papertext(0.03, 0.00, "$RUNID",   ## Plot RunID in lowerleft corner
               "verticalalignment", "bottom", "horizontalalignment", "left",
-              "fontsize", 5, "fontweight", "demi");
+              "fontsize", 5, "fontweight", "normal");
     print("traveltime-$1-xyz-g2.0.png", "-r200");
     ## VARIANT 2: And make one where norm relative to local peak and average:
     arrayimage(AR, [1 1 1], 2.0, [0 400], 0.5, ${5:-0});
     annotate_array(); # (mark phases with velocity lines)
     hRID = papertext(0.03, 0.00, "$RUNID",   ## Plot RunID in lowerleft corner
               "verticalalignment", "bottom", "horizontalalignment", "left",
-              "fontsize", 5, "fontweight", "demi");
+              "fontsize", 5, "fontweight", "normal");
     set(findobj("tag", "colorbar"), "yticklabel", []); # kill colorbar labels
     set(findobj("tag", "colorbar"), "ytick", []);      # kill clrbar ticks too
     # (Some versions octave broken and need to kill ticks too to kill labels.)
