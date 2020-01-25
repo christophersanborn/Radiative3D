@@ -33,7 +33,7 @@ SOURCELOC=0,0,-10             # Event Location: Null Island: 0,0,elev
 
 FREQ=2.0                      # Phonon frequency to model
 NUMPHONS=3K                   # Number of phonons to spray
-RECTIME=3000                  # Recording duration of seismometers.
+RECTIME=4800                  # Recording duration of seismometers.
 GATHER=40.0                   # Terminal gather radius, in kilometers.
 
 SCAT1=0.8,0.01,0.5,0.2,50     # Scat Args (nu,eps,a,kappa) and Q in sedi's
@@ -44,7 +44,7 @@ SCAT3=0.8,0.01,0.7,0.5,300    # Scat Args (nu,eps,a,kappa) and Q in mantle
                               # Q_kappa is infinite.)
 COMPARGS=$SCAT1,$SCAT2,$SCAT3
 
-MFPOVERRIDE=--overridemfp=25,25     # Uncomment to pin P,S Mean-Free-Paths.
+MFPOVERRIDE=--overridemfp=50,40     # Uncomment to pin P,S Mean-Free-Paths.
 NODEFLECT=--nodeflect               # Uncomment to make scattering
                                     # non-delfectionary.
 
