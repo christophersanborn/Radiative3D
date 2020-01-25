@@ -445,7 +445,6 @@ CylinderFace::CylinderFace (Real radius, MediumCell * powner) :
   mRad2   ( radius*radius )
 {
   assert(radius >= 0);
-  std::cout << "~~~~> Wants CylinderFace at radius " << mRadius << "\n";
 }
 
 //////

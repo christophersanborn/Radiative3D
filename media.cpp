@@ -72,8 +72,6 @@ Real MediumCell::IsPointInside(const R3::XYZ & loc) const {
     }
   }
 
-  std::cerr << "~~&>  Mismatch for cell " << this << " is: " << distance
-            << ";  Checked " << nFaces << " faces.\n";
   return distance;
 
 }
@@ -590,9 +588,6 @@ SphereShell::SphereShell(Real RadTop, Real RadBot,
   mDensCoefC = DataTop.Rho();
   mQ[RAY_P] = DataTop.Qp();    // TODO: avg top and bottom (c.f. Tetra)
   mQ[RAY_S] = DataTop.Qs();
-
-  std::cerr << "~~> Wants to make SphereShell > Inner: " << RadBot << "  Outer: " << RadTop
-            << " TopVpVs: " << DataTop.Vp() << ", " << DataTop.Vs() << "\n";
 
 }//
 //
