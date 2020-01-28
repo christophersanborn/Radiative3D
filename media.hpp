@@ -450,6 +450,8 @@ protected:
 
   Real mVelCoefA[RAY_NBT];      // Coef on r^2
   Real mVelCoefC[RAY_NBT];      // Constant (velocity at r=0)
+  Real mZeroRadius[RAY_NBT];    // Radius r at which v==0
+  Real mZeroRadius2[RAY_NBT];   // RadiusSquared r^2 at which v==0
   Real mDensCoefA;
   Real mDensCoefC;
   Real mQ[RAY_NBT];
@@ -499,6 +501,27 @@ public:
         // AdvanceLength handler for uniform velocity profile.
   TravelRec AdvanceLength_Variant_D2(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir);
         // AdvanceLength handler for quadratic velocity profile.
+
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::
+  // ::: Specific Helper Methods  (SphereShell Class) :::
+  // ::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  struct RayArcAttributes {
+    Real Radius;        // Radius of the ray arc.
+    Real Bottom;        // Bottoming radial coord of ray arc. (Dist from
+                        // model center.)
+
+    R3::XYZ Center;     // Centerpoint or the ray arc.
+
+                        // REFERENCE BASIS anchored on ARC CENTER:
+    R3::XYZ u3;         // Points towards Earth-Center from Arc-Center.
+    R3::XYZ u2;         // Out-of-plane.
+    R3::XYZ u1;         // In-plane perpendicular. Aligns with ray tangent
+                        // at arc bottom.
+  };
+
+  RayArcAttributes GetRayArcD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const;
+        // Get ray arc attributes in a radial quadratic velocity profile.
 
 };
 

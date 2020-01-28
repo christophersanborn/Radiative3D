@@ -570,24 +570,50 @@ Tetra::GetPathToBoundary(raytype rt,
 //////
 // CONSTRUCTOR:  SphereShell()
 //
+// V(r) = A*r*r + C
+// V(rT) = A*rT2 + C = vT
+// V(rB) = A*rB2 + C = vB
+//         A(rT2-rB2) = (vT-vB)
+//
 SphereShell::SphereShell(Real RadTop, Real RadBot,
                            const GridData & DataTop, const GridData & DataBot) :
   mFaces( SphereFace(RadTop, CellFace::F_TOP, this),
           SphereFace(RadBot, CellFace::F_BOTTOM, this))
 {
+  assert(RadTop > RadBot);
+  assert(RadBot >= 0);
+  assert(DataBot.Vp() >= DataTop.Vp()); // Disallow reverse gradients; Hope to relax this
+  assert(DataBot.Vs() >= DataTop.Vs()); // restriction once I figure out how to handle it.
 
-  // **TEMP: We ignore bottom data and use only top data to make a uniform-
-  // velocity cell. In future we will make a way to flag this desire, perhaps
-  // via a contructor that takes only one grid-data value. TODO: Fix
+  // Coefficient 'A' on the quadratic term:  ( v = A*r^2 + C )
+  mVelCoefA[RAY_P] = (DataTop.Vp()-DataBot.Vp()) / (RadTop*RadTop - RadBot*RadBot);
+  mVelCoefA[RAY_S] = (DataTop.Vs()-DataBot.Vs()) / (RadTop*RadTop - RadBot*RadBot);
+  mDensCoefA = (DataTop.Rho()-DataBot.Rho()) / (RadTop*RadTop - RadBot*RadBot);
 
-  mVelCoefA[RAY_P] = 0;  // r^2 term ignored **TEMP**
-  mVelCoefA[RAY_S] = 0;
-  mVelCoefC[RAY_P] = DataTop.Vp();  // TODO: compute properly
-  mVelCoefC[RAY_S] = DataTop.Vs();
-  mDensCoefA = 0;
-  mDensCoefC = DataTop.Rho();
-  mQ[RAY_P] = DataTop.Qp();    // TODO: avg top and bottom (c.f. Tetra)
+  // Coefficient 'C', the constant term:
+  mVelCoefC[RAY_P] = DataTop.Vp() - (mVelCoefA[RAY_P]*RadTop*RadTop);
+  mVelCoefC[RAY_S] = DataTop.Vs() - (mVelCoefA[RAY_S]*RadTop*RadTop);
+  mDensCoefC = DataTop.Rho() - (mDensCoefA*RadTop*RadTop);
+
+  // Zero-surface for velocities:
+  Real uradP = -mVelCoefC[RAY_P] / mVelCoefA[RAY_P];
+  Real uradS = -mVelCoefC[RAY_S] / mVelCoefA[RAY_S];
+  mZeroRadius2[RAY_P] = uradP;
+  mZeroRadius2[RAY_S] = uradS;
+  mZeroRadius[RAY_P] = (uradP > 0) ? sqrt(uradP) : (1./0.);
+  mZeroRadius[RAY_S] = (uradS > 0) ? sqrt(uradS) : (1./0.);
+
+  // Q Values: (Take top value and apply to whole cell)
+  mQ[RAY_P] = DataTop.Qp();
   mQ[RAY_S] = DataTop.Qs();
+
+  std::cout << "~~> SphereShell: Vp = " << mVelCoefA[RAY_P] << "*r^2 + " << mVelCoefC[RAY_P] << "; ZeroSurf at r = " << mZeroRadius[RAY_P] << "\n";
+  std::cout << "                 Vs = " << mVelCoefA[RAY_S] << "*r^2 + " << mVelCoefC[RAY_S] << "; ZeroSurf at r = " << mZeroRadius[RAY_S] << "\n";
+
+  assert(mZeroRadius[RAY_P] >= 0);
+  assert(mZeroRadius[RAY_S] >= 0);
+  assert(mZeroRadius[RAY_P] > RadTop);  // May be able to relax this one in future...
+  assert(mZeroRadius[RAY_S] > RadTop);  //
 
 }//
 //
@@ -633,10 +659,13 @@ Real SphereShell::GetQatPoint(const R3::XYZ & loc, raytype type) const {
 //
 TravelRec SphereShell::
 GetPathToBoundary(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
-  if (mVelCoefA[rt] == 0) {
-    return GetPath_Variant_D0(rt, loc, dir);
+  if (mVelCoefA[rt] < 0) {
+    return GetPath_Variant_D2(rt, loc, dir);  // Bottoming ray arcs
+  } else if (mVelCoefA[rt] == 0) {
+    return GetPath_Variant_D0(rt, loc, dir);  // Straight-line rays
   } else {
-    return GetPath_Variant_D2(rt, loc, dir);
+    // TODO: Eventual handler for cresting ray arcs...
+    throw std::runtime_error("SphereShell: No handler for inverted radial velocity profiles.");
   }
 }
 
@@ -679,15 +708,122 @@ GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
 //////
 // METHOD:   SphereShell :: GetPath_Variant_D2()
 //
-//   Handler for GetPathToBoundary() wherin we assume uniform velocity, and
-//   corresponding straight-line ray paths.
+//   Handler for GetPathToBoundary() wherin we assume quadratic radial
+//   velocity, and ray paths that are circular arcs.  Note in this version we
+//   take for granted a velocity profile that increases with depth, and that we
+//   are below the "zero surface" (i.e. that velocities are positive).  I.e. we
+//   assume that ray arcs are "bottoming" ray arcs, as opposed to "cresting"
+//   ray arcs.
+//
+//   The procedure for computing the ray path begins with finding the center
+//   point of the ray arc, which is a function of the current location and
+//   direction, and of the velocity profille in the cell.
 //
 TravelRec SphereShell::
 GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
+
+  RayArcAttributes RayArc = GetRayArcD2(rt, loc, dir);
+
+
+  //FAKE:
+  TravelRec rec;
+  rec.PathLength  = 1e10;
+  rec.TravelTime  = 1e10;
+  rec.NewLoc      = loc;
+  rec.NewDir      = dir;
+  rec.Attenuation = 1.0;
+  rec.pFace = &mFaces[1];
+  return rec;
+
   throw std::runtime_error("UnimpSphereShell_GetPath_D2");
   return TravelRec(); // **FIXME**
 }
 
+//////
+// METHOD:   SphereShell :: GetRayArcD2()
+//
+//  Computes Ray Arc attributes in radial quadratic velocity gradients.
+//
+//  Method of Solution: Bottoming radius:
+//
+//  Assume ray path follows { sin i = G/r * (A*r^2 + C) }, where the paren-
+//  thetical is the velocity profile and G is a boundary value constant. We
+//  bottom when sin i == 1, which yields: { G*A*r^2 - r + G*C = 0 }, and
+//  solution:
+//              r_bottom = ( 1 - sqrt(1-4*G*G*A*C) ) / 2*G*A,
+//
+//  where we take the negative root on the grounds that we are assuming A
+//  negative and C positive.  The parameter G comes from assuming that our
+//  initial equation must be satisfied for a known initial location, take-off
+//  angle, and velocity, by:
+//
+//              G = (sin i0) * r0 / v0
+//
+//  Method of Solution: Arc radius:
+//
+//  We assume that the arc center is at the intersection of two tangent-lines
+//  from the v=0 isosurface (since the ray arc must approach perpendicular as
+//  it hits the isosurface.)  Thus the center is at the corner of a right-
+//  triangle with side-lengths r_zero, r_arc, and hypotenuse (r_bottom +
+//  r_arc), allowing solution from: (r_zero and r_bottom are known)
+//
+//              r_zero^2 + r_arc^2 = (r_bottom + r_arc)^2
+//
+//  Method of Solution: Arc center:
+//
+//  Once the arc radius is known, we simply move perpendicular to 'dir' (the
+//  current ray tangent) a distance r_arc from the 'loc', and we find the
+//  center.
+//
+SphereShell::RayArcAttributes
+SphereShell::GetRayArcD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
+
+  RayArcAttributes Ray;
+
+  // REFERENCE BASIS anchored on CURRENT LOCATION:
+  // These will be orthonormal unless dir is straight up or down, then v3=v2=0.
+  R3::XYZ v3 = ECS.GetDown(loc);  // Downwards; Also direction of veloc gradient.
+  R3::XYZ v2 = v3.Cross(dir);     // Out-of-plane
+  R3::XYZ v1 = v2.Cross(v3);      // Tangent to iso-surface, oriented "forward"
+  v1.Normalize();                 //                 w.r.t. direction of travel.
+  v2.Normalize();
+  v3.Normalize();
+
+  std::cout << "GRAD2: OrNormal check: " << v1.Cross(v2).Mag() << ", " << v2.Cross(v3).Mag();
+
+  // Determine incidence angle-sine into isosurface:
+  Real sini = v1.Dot(dir);          // Positive or zero.
+  if (sini > 1.0) sini = 1.0;       // Very unlikely.
+  Real cosi = sqrt(1 - sini*sini);  // Positive or zero.
+  // (NOTE: If 'dir' is up/down then we'll have sini==0, cosi==1.)
+
+  std::cout << ", Sin(i) is: " << sini << "\n";
+
+  // Get BOTTOMING Radial Coordinate:
+  Real G = sini * loc.Mag() / GetVelocAtPoint(loc, rt);
+  Real TwoGA = 2. * G * mVelCoefA[rt];
+  Real urad = 1. - (2. * TwoGA * G * mVelCoefC[rt]);
+  Ray.Bottom = (1. - sqrt(urad)) / TwoGA;  // TODO: Choose the singular value. (It's NaN now if 'dir' up/down...)
+
+  // ARC RADIUS:
+  Ray.Radius = (mZeroRadius2[rt]/Ray.Bottom - Ray.Bottom) / 2.0;
+
+  // VECTOR from 'loc' to ARC CENTER:
+  R3::XYZ LocToArcCenter = v1.ScaledBy(Ray.Radius*cosi) + v3.ScaledBy(-Ray.Radius*sini);
+  Ray.Center = loc + LocToArcCenter;
+
+  std::cout << "  ArcCenterMag: " << Ray.Center.Mag() << " BottomRad: " << Ray.Bottom << " ArcRadius: " << Ray.Radius << " Sum: " << (Ray.Bottom+Ray.Radius) << "\n";
+
+  // REFERENCE BASIS anchored on ARC CENTER:
+  Ray.u3 = ECS.GetDown(Ray.Center); // Points towards center-of-Earth
+  Ray.u2 = v2;                      // Out-of-plane
+  Ray.u1 = Ray.u2.Cross(Ray.u3);    // Forward-tangent to arc at bottom.
+
+  std::cout << "  ArcNormal check: " << Ray.u1.Cross(Ray.u2).Mag() << ", " << Ray.u2.Cross(Ray.u3).Mag() << ", " << Ray.u1.Mag() << "\n";
+
+  return Ray;
+
+}
 
 //////
 // METHOD:   SphereShell :: AdvanceLength()
@@ -727,6 +863,17 @@ AdvanceLength_Variant_D0(raytype rt, Real len, const R3::XYZ & startloc, const S
 //
 TravelRec SphereShell::
 AdvanceLength_Variant_D2(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) {
+
+  //FAKE:
+  TravelRec rec;
+  rec.PathLength  = 1e10;
+  rec.TravelTime  = 1e10;
+  rec.NewLoc      = startloc;
+  rec.NewDir      = startdir;
+  rec.Attenuation = 1.0;
+  rec.pFace = &mFaces[1];
+  return rec;
+
   throw std::runtime_error("UnimpSphereShell_AdvanceLength_V_D2");
   return TravelRec(); // **FIXME**
 }
