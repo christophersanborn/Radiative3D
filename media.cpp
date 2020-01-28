@@ -783,13 +783,9 @@ SphereShell::GetRayArcD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & d
   // REFERENCE BASIS anchored on CURRENT LOCATION:
   // These will be orthonormal unless dir is straight up or down, then v3=v2=0.
   R3::XYZ v3 = ECS.GetDown(loc);  // Downwards; Also direction of veloc gradient.
-  R3::XYZ v2 = v3.Cross(dir);     // Out-of-plane
+  R3::XYZ v2 = v3.Cross(dir).UnitElse(R3::XYZ(0,0,0));  // Out-of-plane.
   R3::XYZ v1 = v2.Cross(v3);      // Tangent to iso-surface, oriented "forward"
-  v1.Normalize();                 //                 w.r.t. direction of travel.
-  v2.Normalize();
-  v3.Normalize();
-
-  std::cout << "GRAD2: OrNormal check: " << v1.Cross(v2).Mag() << ", " << v2.Cross(v3).Mag();
+                                  //                 w.r.t. direction of travel.
 
   // Determine incidence angle-sine into isosurface:
   Real sini = v1.Dot(dir);          // Positive or zero.
@@ -797,28 +793,42 @@ SphereShell::GetRayArcD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & d
   Real cosi = sqrt(1 - sini*sini);  // Positive or zero.
   // (NOTE: If 'dir' is up/down then we'll have sini==0, cosi==1.)
 
-  std::cout << ", Sin(i) is: " << sini << "\n";
-
   // Get BOTTOMING Radial Coordinate:
-  Real G = sini * loc.Mag() / GetVelocAtPoint(loc, rt);
-  Real TwoGA = 2. * G * mVelCoefA[rt];
-  Real urad = 1. - (2. * TwoGA * G * mVelCoefC[rt]);
-  Ray.Bottom = (1. - sqrt(urad)) / TwoGA;  // TODO: Choose the singular value. (It's NaN now if 'dir' up/down...)
+  const Real G = sini * loc.Mag() / GetVelocAtPoint(loc, rt);
+  const Real TwoGA = 2. * G * mVelCoefA[rt];
+  const Real urad = 1. - (2. * TwoGA * G * mVelCoefC[rt]);
+        // urad >= 1, assuming downward-gradient velocity;
+        // urad == 1 implies singular straight up/down 'dir' direction.
+        // urad  < 1 implies assumptions violated.
+  Ray.Bottom = (urad>1) ? (1. - sqrt(urad)) / TwoGA : 0;
 
   // ARC RADIUS:
   Ray.Radius = (mZeroRadius2[rt]/Ray.Bottom - Ray.Bottom) / 2.0;
 
+  // (NOTE: If 'dir' is up/down then we'll have Ray.Bottom == 0.)
+  // (NOTE: If 'dir' is up/down then we'll have Ray.Radius == +inf.)
+  // (NOTE: We check 'urad' again below for another detection of up/down.)
+
   // VECTOR from 'loc' to ARC CENTER:
   R3::XYZ LocToArcCenter = v1.ScaledBy(Ray.Radius*cosi) + v3.ScaledBy(-Ray.Radius*sini);
   Ray.Center = loc + LocToArcCenter;
-
-  std::cout << "  ArcCenterMag: " << Ray.Center.Mag() << " BottomRad: " << Ray.Bottom << " ArcRadius: " << Ray.Radius << " Sum: " << (Ray.Bottom+Ray.Radius) << "\n";
 
   // REFERENCE BASIS anchored on ARC CENTER:
   Ray.u3 = ECS.GetDown(Ray.Center); // Points towards center-of-Earth
   Ray.u2 = v2;                      // Out-of-plane
   Ray.u1 = Ray.u2.Cross(Ray.u3);    // Forward-tangent to arc at bottom.
 
+  // Catch straight up/down:
+  if (urad <= 1) {
+    Ray.Center = R3::XYZ(0,0,0);
+    Ray.u3 = Ray.u2 = R3::XYZ(0,0,0);
+    Ray.u1 =  dir;
+  }
+
+  std::cout << "GRAD2: OrNormal check: [" << v3.MagSquared() << ", " << v1.MagSquared() << ", " << v1.Cross(v2).MagSquared() << ", " << v2.Cross(v3).MagSquared() << "]"
+            << ", Sin(i) is: " << sini << " Cos(i) is: " << cosi << "\n";
+  std::cout << "  BottomRad: " << Ray.Bottom << " ArcRadius: " << Ray.Radius << " Sum: " << (Ray.Bottom+Ray.Radius) << " (ArcCenterMag: " << Ray.Center.Mag() << ") Dir.Theta: " << dir.Theta()
+            << "  {{ G: " << G << " urad: " << urad << " 1-sqrad: " << (1.-sqrt(urad)) << " }}\n";
   std::cout << "  ArcNormal check: " << Ray.u1.Cross(Ray.u2).Mag() << ", " << Ray.u2.Cross(Ray.u3).Mag() << ", " << Ray.u1.Mag() << "\n";
 
   return Ray;
