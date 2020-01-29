@@ -3,6 +3,7 @@
 #include "geom_r3.hpp"
 #include "geom_s2.hpp"
 #include <iostream>
+#include <iomanip>
 #include <cmath>
 #include <cerrno>     /* Error checking in math functions */
 using namespace std;
@@ -43,6 +44,16 @@ R3::XYZ::XYZ(const S2::ThetaPhi & thph) :
   mZ  ( cos(thph.Theta())                   )  {
 }
 
+
+//////
+// METHOD:  XYZ :: str()
+//
+std::string R3::XYZ::str(int fwidth) const {
+  std::ostringstream s;
+  s << std::setprecision(4);
+  s << "(" << mX << "," << mY << "," << mZ << ")";
+  return s.str();
+}
 
 //////
 // METHOD:  XYZ :: Outer()

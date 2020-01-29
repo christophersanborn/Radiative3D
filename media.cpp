@@ -722,17 +722,29 @@ GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
 TravelRec SphereShell::
 GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
 
+  enum exitface_e {TOP=CellFace::F_TOP,
+                   BOTTOM=CellFace::F_BOTTOM,
+                   NUM_FACES=2};
+
+  Real dists[NUM_FACES];
   RayArcAttributes RayArc = GetRayArcD2(rt, loc, dir);
 
+  dists[TOP] = mFaces[TOP].CircularArcDistToExit(loc, dir, RayArc);
+  dists[BOTTOM] = mFaces[BOTTOM].CircularArcDistToExit(loc, dir, RayArc);
+
+  exitface_e ef = (dists[TOP] < dists[BOTTOM]) ? TOP : BOTTOM;
+  if (dists[ef] < 0) dists[ef] = 0; // Squash retrograde motion
+
+  std::cout << "PathToBoundary: Two faces considered: dists[TOP,BOT] = (" << dists[TOP] << "," << dists[BOTTOM] << ");   (Chose: Face " << ef << " at dist " << dists[ef] <<")\n";
 
   //FAKE:
   TravelRec rec;
-  rec.PathLength  = 1e10;
-  rec.TravelTime  = 1e10;
+  rec.PathLength  = dists[ef];
+  rec.TravelTime  = 20;
   rec.NewLoc      = loc;
   rec.NewDir      = dir;
   rec.Attenuation = 1.0;
-  rec.pFace = &mFaces[1];
+  rec.pFace = &mFaces[ef];
   return rec;
 
   throw std::runtime_error("UnimpSphereShell_GetPath_D2");
@@ -775,8 +787,8 @@ GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
 //  current ray tangent) a distance r_arc from the 'loc', and we find the
 //  center.
 //
-SphereShell::RayArcAttributes
-SphereShell::GetRayArcD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
+RayArcAttributes SphereShell::
+GetRayArcD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
 
   RayArcAttributes Ray;
 
@@ -789,9 +801,9 @@ SphereShell::GetRayArcD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & d
 
   // Determine incidence angle-sine into isosurface:
   Real sini = v1.Dot(dir);          // Positive or zero.
-  if (sini > 1.0) sini = 1.0;       // Very unlikely.
-  Real cosi = sqrt(1 - sini*sini);  // Positive or zero.
-  // (NOTE: If 'dir' is up/down then we'll have sini==0, cosi==1.)
+  if (sini > 1.0) sini = 1.0;       // (very unlikely, numerical error only.)
+  Real cosi = v3.Dot(dir);          // [-1, 1]
+  // (NOTE: If 'dir' is pure vertical then we'll have sini==0, cosi==+/-1.)
 
   // Get BOTTOMING Radial Coordinate:
   const Real G = sini * loc.Mag() / GetVelocAtPoint(loc, rt);
@@ -805,9 +817,9 @@ SphereShell::GetRayArcD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & d
   // ARC RADIUS:
   Ray.Radius = (mZeroRadius2[rt]/Ray.Bottom - Ray.Bottom) / 2.0;
 
-  // (NOTE: If 'dir' is up/down then we'll have Ray.Bottom == 0.)
-  // (NOTE: If 'dir' is up/down then we'll have Ray.Radius == +inf.)
-  // (NOTE: We check 'urad' again below for another detection of up/down.)
+  // (NOTE: If 'dir' is vertical then we'll have Ray.Bottom == 0.)
+  // (NOTE: If 'dir' is vertical then we'll have Ray.Radius == +inf.)
+  // (NOTE: We check 'urad' again below for another detection of vertical up/down.)
 
   // VECTOR from 'loc' to ARC CENTER:
   R3::XYZ LocToArcCenter = v1.ScaledBy(Ray.Radius*cosi) + v3.ScaledBy(-Ray.Radius*sini);
@@ -825,11 +837,15 @@ SphereShell::GetRayArcD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & d
     Ray.u1 =  dir;
   }
 
+  /*
   std::cout << "GRAD2: OrNormal check: [" << v3.MagSquared() << ", " << v1.MagSquared() << ", " << v1.Cross(v2).MagSquared() << ", " << v2.Cross(v3).MagSquared() << "]"
-            << ", Sin(i) is: " << sini << " Cos(i) is: " << cosi << "\n";
+            << ", Sin(i) is: " << sini << " Cos(i) is: " << cosi << ";  Uptrending-at-loc: " << -(v3.Dot(dir)) << "\n";
   std::cout << "  BottomRad: " << Ray.Bottom << " ArcRadius: " << Ray.Radius << " Sum: " << (Ray.Bottom+Ray.Radius) << " (ArcCenterMag: " << Ray.Center.Mag() << ") Dir.Theta: " << dir.Theta()
             << "  {{ G: " << G << " urad: " << urad << " 1-sqrad: " << (1.-sqrt(urad)) << " }}\n";
-  std::cout << "  ArcNormal check: " << Ray.u1.Cross(Ray.u2).Mag() << ", " << Ray.u2.Cross(Ray.u3).Mag() << ", " << Ray.u1.Mag() << "\n";
+  std::cout << "  ArcNormal check: " << Ray.u1.Cross(Ray.u2).Mag() << ", " << Ray.u2.Cross(Ray.u3).Mag() << ", " << Ray.u1.Mag() << "  u1 Parallality check: " << Ray.u1.Dot(dir) << "  Uptrending check: " << -(Ray.u3.Dot(dir)) << "  Out-of-plane check: " << Ray.u2.Dot(dir) << "\n";
+  std::cout << "  Location now is:  " << loc.str() << "  direction: " << R3::XYZ(dir).str() << "  v1: " << v1.str() << " v3: " << v3.str() << "\n";
+  std::cout << "  RayAttributes is: " << Ray.str() << "\n";
+  */
 
   return Ray;
 

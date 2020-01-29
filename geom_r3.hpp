@@ -15,6 +15,7 @@
 //
 #include <stdexcept>
 #include <cmath>
+#include <string>
 #include "geom_base.hpp"
 
 
@@ -96,6 +97,12 @@ public:
     mZ = z;
   }
 
+
+  // ::::::::::::::::::::::::::::::::::::::::::
+  // ::: Introspection Methods  (XYZ Class) :::
+  // ::::::::::::::::::::::::::::::::::::::::::
+
+  std::string str(int fieldwidth=0) const;
 
   // :::::::::::::::::::::::::::::::::::::::::
   // ::: Property-Get Methods  (XYZ Class) :::

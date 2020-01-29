@@ -684,6 +684,68 @@ Real SphereFace::LinearRayDistToExit(const R3::XYZ & loc,
 }
 
 
+//////
+// METHOD:  SphereFace :: CircularArcDistToExit()
+//
+// This essentially boils down to calculating the intersections between two
+// circles: one the ray-arc circle, the other the "slice" of the bounding
+// sphere that is in-plane with the ray arc.  (The ray-arc plane always
+// includes the model center and so the radius of this sphere slice is trivally
+// just the radius of the sphere.)  The two circles will intersect in at most
+// two points. Also, we make some simplifying assumptions, such as that the arc
+// center is always more distant from the model center than the radius of the
+// cell face.  This assumption holds so long as the velocity profile is
+// downwards-increasing and the cell face is in the positive velocity region
+// (as it should be).  A CORROLARY is that if we add support for upward
+// gradients, more sophisticated logic may be needed here.
+//
+// Method of solution:
+//
+// Assume a triangle of side-lengths S, Q, and R, where S is the Separation
+// between model center and arc center, R is the Radius of the SphereFace, and
+// Q is the radius of the ray arc.  The corner SQ is the ray arc center, and
+// the corner QR is the intersection of the two circles.  Knowing side lengths
+// must satisfy: R^2 = S^2 + Q^2 - 2*S*Q*cos(q), we can easily solve for the
+// angle q, which is the angle between the bottoming point and the exiting
+// point. Thereafter we can decompose the current location into an angular
+// coordinate using the basis attached to the RayArcAttributes arg, and compute
+// a difference between that and the exit angle.
+//
+// We use the same convention as in LinearRayDistToExit() as far as infinities,
+// negative distances, etc.
+//
+Real SphereFace::
+CircularArcDistToExit(const R3::XYZ & loc, const R3::XYZ & dir, const RayArcAttributes & arc) const {
+
+  const Real S2 = arc.Center.MagSquared();
+  if (S2==0) {
+    throw (Runtime("No handler yet for straight-line arcs. (SphereFace::CADTE)"));
+  }
+  const Real R2 = mRad2;
+  const Real Q2 = arc.Radius * arc.Radius;
+  const Real TwoSQ = 2 * arc.Radius * sqrt(S2);
+
+  Real cosq = (S2 + Q2 - R2) / TwoSQ;
+
+  if (cosq > 1.0) {     // then arc never pierces face...
+    return IsOutwardNormal() ? (-1./0.) : (1./0.);
+  }
+
+  Real angleBtoE = acos(cosq);  // Angle bottom-to-exit, or half the
+                                // intersection angle.
+  Real angleLoc = arc.AngleOffsetFromBottom(loc);
+  Real angleLtoE = angleBtoE - angleLoc;  // Current location to exit.
+
+  if (IsOutwardNormal()) return angleLtoE * arc.Radius;
+  if (angleLoc >= 0) return (1./0.);
+
+  angleLtoE = -angleBtoE - angleLoc;      // Use other intersection if
+                                          // inward-normal.
+  return angleLtoE * arc.Radius;
+
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 // &&&&                                                              ****
 // ****  CLASS:  GCAD_RetVal                                         ****

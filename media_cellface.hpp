@@ -30,7 +30,7 @@
 
 class MediumCell; /* Defined in media.hpp */
 class RTCoef;     /* Defined in rtcoef.hpp */
-
+class RayArcAttributes; /* Defined in raypath.hpp */
 
 //////
 // CLASSES: Definitions
@@ -395,9 +395,10 @@ public:
   virtual Real GetDistanceAboveFace(const R3::XYZ & loc) const override;
   virtual Real LinearRayDistToExit(const R3::XYZ & loc, const R3::XYZ & dir) const override;
 
-  //GCAD_RetVal GetCircArcDistToFace(const Real & R, const R3::XYZ & C, const R3::Matrix & S) const;
-                    // Similar to LinearRayDistToExit except it computes
-                    // distance along a circular arc path.
+  Real CircularArcDistToExit(const R3::XYZ & loc, const R3::XYZ & dir, const RayArcAttributes & arc) const;
+        // Similar to LinearRayDistToExit() except assumes path along a
+        // circular arc, the geometry of which has already been computed and
+        // is passed in in a RayArcAttributes arg.
 
 };
 

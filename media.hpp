@@ -49,6 +49,7 @@
 #include "array.hpp"
 #include "raytype.hpp"
 #include "elastic.hpp"
+#include "raypath.hpp"
 #include "media_cellface.hpp"
 
 //////
@@ -505,23 +506,6 @@ public:
   // ::::::::::::::::::::::::::::::::::::::::::::::::::::
   // ::: Specific Helper Methods  (SphereShell Class) :::
   // ::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  struct RayArcAttributes {
-    Real Bottom;        // Bottoming radial coord of ray arc. (Dist
-                        // from model center.)
-    Real Radius;        // Radius of the ray arc (from arc center).
-
-    R3::XYZ Center;     // Centerpoint of the ray arc.
-
-                        // REFERENCE BASIS anchored on ARC CENTER:
-    R3::XYZ u3;         // Points towards Earth-Center from Arc-Center.
-    R3::XYZ u2;         // Out-of-plane.
-    R3::XYZ u1;         // In-plane perpendicular. Aligns with ray tangent
-                        // at arc bottom.
-    // NOTES: If ray is pure vertical, then should hold Bottom=0,
-    //        Radius=+inf, Center=(0,0,0), u3=u2=(0,0,0),
-    //        u1 = direction of ray tangent.
-  };
 
   RayArcAttributes GetRayArcD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const;
         // Get ray arc attributes in a radial quadratic velocity profile.
