@@ -21,6 +21,38 @@
 #include "geom.hpp"
 
 //////
+// CLASS:  cache_RD2_precompute
+//
+// When we compute the Ray Arc geometry in Radial-Quadratic (RD2)
+// velocity profiles, we cache in this structure certain precomputed
+// values that are going to be used in multiple subsequent
+// calculations.
+//
+struct cache_RD2_precompute {
+  Real S;           // Model center to Arc center Separation distance.
+  Real S2;          // S^2
+  Real TwoSQ;       // 2*S*Q; (Q being Arc Radius)
+  Real CosZeta;     // Zeta is angle between line S and a tangent to the v==0
+                    // isosurface through the Arc Center. Cosine of that.
+  Real SinZeta;     // Sine of Zeta
+  Real CotZetaBy2;  // Cotangent of Zeta/2
+  Real timeCoef;    // Coefficient used in computing travel times: equal to
+                    // (a*S*SinZeta)^-1 where 'a' is the quadratic coefficient
+                    // of the velocity profile (i.e. from v=ar^2+c).
+  cache_RD2_precompute() {}
+  // Specify via just four parameters:
+  cache_RD2_precompute(Real _S2, Real _Q, Real _zeroRad2, Real _a) :
+    S          (  sqrt(_S2)  ),
+    S2         (  _S2        ),
+    TwoSQ      (  2*S*_Q     ),
+    CosZeta    (  (S2 + _Q*_Q - _zeroRad2)/TwoSQ  ),
+    SinZeta    (  sqrt(1 - CosZeta*CosZeta)       ),
+    CotZetaBy2 (  (1+CosZeta)/SinZeta             ),
+    timeCoef   (  1/(_a*S*SinZeta)                )
+    {}
+};
+
+//////
 // CLASS:  RayArcAttributes
 //
 // Defines a CIRCULAR ray arc with a known Center and Radius, and a coordinate
@@ -32,9 +64,15 @@
 // positive values are beyond the bottoming (and uptrending) and negative
 // values are before the bottoming (and downtrending).
 //
+// This struct is suitable for ray arcs in Radial-Quadratic (RD2) velocities
+// or cartesian Linear-gradient (LD1), and possibly others, as these produce
+// circular ray arcs.  Additional profile-dependent precomputes are stored in
+// a union cache.
+//
 struct RayArcAttributes {
 
   Real Radius;        // Radius of the ray arc (from arc center).
+  Real Rad2;          // Radius-squared
 
   R3::XYZ Center;     // Centerpoint of the ray arc.
 
@@ -44,6 +82,13 @@ struct RayArcAttributes {
   R3::XYZ u2;         // Out-of-plane.
   R3::XYZ u1;         // In-plane perpendicular. Aligns with ray tangent
                       // at arc bottom.
+
+  union cache {
+    cache_RD2_precompute RD2; // Used for radial-quadratic arcs.
+    cache() {}
+  } c;
+
+  RayArcAttributes() {}
 
   // NOTES: If ray is pure vertical, then should hold Bottom=0,
   //        Radius=+inf, Center=(0,0,0), u3=u2=(0,0,0),

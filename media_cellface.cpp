@@ -717,13 +717,13 @@ Real SphereFace::LinearRayDistToExit(const R3::XYZ & loc,
 Real SphereFace::
 CircularArcDistToExit(const R3::XYZ & loc, const R3::XYZ & dir, const RayArcAttributes & arc) const {
 
-  const Real S2 = arc.Center.MagSquared();
+  const Real S2 = arc.c.RD2.S2; // Get S2 from cache
   if (S2==0) {
     throw (Runtime("No handler yet for straight-line arcs. (SphereFace::CADTE)"));
   }
-  const Real R2 = mRad2;
-  const Real Q2 = arc.Radius * arc.Radius;
-  const Real TwoSQ = 2 * arc.Radius * sqrt(S2);
+  const Real R2 = mRad2; // SphereFace r^2
+  const Real Q2 = arc.Rad2; // Ray arc r^2
+  const Real TwoSQ = arc.c.RD2.TwoSQ; // Get 2*S*Q from cache
 
   Real cosq = (S2 + Q2 - R2) / TwoSQ;
 

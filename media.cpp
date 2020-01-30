@@ -812,6 +812,7 @@ GetRayArcD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
 
   // ARC RADIUS:
   Ray.Radius = (mZeroRadius2[rt]/Bottom - Bottom) / 2.0;
+  Ray.Rad2 = Ray.Radius*Ray.Radius;
 
   // (NOTE: If 'dir' is vertical then we'll have Ray.Bottom == 0.)
   // (NOTE: If 'dir' is vertical then we'll have Ray.Radius == +inf.)
@@ -832,6 +833,9 @@ GetRayArcD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
     Ray.u3 = Ray.u2 = R3::XYZ(0,0,0);
     Ray.u1 =  dir;
   }
+
+  // Useful pre-computes:
+  Ray.c.RD2 = cache_RD2_precompute(Ray.Center.MagSquared(), Ray.Radius, mZeroRadius2[rt], mVelCoefA[rt]);
 
   /*
   std::cout << "GRAD2: OrNormal check: [" << v3.MagSquared() << ", " << v1.MagSquared() << ", " << v1.Cross(v2).MagSquared() << ", " << v2.Cross(v3).MagSquared() << "]"
