@@ -808,10 +808,10 @@ GetRayArcD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
         // urad >= 1, assuming downward-gradient velocity;
         // urad == 1 implies singular straight up/down 'dir' direction.
         // urad  < 1 implies assumptions violated.
-  Ray.Bottom = (urad>1) ? (1. - sqrt(urad)) / TwoGA : 0;
+  Real Bottom = (urad>1) ? (1. - sqrt(urad)) / TwoGA : 0;
 
   // ARC RADIUS:
-  Ray.Radius = (mZeroRadius2[rt]/Ray.Bottom - Ray.Bottom) / 2.0;
+  Ray.Radius = (mZeroRadius2[rt]/Bottom - Bottom) / 2.0;
 
   // (NOTE: If 'dir' is vertical then we'll have Ray.Bottom == 0.)
   // (NOTE: If 'dir' is vertical then we'll have Ray.Radius == +inf.)
@@ -909,7 +909,7 @@ AdvanceLength_Variant_D2_Impl(raytype rt, Real len, const R3::XYZ & startloc,
   R3::XYZ newDir = arc.DirectionFromAngle(newAngle);
 
   Real timeDelta = len / GetVelocAtPoint(startloc,rt); // HORRENDOUS estimate **TEMP** TODO: FIX
-  Real atten = 1.0; // **TEMP** TODO: FIX
+  Real atten = HelperUniformAttenuation(timeDelta * cmPhononFreq, mQ[rt]);
 
   TravelRec rec;
   rec.PathLength = len;

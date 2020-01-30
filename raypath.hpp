@@ -27,16 +27,12 @@
 // system anchored on the arc center, wherein u3 points along the velocity
 // gradient (towards what could be called a "ray bottoming"), and u1 points in
 // the direction of the ray tangent when the ray is at the bottoming
-// point. The coordinate systme can be used to define positions along the ray
+// point. The coordinate system can be used to define positions along the ray
 // in terms of a either theta-coordinate or an arc-length coordinate, where
 // positive values are beyond the bottoming (and uptrending) and negative
 // values are before the bottoming (and downtrending).
 //
 struct RayArcAttributes {
-
-  Real Bottom;        // Bottoming radial coord of ray arc. (Dist from model
-                      // center.)  DEPRECATE - (Not really relevant outside of
-                      // spherical velocity gradients)
 
   Real Radius;        // Radius of the ray arc (from arc center).
 
