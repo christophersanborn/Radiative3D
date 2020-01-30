@@ -99,8 +99,8 @@ public:
   R3::XYZ      NewLoc;  // Location of phonon after travelling
   S2::ThetaPhi NewDir;  // Direction of phonon after travelling
   Real    Attenuation;  // Intrinsic Attenutation determined by Q
-  CellFace    * pFace;  // Points to CellFace through which the ray
-                        //  exited the MediumCell. (Undefined if N/A.)
+  const CellFace * pFace;   // Points to CellFace through which the ray
+                            // exited the MediumCell. (Undefined if N/A.)
 };
 
 
@@ -240,13 +240,13 @@ public:
   // :
 
   virtual TravelRec AdvanceLength
-  (raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) = 0;
+  (raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const = 0;
         // This one computes where/when a Phonon will end up if if follows
         // it's cell-specific ray path (which could be straight-line or
         // curved) for a given total path length 'len'.
 
   virtual TravelRec GetPathToBoundary
-  (raytype rt, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) = 0;
+  (raytype rt, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const = 0;
         // This one computes where/when a Phonon will end up if if
         // follows it's cell-specific ray path until it hits a boundary
         // of the cell.
@@ -359,10 +359,10 @@ public:
   // :::::::::::::::::::::::::::::::::::::::::::::::::
 
   virtual TravelRec AdvanceLength(raytype rt, Real length, const R3::XYZ & startloc,
-                                  const S2::ThetaPhi & startdir) override;
+                                  const S2::ThetaPhi & startdir) const override;
 
   virtual TravelRec GetPathToBoundary(raytype rt, const R3::XYZ & startloc,
-                                      const S2::ThetaPhi & startdir) override;
+                                      const S2::ThetaPhi & startdir) const override;
 
 };
 
@@ -423,10 +423,10 @@ public:
   // :::::::::::::::::::::::::::::::::::::::::::
 
   virtual TravelRec AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc,
-                                  const S2::ThetaPhi & startdir) override;
+                                  const S2::ThetaPhi & startdir) const override;
 
   virtual TravelRec GetPathToBoundary(raytype rt, const R3::XYZ & startloc,
-                                      const S2::ThetaPhi & startdir) override;
+                                      const S2::ThetaPhi & startdir) const override;
 };
 
 
@@ -491,16 +491,16 @@ public:
   // ::: Do-Something Methods  (SphereShell Class) :::
   // :::::::::::::::::::::::::::::::::::::::::::::::::
 
-  virtual TravelRec GetPathToBoundary(raytype rt, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) override;
-  virtual TravelRec AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) override;
+  virtual TravelRec GetPathToBoundary(raytype rt, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const override;
+  virtual TravelRec AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const override;
 
-  TravelRec GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir);
+  TravelRec GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const;
         // GetPath handler for uniform velocity profile.
-  TravelRec GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir);
+  TravelRec GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const;
         // GetPath handler for quadratic velocity profile.
-  TravelRec AdvanceLength_Variant_D0(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir);
+  TravelRec AdvanceLength_Variant_D0(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const;
         // AdvanceLength handler for uniform velocity profile.
-  TravelRec AdvanceLength_Variant_D2(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir);
+  TravelRec AdvanceLength_Variant_D2(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const;
         // AdvanceLength handler for quadratic velocity profile.
 
   // ::::::::::::::::::::::::::::::::::::::::::::::::::::

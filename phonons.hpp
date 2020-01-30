@@ -248,13 +248,13 @@ public:
                                       // and rotation. Rotatate
                                       // ourselves into rel.
 
-  void PseudoReflect(CellFace * pFace);
+  void PseudoReflect(const CellFace * pFace);
                       // A surface reflection method for
                       // prototyping purposes.  Not realy
                       // physical.  But does handle P<->S
                       // conversions.
 
-  void Refract(CellFace * pFace);
+  void Refract(const CellFace * pFace);
                       // Handles the transmission of a phonon from one
                       // cell into the adjacent cell, via a CellFace.
                       // This is actually a dispatcher function, which
@@ -262,7 +262,7 @@ public:
                       // depending on whether ray-bending, or full
                       // reflection/transmission handling, are needed.
 
-  void Refraction_Bend(CellFace * pFace);
+  void Refraction_Bend(const CellFace * pFace);
                       // Called by Refract(). Handles the case where
                       // ray bends across a velocity jump in a
                       // stair-step model.  Handles refraction only.
@@ -271,7 +271,7 @@ public:
                       // post-critical incidence, which always
                       // reflects.
 
-  void Refraction_FullRT(CellFace * pFace);
+  void Refraction_FullRT(const CellFace * pFace);
                       // Called by Refract(). Handles the case where
                       // full Reflection/Transmission handling with
                       // raytype conversions needs to be handled.
@@ -280,7 +280,7 @@ public:
                       // E.g., a Moho interface, as indicated by
                       // attribute duplicity on the grid nodes.
  
-  void Refraction_Continuous(CellFace * pFace);
+  void Refraction_Continuous(const CellFace * pFace);
                       // Called by Refract(). Handles case where
                       // velocity is continuous across interface, and
                       // thus raypath needs no deflection, such as

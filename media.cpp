@@ -208,7 +208,7 @@ Real RCUCylinder::GetQatPoint(const R3::XYZ & loc, raytype type) const {
 TravelRec
 RCUCylinder::AdvanceLength(raytype rt, Real len,
                            const R3::XYZ & startloc,
-                           const S2::ThetaPhi & startdir) {
+                           const S2::ThetaPhi & startdir) const {
   TravelRec rec;
 
   rec.PathLength = len;
@@ -234,7 +234,7 @@ RCUCylinder::AdvanceLength(raytype rt, Real len,
 //   raypath tangent at that point.
 //
 TravelRec RCUCylinder::GetPathToBoundary(raytype rt, const R3::XYZ & loc,
-                                                     const S2::ThetaPhi & dir) {
+                                                     const S2::ThetaPhi & dir) const {
   TravelRec rec;
   enum exitface_e {TOP=CellFace::F_TOP,
                    BOTTOM=CellFace::F_BOTTOM,
@@ -442,7 +442,7 @@ Real Tetra::GetQatPoint(const R3::XYZ & loc, raytype type) const {
 TravelRec
 Tetra::AdvanceLength(raytype rt, Real len,
                      const R3::XYZ & startloc,
-                     const S2::ThetaPhi & startdir) {
+                     const S2::ThetaPhi & startdir) const {
 
   CoordinateTransformation CT =  CoordinateTransformation(GetVelocAtPoint(startloc, rt),mVelGrad[rt],
                                                           startloc, startdir.XYZ());
@@ -518,7 +518,7 @@ Tetra::AdvanceLength(raytype rt, Real len,
 TravelRec
 Tetra::GetPathToBoundary(raytype rt,
                          const R3::XYZ & loc,
-                         const S2::ThetaPhi & dir){
+                         const S2::ThetaPhi & dir) const {
 
   CoordinateTransformation CT =  CoordinateTransformation(GetVelocAtPoint(loc, rt),
                                                           mVelGrad[rt],loc,dir.XYZ());
@@ -658,7 +658,7 @@ Real SphereShell::GetQatPoint(const R3::XYZ & loc, raytype type) const {
 //   assumes straight-line rays, the latter assumes circular arc rays.
 //
 TravelRec SphereShell::
-GetPathToBoundary(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
+GetPathToBoundary(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
   if (mVelCoefA[rt] < 0) {
     return GetPath_Variant_D2(rt, loc, dir);  // Bottoming ray arcs
   } else if (mVelCoefA[rt] == 0) {
@@ -676,7 +676,7 @@ GetPathToBoundary(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
 //   corresponding straight-line ray paths.
 //
 TravelRec SphereShell::
-GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
+GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
 
   TravelRec rec;
   enum exitface_e {TOP=CellFace::F_TOP,
@@ -720,7 +720,7 @@ GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
 //   direction, and of the velocity profille in the cell.
 //
 TravelRec SphereShell::
-GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) {
+GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
 
   enum exitface_e {TOP=CellFace::F_TOP,
                    BOTTOM=CellFace::F_BOTTOM,
@@ -856,7 +856,7 @@ GetRayArcD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
 //
 TravelRec
 SphereShell::AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc,
-                           const S2::ThetaPhi & startdir) {
+                           const S2::ThetaPhi & startdir) const {
   if (mVelCoefA[rt] == 0) {
     return AdvanceLength_Variant_D0(rt, len, startloc, startdir);
   } else {
@@ -869,7 +869,7 @@ SphereShell::AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc,
 // METHOD:   SphereShell :: AdvanceLength_Variant_D0()
 //
 TravelRec SphereShell::
-AdvanceLength_Variant_D0(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) {
+AdvanceLength_Variant_D0(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const {
 
   TravelRec rec;
 
@@ -888,7 +888,7 @@ AdvanceLength_Variant_D0(raytype rt, Real len, const R3::XYZ & startloc, const S
 // METHOD:   SphereShell :: AdvanceLength_Variant_D2()
 //
 TravelRec SphereShell::
-AdvanceLength_Variant_D2(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) {
+AdvanceLength_Variant_D2(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const {
 
   //FAKE:
   TravelRec rec;

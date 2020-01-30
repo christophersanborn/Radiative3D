@@ -201,6 +201,14 @@ public:
     return *(mpOther->mpCell);
   }
 
+  MediumCell & Cell() const {
+    return *mpCell;
+  }
+
+  MediumCell & OtherCell() const {
+    return *(mpOther->mpCell);
+  }
+
   // :::::::::::::::::::::::::::::::::::::::::::
   // ::: Interface Methods  (CellFace Class) :::
   // :::::::::::::::::::::::::::::::::::::::::::

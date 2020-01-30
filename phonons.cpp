@@ -217,7 +217,7 @@ R3::XYZ Phonon::DirectionOfMotion() const {
 //   On the macro level, this function handles the transmission of
 //   phonons from one cell into a neighbor cell across an interface.
 //
-void Phonon::Refract(CellFace * pFace) {
+void Phonon::Refract(const CellFace * pFace) {
 
   Real vel_eps = 0.00001;   // Threshold below which we don't bother
                             // with Snell's law. (Basically, this
@@ -265,7 +265,7 @@ void Phonon::Refract(CellFace * pFace) {
 //   The phonon is basically handed over to the adjoinin cell without
 //   much additional fanfare.
 //
-void Phonon::Refraction_Continuous(CellFace * pFace) {
+void Phonon::Refraction_Continuous(const CellFace * pFace) {
 
   InsertInto( &(pFace->OtherCell()) );
 
@@ -303,7 +303,7 @@ void Phonon::Refraction_Continuous(CellFace * pFace) {
 //   positive. (ie., we are always traveling "with", not "against",
 //   the exit-face normal.)
 //
-void Phonon::Refraction_Bend(CellFace * pFace) {
+void Phonon::Refraction_Bend(const CellFace * pFace) {
 
   R3::XYZ fnorm = pFace->Normal(mLoc);
   // Face-Norm: Unit vec normal to exiting CellFace
@@ -421,7 +421,7 @@ void Phonon::Refraction_Bend(CellFace * pFace) {
 //   treatment on a particular interface, the user must request this
 //   via a double-valued grid layer.
 //
-void Phonon::Refraction_FullRT(CellFace * pFace) {
+void Phonon::Refraction_FullRT(const CellFace * pFace) {
 
   RTCoef rt = pFace->GetRTBasis(mLoc, mDir);  
                       // Gets basis vectors for scattered
