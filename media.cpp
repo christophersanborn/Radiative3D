@@ -660,9 +660,9 @@ Real SphereShell::GetQatPoint(const R3::XYZ & loc, raytype type) const {
 TravelRec SphereShell::
 GetPathToBoundary(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
   if (mVelCoefA[rt] < 0) {
-    return GetPath_Variant_D2(rt, loc, dir);  // Bottoming ray arcs
+    return GetPath_Variant_RD2(rt, loc, dir);  // Bottoming ray arcs
   } else if (mVelCoefA[rt] == 0) {
-    return GetPath_Variant_D0(rt, loc, dir);  // Straight-line rays
+    return GetPath_Variant_RD0(rt, loc, dir);  // Straight-line rays
   } else {
     // TODO: Eventual handler for cresting ray arcs...
     throw std::runtime_error("SphereShell: No handler for inverted radial velocity profiles.");
@@ -670,13 +670,14 @@ GetPathToBoundary(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) con
 }
 
 //////
-// METHOD:   SphereShell :: GetPath_Variant_D0()
+// METHOD:   SphereShell :: GetPath_Variant_RD0()
 //
 //   Handler for GetPathToBoundary() wherin we assume uniform velocity, and
-//   corresponding straight-line ray paths.
+//   corresponding straight-line ray paths, bounded by two spherical
+//   SphereFace cell faces.
 //
 TravelRec SphereShell::
-GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
+GetPath_Variant_RD0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
 
   TravelRec rec;
   enum exitface_e {TOP=CellFace::F_TOP,
@@ -706,7 +707,7 @@ GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) co
 }
 
 //////
-// METHOD:   SphereShell :: GetPath_Variant_D2()
+// METHOD:   SphereShell :: GetPath_Variant_RD2()
 //
 //   Handler for GetPathToBoundary() wherin we assume quadratic radial
 //   velocity, and ray paths that are circular arcs.  Note in this version we
@@ -720,14 +721,14 @@ GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) co
 //   direction, and of the velocity profille in the cell.
 //
 TravelRec SphereShell::
-GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
+GetPath_Variant_RD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
 
   enum exitface_e {TOP=CellFace::F_TOP,
                    BOTTOM=CellFace::F_BOTTOM,
                    NUM_FACES=2};
 
   Real dists[NUM_FACES];
-  RayArcAttributes arc = GetRayArcD2(rt, loc, dir);
+  RayArcAttributes arc = GetRayArc_RD2(rt, loc, dir);
 
   dists[TOP] = mFaces[TOP].CircularArcDistToExit(loc, dir, arc);
   dists[BOTTOM] = mFaces[BOTTOM].CircularArcDistToExit(loc, dir, arc);
@@ -738,7 +739,7 @@ GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) co
   //std::cout << "PathToBoundary: Two faces considered: dists[TOP,BOT] = (" << dists[TOP] << "," << dists[BOTTOM] << ");   (Chose: Face " << ef << " at dist " << dists[ef] <<")\n";
 
   TravelRec rec;
-  rec =  AdvanceLength_Variant_D2_Impl(rt,dists[ef],loc,dir,arc);
+  rec =  AdvanceLength_Variant_RD2_Impl(rt,dists[ef],loc,dir,arc);
   rec.pFace = &mFaces[ef];
 
   //std::cout << "PathToBoundary: TravelRec is: " << rec.str() << "\n";
@@ -748,7 +749,7 @@ GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) co
 }
 
 //////
-// METHOD:   SphereShell :: GetRayArcD2()
+// METHOD:   SphereShell :: GetRayArc_RD2()
 //
 //  Computes Ray Arc attributes in radial quadratic velocity gradients.
 //
@@ -784,7 +785,7 @@ GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) co
 //  center.
 //
 RayArcAttributes SphereShell::
-GetRayArcD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
+GetRayArc_RD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const {
 
   RayArcAttributes Ray;
 
@@ -858,18 +859,18 @@ TravelRec
 SphereShell::AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc,
                            const S2::ThetaPhi & startdir) const {
   if (mVelCoefA[rt] == 0) {
-    return AdvanceLength_Variant_D0(rt, len, startloc, startdir);
+    return AdvanceLength_Variant_RD0(rt, len, startloc, startdir);
   } else {
-    return AdvanceLength_Variant_D2(rt, len, startloc, startdir);
+    return AdvanceLength_Variant_RD2(rt, len, startloc, startdir);
   }
 }
 
 
 //////
-// METHOD:   SphereShell :: AdvanceLength_Variant_D0()
+// METHOD:   SphereShell :: AdvanceLength_Variant_RD0()
 //
 TravelRec SphereShell::
-AdvanceLength_Variant_D0(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const {
+AdvanceLength_Variant_RD0(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const {
 
   TravelRec rec;
 
@@ -885,25 +886,25 @@ AdvanceLength_Variant_D0(raytype rt, Real len, const R3::XYZ & startloc, const S
 
 
 //////
-// METHOD:   SphereShell :: AdvanceLength_Variant_D2()
+// METHOD:   SphereShell :: AdvanceLength_Variant_RD2()
 //
 TravelRec SphereShell::
-AdvanceLength_Variant_D2(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const {
+AdvanceLength_Variant_RD2(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const {
   TravelRec rec;
-  RayArcAttributes arc = GetRayArcD2(rt, startloc, startdir);
+  RayArcAttributes arc = GetRayArc_RD2(rt, startloc, startdir);
             // ^^ TODO: Often, if not always, this has been computed recently
             // already, and we are re-computing it here. TODO: Find a way to
             // keep previous computatin of this.
-  rec =  AdvanceLength_Variant_D2_Impl(rt,len,startloc,startdir,arc);
+  rec =  AdvanceLength_Variant_RD2_Impl(rt,len,startloc,startdir,arc);
   return rec;
 }
 
 //////
-// METHOD:  SphereShell :: AdvanceLength_Variant_D2_Impl()
+// METHOD:  SphereShell :: AdvanceLength_Variant_RD2_Impl()
 //
 TravelRec SphereShell::
-AdvanceLength_Variant_D2_Impl(raytype rt, Real len, const R3::XYZ & startloc,
-                              const S2::ThetaPhi & startdir, const RayArcAttributes & arc) const {
+AdvanceLength_Variant_RD2_Impl(raytype rt, Real len, const R3::XYZ & startloc,
+                               const S2::ThetaPhi & startdir, const RayArcAttributes & arc) const {
 
   Real startAngle = arc.AngleOffsetFromBottom(startloc);
   Real angleDelta = len / arc.Radius;

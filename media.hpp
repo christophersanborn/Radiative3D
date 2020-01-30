@@ -511,22 +511,28 @@ public:
 
   protected:
 
-  TravelRec GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const;
+  // NOMENCLATURE NOTE: 'RD0' implies "radial degree zero," or, uniform
+  // velocity inside radially symmetric cells.  'RD2' implies "radial degree
+  // two," or radially quadratic varying velocity.  At some point we may add
+  // support for 'RD1' for velocity that varies linearly with radial
+  // coordinate.
+
+  TravelRec GetPath_Variant_RD0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const;
         // GetPath handler for uniform velocity profile.
-  TravelRec GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const;
-        // GetPath handler for quadratic velocity profile.
-  TravelRec AdvanceLength_Variant_D0(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const;
+  TravelRec GetPath_Variant_RD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const;
+        // GetPath handler for radial quadratic velocity profile.
+  TravelRec AdvanceLength_Variant_RD0(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const;
         // AdvanceLength handler for uniform velocity profile.
-  TravelRec AdvanceLength_Variant_D2(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const;
-        // AdvanceLength handler for quadratic velocity profile.
-  TravelRec AdvanceLength_Variant_D2_Impl(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir, const RayArcAttributes & arc) const;
+  TravelRec AdvanceLength_Variant_RD2(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const;
+        // AdvanceLength handler for radial quadratic velocity profile.
+  TravelRec AdvanceLength_Variant_RD2_Impl(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir, const RayArcAttributes & arc) const;
         // Implementation. (Takes additional precomputed parameter.)
 
   // ::::::::::::::::::::::::::::::::::::::::::::::::::::
   // ::: Specific Helper Methods  (SphereShell Class) :::
   // ::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-  RayArcAttributes GetRayArcD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const;
+  RayArcAttributes GetRayArc_RD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const;
         // Get ray arc attributes in a radial quadratic velocity profile.
 
 };

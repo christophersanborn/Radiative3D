@@ -718,6 +718,8 @@ Real SphereFace::
 CircularArcDistToExit(const R3::XYZ & loc, const R3::XYZ & dir, const RayArcAttributes & arc) const {
 
   const Real S2 = arc.c.RD2.S2; // Get S2 from cache
+                  // TODO: taking from RD2 could be bad,
+                  // as we *could* be RD1... TODO: CHECK ASSUMPTIONS
   if (S2==0) {
     throw (Runtime("No handler yet for straight-line arcs. (SphereFace::CADTE)"));
   }
