@@ -727,28 +727,24 @@ GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) co
                    NUM_FACES=2};
 
   Real dists[NUM_FACES];
-  RayArcAttributes RayArc = GetRayArcD2(rt, loc, dir);
+  RayArcAttributes arc = GetRayArcD2(rt, loc, dir);
 
-  dists[TOP] = mFaces[TOP].CircularArcDistToExit(loc, dir, RayArc);
-  dists[BOTTOM] = mFaces[BOTTOM].CircularArcDistToExit(loc, dir, RayArc);
+  dists[TOP] = mFaces[TOP].CircularArcDistToExit(loc, dir, arc);
+  dists[BOTTOM] = mFaces[BOTTOM].CircularArcDistToExit(loc, dir, arc);
 
   exitface_e ef = (dists[TOP] < dists[BOTTOM]) ? TOP : BOTTOM;
   if (dists[ef] < 0) dists[ef] = 0; // Squash retrograde motion
 
-  std::cout << "PathToBoundary: Two faces considered: dists[TOP,BOT] = (" << dists[TOP] << "," << dists[BOTTOM] << ");   (Chose: Face " << ef << " at dist " << dists[ef] <<")\n";
+  //std::cout << "PathToBoundary: Two faces considered: dists[TOP,BOT] = (" << dists[TOP] << "," << dists[BOTTOM] << ");   (Chose: Face " << ef << " at dist " << dists[ef] <<")\n";
 
-  //FAKE:
   TravelRec rec;
-  rec.PathLength  = dists[ef];
-  rec.TravelTime  = 20;
-  rec.NewLoc      = loc;
-  rec.NewDir      = dir;
-  rec.Attenuation = 1.0;
+  rec =  AdvanceLength_Variant_D2_Impl(rt,dists[ef],loc,dir,arc);
   rec.pFace = &mFaces[ef];
+
+  //std::cout << "PathToBoundary: TravelRec is: " << rec.str() << "\n";
+
   return rec;
 
-  throw std::runtime_error("UnimpSphereShell_GetPath_D2");
-  return TravelRec(); // **FIXME**
 }
 
 //////
@@ -889,17 +885,39 @@ AdvanceLength_Variant_D0(raytype rt, Real len, const R3::XYZ & startloc, const S
 //
 TravelRec SphereShell::
 AdvanceLength_Variant_D2(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const {
-
-  //FAKE:
   TravelRec rec;
-  rec.PathLength  = 1e10;
-  rec.TravelTime  = 1e10;
-  rec.NewLoc      = startloc;
-  rec.NewDir      = startdir;
-  rec.Attenuation = 1.0;
-  rec.pFace = &mFaces[1];
+  RayArcAttributes arc = GetRayArcD2(rt, startloc, startdir);
+            // ^^ TODO: Often, if not always, this has been computed recently
+            // already, and we are re-computing it here. TODO: Find a way to
+            // keep previous computatin of this.
+  rec =  AdvanceLength_Variant_D2_Impl(rt,len,startloc,startdir,arc);
+  return rec;
+}
+
+//////
+// METHOD:  SphereShell :: AdvanceLength_Variant_D2_Impl()
+//
+TravelRec SphereShell::
+AdvanceLength_Variant_D2_Impl(raytype rt, Real len, const R3::XYZ & startloc,
+                              const S2::ThetaPhi & startdir, const RayArcAttributes & arc) const {
+
+  Real startAngle = arc.AngleOffsetFromBottom(startloc);
+  Real angleDelta = len / arc.Radius;
+  Real newAngle = startAngle + angleDelta;
+
+  R3::XYZ newLoc = arc.PositionFromAngle(newAngle);
+  R3::XYZ newDir = arc.DirectionFromAngle(newAngle);
+
+  Real timeDelta = len / GetVelocAtPoint(startloc,rt); // HORRENDOUS estimate **TEMP** TODO: FIX
+  Real atten = 1.0; // **TEMP** TODO: FIX
+
+  TravelRec rec;
+  rec.PathLength = len;
+  rec.TravelTime = timeDelta;
+  rec.NewLoc = newLoc;
+  rec.NewDir = S2::Node(newDir.x(),newDir.y(),newDir.z()); // TODO: Proly a more efficient R3-S2 conversion possible...
+  rec.Attenuation = atten;
+
   return rec;
 
-  throw std::runtime_error("UnimpSphereShell_AdvanceLength_V_D2");
-  return TravelRec(); // **FIXME**
 }

@@ -9,6 +9,15 @@ Real RayArcAttributes::AngleOffsetFromBottom(const R3::XYZ & loc) const {
   return atan2(loctany,loctanx);
 }
 
+R3::XYZ RayArcAttributes::PositionFromAngle(Real angle) const {
+  return Center + u1.ScaledBy(Radius*sin(angle))
+                + u3.ScaledBy(Radius*cos(angle));
+}
+
+R3::XYZ RayArcAttributes::DirectionFromAngle(Real angle) const {
+  return u1.ScaledBy(cos(angle)) + u3.ScaledBy(-sin(angle));
+}
+
 std::string RayArcAttributes::str() const {
   std::ostringstream s;
   s << "{RayArc:"<<" {Radius: "<<Radius<<" @ Center: "<<Center.str()<<""

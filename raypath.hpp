@@ -60,6 +60,13 @@ struct RayArcAttributes {
         // mean loc is ahead of the bottom, negative behind, determined by
         // assuming u1 contains the ray tangent at bottom.
 
+  R3::XYZ PositionFromAngle(Real angle) const;
+        // Given angle relative to bottom, return location on arc path.
+
+  R3::XYZ DirectionFromAngle(Real angle) const;
+        // Given angle relative to bottom, return direction of the ray
+        // tangent at that point.
+
   std::string str() const;
 
 };

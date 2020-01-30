@@ -46,6 +46,7 @@
 #define MEDIA_H_
 //
 #include <stdlib.h>
+#include <iomanip>
 #include "array.hpp"
 #include "raytype.hpp"
 #include "elastic.hpp"
@@ -94,13 +95,27 @@ class TravelRec {
 public:
 
   Real     PathLength;  // Distance travelled along (possibly curved)
-                        //  path
-  Real     TravelTime;  // Time it took to travel that distance
-  R3::XYZ      NewLoc;  // Location of phonon after travelling
-  S2::ThetaPhi NewDir;  // Direction of phonon after travelling
-  Real    Attenuation;  // Intrinsic Attenutation determined by Q
+                        //  path.
+  Real     TravelTime;  // Time it took to travel that distance.
+  R3::XYZ      NewLoc;  // Location of phonon after travelling.
+  S2::ThetaPhi NewDir;  // Direction of phonon after travelling.
+  Real    Attenuation;  // Accrued Intrinsic Attenutation (determined
+                        // by Q) as a multiplicative factor. (1.0
+                        // means no attenuation.)
   const CellFace * pFace;   // Points to CellFace through which the ray
                             // exited the MediumCell. (Undefined if N/A.)
+
+  TravelRec() : Attenuation(1.0), pFace(nullptr) {}
+
+  std::string str() const {
+    std::ostringstream s;
+    s << std::setprecision(4);
+    s << "{PathLength: " << PathLength << ", TravelTime: " << TravelTime
+      << ", NewLoc: " << NewLoc.str() << ", Attenuation: " << Attenuation
+      << ", pFace: " << pFace << "}";
+    return s.str();
+  }
+
 };
 
 
@@ -494,6 +509,8 @@ public:
   virtual TravelRec GetPathToBoundary(raytype rt, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const override;
   virtual TravelRec AdvanceLength(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const override;
 
+  protected:
+
   TravelRec GetPath_Variant_D0(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const;
         // GetPath handler for uniform velocity profile.
   TravelRec GetPath_Variant_D2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const;
@@ -502,6 +519,8 @@ public:
         // AdvanceLength handler for uniform velocity profile.
   TravelRec AdvanceLength_Variant_D2(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir) const;
         // AdvanceLength handler for quadratic velocity profile.
+  TravelRec AdvanceLength_Variant_D2_Impl(raytype rt, Real len, const R3::XYZ & startloc, const S2::ThetaPhi & startdir, const RayArcAttributes & arc) const;
+        // Implementation. (Takes additional precomputed parameter.)
 
   // ::::::::::::::::::::::::::::::::::::::::::::::::::::
   // ::: Specific Helper Methods  (SphereShell Class) :::
