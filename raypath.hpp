@@ -37,7 +37,7 @@ struct cache_RD2_precompute {
   Real SinZeta;     // Sine of Zeta
   Real CotZetaBy2;  // Cotangent of Zeta/2
   Real timeCoef;    // Coefficient used in computing travel times: equal to
-                    // (a*S*SinZeta)^-1 where 'a' is the quadratic coefficient
+                    // -(a*S*SinZeta)^-1 where 'a' is the quadratic coefficient
                     // of the velocity profile (i.e. from v=ar^2+c).
   cache_RD2_precompute() {}
   // Specify via just four parameters:
@@ -48,7 +48,7 @@ struct cache_RD2_precompute {
     CosZeta    (  (S2 + _Q*_Q - _zeroRad2)/TwoSQ  ),
     SinZeta    (  sqrt(1 - CosZeta*CosZeta)       ),
     CotZetaBy2 (  (1+CosZeta)/SinZeta             ),
-    timeCoef   (  1/(_a*S*SinZeta)                )
+    timeCoef   (  -1/(_a*S*SinZeta)               )
     {}
 };
 

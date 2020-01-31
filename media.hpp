@@ -535,6 +535,11 @@ public:
   RayArcAttributes GetRayArc_RD2(raytype rt, const R3::XYZ & loc, const S2::ThetaPhi & dir) const;
         // Get ray arc attributes in a radial quadratic velocity profile.
 
+  Real GetTravelTimeAngleToAngle_RD2(Real angle0, Real angle1, const RayArcAttributes & arc) const;
+        // Compute travel time along a circular arc from an initial to final
+        // angular coordinate given as radians to/from bottoming angle. This
+        // one is correct for radial quadratic velocity profiles.
+
 };
 
 

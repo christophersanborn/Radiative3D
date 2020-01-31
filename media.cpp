@@ -908,12 +908,12 @@ AdvanceLength_Variant_RD2_Impl(raytype rt, Real len, const R3::XYZ & startloc,
 
   Real startAngle = arc.AngleOffsetFromBottom(startloc);
   Real angleDelta = len / arc.Radius;
-  Real newAngle = startAngle + angleDelta;
+  Real endAngle = startAngle + angleDelta;
 
-  R3::XYZ newLoc = arc.PositionFromAngle(newAngle);
-  R3::XYZ newDir = arc.DirectionFromAngle(newAngle);
+  R3::XYZ newLoc = arc.PositionFromAngle(endAngle);
+  R3::XYZ newDir = arc.DirectionFromAngle(endAngle);
 
-  Real timeDelta = len / GetVelocAtPoint(startloc,rt); // HORRENDOUS estimate **TEMP** TODO: FIX
+  Real timeDelta = GetTravelTimeAngleToAngle_RD2(startAngle, endAngle, arc);
   Real atten = HelperUniformAttenuation(timeDelta * cmPhononFreq, mQ[rt]);
 
   TravelRec rec;
@@ -925,4 +925,17 @@ AdvanceLength_Variant_RD2_Impl(raytype rt, Real len, const R3::XYZ & startloc,
 
   return rec;
 
+}
+
+//////
+// METHOD:  SphereShell :: GetTravelTimeAngleToAngle_RD2()
+//
+Real SphereShell::
+GetTravelTimeAngleToAngle_RD2(Real angle0, Real angle1, const RayArcAttributes & arc) const {
+  const Real timeCoef = arc.c.RD2.timeCoef;     // Pop some params off
+  const Real CotZetaBy2 = arc.c.RD2.CotZetaBy2; // the arc cache...
+  // Compute:
+  Real t0 = timeCoef*atanh(CotZetaBy2*tan(angle0/2));
+  Real t1 = timeCoef*atanh(CotZetaBy2*tan(angle1/2));
+  return t1 - t0;
 }
