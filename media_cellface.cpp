@@ -721,7 +721,7 @@ CircularArcDistToExit(const R3::XYZ & loc, const R3::XYZ & dir, const RayArcAttr
                   // TODO: taking from RD2 could be bad,
                   // as we *could* be RD1... TODO: CHECK ASSUMPTIONS
   if (S2==0) {
-    throw (Runtime("No handler yet for straight-line arcs. (SphereFace::CADTE)"));
+    return LinearRayDistToExit(loc, dir); // Fall-back to linear calculation.
   }
   const Real R2 = mRad2; // SphereFace r^2
   const Real Q2 = arc.Rad2; // Ray arc r^2

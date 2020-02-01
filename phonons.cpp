@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cmath>
 #include <cstdlib>      /* rand(), RAND_MAX */
+#include <cassert>
 #include "phonons.hpp"
 #include "media.hpp"
 #include "rtcoef.hpp"
@@ -57,6 +58,8 @@ Real Phonon::cm_ttl = 3600.0;    // One hour.  Note: the Model()
 //   accessibility of this method.
 //
 inline void Phonon::Move(const TravelRec & travel) {
+  assert(travel.PathLength >= 0);
+  assert(travel.TravelTime >= 0);
   mPathLength += travel.PathLength;
   mTimeAlive  += travel.TravelTime;
   mLoc         = travel.NewLoc;

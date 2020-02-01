@@ -906,6 +906,27 @@ TravelRec SphereShell::
 AdvanceLength_Variant_RD2_Impl(raytype rt, Real len, const R3::XYZ & startloc,
                                const S2::ThetaPhi & startdir, const RayArcAttributes & arc) const {
 
+  if (arc.Radius == (1./0.)) {  // If vertical trajectory (no curvature)...
+    // Then fallback to RD0 variant, but we need to correct traveltime...
+    TravelRec fallback = AdvanceLength_Variant_RD0(rt, len, startloc, startdir);
+    Real r0 = startloc.Mag();
+    Real r1 = fallback.NewLoc.Mag();
+    Real sqnac = sqrt(-mVelCoefA[rt]*mVelCoefC[rt]);
+    Real sqnaoc = sqrt(-mVelCoefA[rt]/mVelCoefC[rt]);
+    Real tau0 = atanh(sqnaoc*r0);
+    Real tau1 = atanh(sqnaoc*r1);
+    Real tpm = (tau1-tau0)/sqnac;
+    fallback.TravelTime = abs(tpm);
+    if (std::isnan(fallback.TravelTime)) {
+      std::cerr << ")))) r0,r1: " << r0 << ", " << r1 << " sqnac: " << sqnac
+                << " tau0,tau1: " << tau0 << ", " << tau1 << " tpm: " << tpm
+                << " ==>vel: " << (len/tpm) << " a,c: " << mVelCoefA[rt] << ", " << mVelCoefC[rt]
+                << " fbTRec Len: " <<  fallback.PathLength << "\n";
+    }
+    assert(!std::isnan(fallback.TravelTime));
+    assert(!std::isnan(fallback.PathLength));
+    return fallback;
+  }
   Real startAngle = arc.AngleOffsetFromBottom(startloc);
   Real angleDelta = len / arc.Radius;
   Real endAngle = startAngle + angleDelta;
