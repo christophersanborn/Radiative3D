@@ -32,6 +32,7 @@ void HalfspaceCylinder(Grid &, const std::vector<Real> &);
 void ScatParamsStudy(Grid &, const std::vector<Real> &);
 void CrustPinchWCG(Grid &, const std::vector<Real> &);
 void CrustUpthrustWCG(Grid &, const std::vector<Real> &);
+void SphereEarth(Grid &, const std::vector<Real> &);
 void ToySphere(Grid &, const std::vector<Real> &);
 #include "user_LopNorCyl_inc.cpp"
 #include "user_LopNorCylMoho_inc.cpp"
@@ -39,6 +40,7 @@ void ToySphere(Grid &, const std::vector<Real> &);
 #include "user_Halfspace_inc.cpp"
 #include "user_NSCP_inc.cpp"
 #include "user_Upthrust_inc.cpp"
+#include "user_SphereEarth_inc.cpp"
 #include "user_ToySphere_inc.cpp"
 
 //////
@@ -76,6 +78,11 @@ void Grid::ConstructGridManual(int Selection, const std::vector<Real> &args) {
       std::cout << LineHead << "Selected Lop Nor Baseline Model (Layered).\n";
       LopNorCylinder(*this, args);
     }
+    break;
+
+  case 16:
+    std::cout << LineHead << "Selected Spherical Earth Model (Spherical).\n";
+    SphereEarth(*this, args);
     break;
 
   case 21:
