@@ -18,7 +18,7 @@ source scripts/do-fundamentals.sh
 
 SIMTARGET="video"             # Choice: 'waveform' or 'video'. Affects
                               # defaults not otherwise specified.
-MODIDX=16  # Spherical Earth  # Model Index: Selects from custom coded models.
+MODIDX=30  # Spherical Toy    # Model Index: Selects from custom coded models.
                               # 1: Lop Nor (base or moho depends on COMPARGS),
                               # 5: North Sea Crust Pinch model,
                               # 8: Crust Upthrust model
@@ -26,14 +26,14 @@ MODIDX=16  # Spherical Earth  # Model Index: Selects from custom coded models.
 #SOURCETYP=$(EventParams "Selby" 0)
         # Lookup source parameters. Choices include 'expl', 'eq', 'Selby', etc.
         # Second parameter is usually isofrac (range [-1.0,1.0] or [-90,90]).
-SOURCETYP=EXPL #SDR,22.5,90,0       # Or, specify source directly.
+SOURCETYP=SDR,22.5,90,0       # Or, specify source directly.
 SOURCELOC=0,0,-10             # Event Location: Null Island: 0,0,elev
                               #                 North Pole:  10007,0,elev
 
 
 FREQ=2.0                      # Phonon frequency to model
-NUMPHONS=2K                   # Number of phonons to spray
-RECTIME=12000                 # Recording duration of seismometers.
+NUMPHONS=3K                   # Number of phonons to spray
+RECTIME=4800                  # Recording duration of seismometers.
 GATHER=40.0                   # Terminal gather radius, in kilometers.
 
 SCAT1=0.8,0.01,0.5,0.2,50     # Scat Args (nu,eps,a,kappa) and Q in sedi's
@@ -173,12 +173,12 @@ fi
 echo "Making Scatter-Vid Above View:"
 mkdir -p framecache
 octave -qf <<EOF
-  scattervid_axial(0,
+  scattervid_above(0,
             struct(
               "seispat",   "seisfiles/seis_%03d.octv",
-              "seisrange", [],
+              "seisrange", [0:32],
               "loctext",   "Null Island",
-              "numframes", 600,
+              "numframes", 300,
               "window", [-8600 8600 6400 -6400]
             )
           );

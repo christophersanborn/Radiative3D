@@ -33,10 +33,10 @@ void SphereEarth(Grid & gr, const std::vector<Real> & args) {
 
   Q QCr = QmQk(q);          //
   Q QMa = QmQk(q);          //
-  Q QCo = QmQk(q);          //
+  Q QCo = QmQk(1,q);        //
   Q QCi = QmQk(q);          //
 
-  gr.SetSize(1,1,10);           // Sets index bounds
+  gr.SetSize(1,1,16);           // Sets index bounds
   gr.SetIndexBase(0);           // When addressing nodes, use base 0
   gr.SetMapping(Grid::GC_RAE, Grid::GC_SPHERICAL);
 
@@ -49,12 +49,12 @@ void SphereEarth(Grid & gr, const std::vector<Real> & args) {
   gr.WNode(0,0,6).SetLocation ( 0, 0, -2047.0 );
   gr.WNode(0,0,7).SetLocation ( 0, 0, -2789.0 );
   gr.WNode(0,0,8).SetLocation ( 0, 0, -2891.0 );  // CMB
-  gr.WNode(0,0,9).SetLocation ( 0, 0, -2789.0 );
-  gr.WNode(0,0,10).SetLocation ( 0, 0, -2789.0 );
-  gr.WNode(0,0,11).SetLocation ( 0, 0, -2789.0 );
-  gr.WNode(0,0,12).SetLocation ( 0, 0, -5150.0 );  // ICB
-  gr.WNode(0,0,13).SetLocation ( 0, 0, -2789.0 );
-  gr.WNode(0,0,14).SetLocation ( 0, 0, -2789.0 );
+  gr.WNode(0,0,9).SetLocation ( 0, 0, -3594.0 );
+  gr.WNode(0,0,10).SetLocation ( 0, 0, -4298.0 );
+  gr.WNode(0,0,11).SetLocation ( 0, 0, -4852.0 );
+  gr.WNode(0,0,12).SetLocation ( 0, 0, -5153.0 );  // ICB
+  gr.WNode(0,0,13).SetLocation ( 0, 0, -5661.0 );
+  gr.WNode(0,0,14).SetLocation ( 0, 0, -6066.0 );
   gr.WNode(0,0,15).SetLocation ( 0, 0, -6371.0 );  // Center
 
   gr.WNode(0,0,0).SetAttributes( VpVs( 5.80, 3.20), 2.60, QCr, HSCr );
@@ -71,11 +71,11 @@ void SphereEarth(Grid & gr, const std::vector<Real> & args) {
   gr.WNode(0,0,7).SetAttributes( VpVs(13.65, 7.26), 5.72, QMa, HSMa );
   gr.WNode(0,0,8).SetAttributes( VpVs(13.66, 7.28), 5.77, QMa, HSMa );
 
-  gr.WNode(0,0,8).SetAttributes( VpVs( 8.00, 1e-6), 9.91, QCo, HSCo );
-  gr.WNode(0,0,9).SetAttributes( VpVs( 9.08, 1e-6), 10.9, QCo, HSCo );
-  gr.WNode(0,0,10).SetAttributes( VpVs(9.79, 1e-6), 11.6, QCo, HSCo );
-  gr.WNode(0,0,11).SetAttributes( VpVs(10.17, 1e-6), 12.0, QCo, HSCo );
-  gr.WNode(0,0,12).SetAttributes( VpVs(10.29, 1e-6), 12.1, QCo, HSCo );
+  gr.WNode(0,0,8).SetAttributes( VpVs( 8.00, 1e-5), 9.91, QCo, HSCo );
+  gr.WNode(0,0,9).SetAttributes( VpVs( 9.08, 1e-5), 10.9, QCo, HSCo );
+  gr.WNode(0,0,10).SetAttributes( VpVs(9.79, 1e-5), 11.6, QCo, HSCo );
+  gr.WNode(0,0,11).SetAttributes( VpVs(10.17, 1e-5), 12.0, QCo, HSCo );
+  gr.WNode(0,0,12).SetAttributes( VpVs(10.29, 1e-5), 12.1, QCo, HSCo );
 
   gr.WNode(0,0,12).SetAttributes( VpVs(11.04, 3.50), 12.7, QCi, HSCi );
   gr.WNode(0,0,13).SetAttributes( VpVs(11.18, 3.61), 12.9, QCi, HSCi );
