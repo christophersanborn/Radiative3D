@@ -32,8 +32,8 @@ SOURCELOC=0,0,-10             # Event Location: Null Island: 0,0,elev
 
 
 FREQ=2.0                      # Phonon frequency to model
-NUMPHONS=3K                   # Number of phonons to spray
-RECTIME=4800                  # Recording duration of seismometers.
+NUMPHONS=2K                   # Number of phonons to spray
+RECTIME=6000                  # Recording duration of seismometers.
 GATHER=40.0                   # Terminal gather radius, in kilometers.
 
 SCAT1=0.8,0.01,0.5,0.2,50     # Scat Args (nu,eps,a,kappa) and Q in sedi's
@@ -173,10 +173,10 @@ fi
 echo "Making Scatter-Vid Above View:"
 mkdir -p framecache
 octave -qf <<EOF
-  scattervid_above(0,
+  scattervid_axial(0,
             struct(
               "seispat",   "seisfiles/seis_%03d.octv",
-              "seisrange", [0:32],
+              "seisrange", [],
               "loctext",   "Null Island",
               "numframes", 300,
               "window", [-8600 8600 6400 -6400]
