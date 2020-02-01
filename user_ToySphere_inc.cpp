@@ -45,9 +45,9 @@ void ToySphere(Grid & gr, const std::vector<Real> & args) {
   gr.WNode(0,0,2).SetLocation ( 0, 0, -6371.0 );  // Center
 
   gr.WNode(0,0,0).SetAttributes( VpVs( 5.00, 2.60), 3.60, QMa, HSMa );
-  gr.WNode(0,0,2).SetAttributes( VpVs( 8.00, 4.40), 4.00, QMa, HSMa );
-  gr.WNode(0,0,2).SetAttributes( VpVs( 8.50, 4.80), 4.20, QCo, HSCo );
-  gr.WNode(0,0,3).SetAttributes( VpVs(10.00, 6.00), 4.90, QCo, HSCo );
+  gr.WNode(0,0,1).SetAttributes( VpVs( 8.00, 4.40), 4.00, QMa, HSMa );
+  gr.WNode(0,0,1).SetAttributes( VpVs( 8.50, 4.80), 4.20, QCo, HSCo );
+  gr.WNode(0,0,2).SetAttributes( VpVs(10.00, 6.00), 4.90, QCo, HSCo );
 
 
 }
