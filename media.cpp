@@ -580,10 +580,18 @@ SphereShell::SphereShell(Real RadTop, Real RadBot,
   mFaces( SphereFace(RadTop, CellFace::F_TOP, this),
           SphereFace(RadBot, CellFace::F_BOTTOM, this))
 {
-  assert(RadTop > RadBot);
-  assert(RadBot >= 0);
-  assert(DataBot.Vp() >= DataTop.Vp()); // Disallow reverse gradients; Hope to relax this
-  assert(DataBot.Vs() >= DataTop.Vs()); // restriction once I figure out how to handle it.
+
+  if (RadTop <= RadBot) {
+    throw Runtime("SphereShell: Top surface must have greater radius than bottom surface.");
+  } if (RadBot < 0) {
+    throw Runtime("SphereShell: Bottom radius is less than zero. Check grid.");
+  } if (DataBot.Vp() > DataTop.Vp() || DataBot.Vs() > DataTop.Vs()) {
+    throw Runtime("SphereShell: Reverse velocity gradients within model cells not currently supported. "
+                  "Ensure velocity at bottom of cell is greater than or equal to the top of the cell.");
+  } if (DataTop.Vp() <= 0 || DataTop.Vs() <= 0 || DataBot.Vp() <= 0 || DataBot.Vs() <= 0) {
+    throw Runtime("SphereShell: Elastic velocities must be greater than zero. "
+                  "If goal is to model liquid, try very small but non-zero velocites.");
+  }
 
   // Coefficient 'A' on the quadratic term:  ( v = A*r^2 + C )
   mVelCoefA[RAY_P] = (DataTop.Vp()-DataBot.Vp()) / (RadTop*RadTop - RadBot*RadBot);
@@ -607,8 +615,8 @@ SphereShell::SphereShell(Real RadTop, Real RadBot,
   mQ[RAY_P] = DataTop.Qp();
   mQ[RAY_S] = DataTop.Qs();
 
-  std::cout << "~~> SphereShell: Vp = " << mVelCoefA[RAY_P] << "*r^2 + " << mVelCoefC[RAY_P] << "; ZeroSurf at r = " << mZeroRadius[RAY_P] << "\n";
-  std::cout << "                 Vs = " << mVelCoefA[RAY_S] << "*r^2 + " << mVelCoefC[RAY_S] << "; ZeroSurf at r = " << mZeroRadius[RAY_S] << "\n";
+  //std::cout << "~~> SphereShell: Vp = " << mVelCoefA[RAY_P] << "*r^2 + " << mVelCoefC[RAY_P] << "; ZeroSurf at r = " << mZeroRadius[RAY_P] << "\n";
+  //std::cout << "                 Vs = " << mVelCoefA[RAY_S] << "*r^2 + " << mVelCoefC[RAY_S] << "; ZeroSurf at r = " << mZeroRadius[RAY_S] << "\n";
 
   assert(mZeroRadius[RAY_P] >= 0);
   assert(mZeroRadius[RAY_S] >= 0);
