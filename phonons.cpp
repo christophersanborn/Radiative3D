@@ -58,13 +58,13 @@ Real Phonon::cm_ttl = 3600.0;    // One hour.  Note: the Model()
 //   accessibility of this method.
 //
 inline void Phonon::Move(const TravelRec & travel) {
-  assert(travel.PathLength >= 0);
-  assert(travel.TravelTime >= 0);
   mPathLength += travel.PathLength;
   mTimeAlive  += travel.TravelTime;
+  mRecentTravelTime += travel.TravelTime;
   mLoc         = travel.NewLoc;
   mDir         = travel.NewDir;
   mAmplitude  *= travel.Attenuation;
+  mMoveCount +=1;
 }
 
 
@@ -536,17 +536,25 @@ void Phonon::InsertInto(MediumCell * pCell) {
 //   the global DataOut object.
 //
 void Phonon::Propagate() {
- 
+
   while (true) {    // ===========================
                     //   PROPAGATION INNER LOOP:
 
     // ::::::
     // :: Test for TIME-OUT:
     // :
-   
+
     if (mTimeAlive > cm_ttl) {
       dataout.ReportPhononTimeout(*this);
       break;
+    }
+    if ((mMoveCount % 128)==127) { // Check validity
+      if (std::isnan(mPathLength) || std::isnan(mTimeAlive) || (mPathLength < 0)
+          || (mTimeAlive < 0) || (mRecentTravelTime <= 0)) {
+        dataout.ReportInvalidPhonon(*this);
+        break;
+      }
+      mRecentTravelTime = 0;
     }
 
     // ::::::

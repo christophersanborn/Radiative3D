@@ -81,6 +81,12 @@ private:
   Real mPathLength;  // Cumulative path length travelled by this
                      // phonon
 
+  Real mRecentTravelTime; // Accumulated travel time over the last 127
+                          // moves. Used to detect stuck phonons.
+
+  unsigned int mMoveCount;// Move counter. Used to periodically check
+                          // for stuck phonons.
+
   Real mAmplitude;   // Phonon amplitude
 
   R3::XYZ      mLoc; // Phonon's current Location
@@ -161,6 +167,8 @@ public:
   Phonon(const R3::XYZ & loc, const S2::ThetaPhi & dir, raytype pol_t) :
     mTimeAlive(0),
     mPathLength(0),
+    mRecentTravelTime(0),
+    mMoveCount(0),
     mAmplitude(1.0),
     mLoc (loc), 
     mDir (dir), 
@@ -175,6 +183,8 @@ public:
   Phonon(const S2::ThetaPhi & dir, raytype pol_t) :
     mTimeAlive(0),
     mPathLength(0),
+    mRecentTravelTime(0),
+    mMoveCount(0),
     mAmplitude(1.0),
     mLoc (0,0,0), 
     mDir (dir), 

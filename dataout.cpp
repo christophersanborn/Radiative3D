@@ -416,12 +416,11 @@ void Seismometer::OutputOctaveText(std::ostream * out) {
 // METHOD:   DataReporter :: SuppressAllReports()
 //
 void DataReporter::SuppressAllReports(bool suppress) {
-   
+
   bool out = false;
   if (suppress == false) {
     out = true;
   }
-  
   mbReportGenerate = out;
   mbReportCollect  = out;
   mbReportReflect  = out;
@@ -429,6 +428,7 @@ void DataReporter::SuppressAllReports(bool suppress) {
   mbReportScatter  = out;
   mbReportLost     = out;
   mbReportTimeout  = out;
+  mbReportInvalid  = out;
 
 }
 
@@ -471,7 +471,7 @@ void DataReporter::SetReportsFile(std::string fname) {
   mofsReports.open(ss.str().c_str());
   // TODO:  Check for and handle errors opening file
   mposReports = &mofsReports;
- 
+
 }
 
 
@@ -524,17 +524,6 @@ void DataReporter::ReportNewEventPhonon(const Phonon & phon) {
   }
 }
 
-
-//////
-// METHOD:  ReportPhononTimeout()
-//
-void DataReporter::ReportPhononTimeout(const Phonon & phon) {
-  if (mbReportTimeout) {
-    output_phonon_dataline(mposReports, mIDTimeout, phon);
-  }
-}
-
-
 //////
 // METHOD:  ReportScatterEvent()
 //
@@ -573,7 +562,6 @@ void DataReporter::ReportPhononCollected(const Phonon & phon) {
 
 }
 
-
 //////
 // METHOD:  ReportReflection()
 //
@@ -599,13 +587,44 @@ void DataReporter::ReportLostPhonon(const Phonon & phon) {
   if (mbReportLost) {
     output_phonon_dataline(mposReports, mIDLost, phon);
   }
+  mNumLost += 1;
 }
+
+//////
+// METHOD:  ReportPhononTimeout()
+//
+void DataReporter::ReportPhononTimeout(const Phonon & phon) {
+  if (mbReportTimeout) {
+    output_phonon_dataline(mposReports, mIDTimeout, phon);
+  }
+  mNumTimeout += 1;
+}
+
+//////
+// METHOD:  ReportInvalidPhonon()
+//
+void DataReporter::ReportInvalidPhonon(const Phonon & phon) {
+  if (mbReportInvalid) {
+    output_phonon_dataline(mposReports, mIDInvalid, phon);
+  }
+  mNumInvalid += 1;
+}
+
 
 //////
 // METHOD:  OutputPostSimSummary()
 //
 void DataReporter::OutputPostSimSummary() {
-  std::cerr << "Printing Post-Sim Summary: \n";
+  std::cout << "Printing Post-Sim Summary: \n";
+
+  // ::::::
+  // :: Print Phonon Loss Report:
+  // :
+
+  std::cout << "->  Phonons lost due to:\n"
+            << "      Loss surfaces:  " << mNumLost << "\n"
+            << "      Timeout:        " << mNumTimeout << "\n"
+            << "      Invalidity:     " << mNumInvalid << "\n";
 
   // ::::::
   // :: Print summaries and traces of all Seismometers:

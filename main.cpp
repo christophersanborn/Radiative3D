@@ -241,14 +241,15 @@ void process_option(CmdOpt & opt, ModelParams & params,
           else if (keywd == "CEL") {dataout.SuppressTransfer(false);}
           else if (keywd == "LST") {dataout.SuppressLost(false);}
           else if (keywd == "TMO") {dataout.SuppressTimeout(false);}
+          else if (keywd == "INV") {dataout.SuppressInvalid(false);}
           else if (keywd == "SCATTERS") {
             dataout.SuppressGenerate(false);
             dataout.SuppressScatter(false);
             dataout.SuppressReflect(false);
           }
           else {
-            throw(Runtime("Valid report keywords are: ALL_ON, ALL_OFF, " 
-                   + Text("GEN, SCT, REF, COL, CEL, LST, TMO, or SCATTERS.")));
+            throw(Runtime("Valid report keywords are: ALL_ON, ALL_OFF, GEN, "
+                   + Text("SCT, REF, COL, CEL, LST, TMO, INV, or SCATTERS.")));
           }
         //
       }// end while

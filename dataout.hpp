@@ -260,9 +260,15 @@ protected:
 
   std::string     mIDLost;     // Text ID label for LOST reports
   bool       mbReportLost;     // True if LOST data wanted
+  unsigned long  mNumLost;     // How many phonons discarded as LOST
 
   std::string     mIDTimeout;  // Text ID label for TIMEOUT reports
   bool       mbReportTimeout;  // True if TIMEOUT data wanted
+  unsigned long  mNumTimeout;  // How many phonons discarded for TIMEOUT
+
+  std::string     mIDInvalid;  // Text ID label for INVALID reports
+  bool       mbReportInvalid;  // True if INVALID data wanted
+  unsigned long  mNumInvalid;  // How many phonons discarded as INVALID
 
   std::ostream *mpOSSeisTrace; // Output stream for seismometer traces
   std::string    mIDSeisTrace; // Text ID label for seismometer traces
@@ -298,8 +304,13 @@ public:
     mbReportScatter  ( true       ),
     mIDLost          ( "LST: "    ),
     mbReportLost     ( true       ),
+    mNumLost         ( 0          ),
     mIDTimeout       ( "TMO: "    ),
     mbReportTimeout  ( true       ),
+    mNumTimeout      ( 0          ),
+    mIDInvalid       ( "INV: "    ),
+    mbReportInvalid  ( true       ),
+    mNumInvalid      ( 0          ),
     mpOSSeisTrace    ( &std::cout ),  // Default to stdout; can override
     mIDSeisTrace     ( "SEIS: "   ),
     mbReportSeisTrace (true       )
@@ -329,6 +340,7 @@ public:
   void SuppressTransfer(bool suppress = true) {mbReportTransfer = !suppress;}
   void SuppressLost(bool suppress = true) {mbReportLost = !suppress;}
   void SuppressTimeout(bool suppress = true) {mbReportTimeout = !suppress;}
+  void SuppressInvalid(bool suppress = true) {mbReportInvalid = !suppress;}
 
 
   void SetOutputDirectory(std::string);
@@ -375,7 +387,7 @@ public:
   //            DataReporter object.
   //
 
-  void ReportNewEventPhonon(const Phonon &);  
+  void ReportNewEventPhonon(const Phonon &);
                                   // Phonon generated at event source
 
   void ReportPhononTimeout(const Phonon &);
@@ -387,7 +399,7 @@ public:
   void ReportPhononCollected(const Phonon &);
                                   // Phonon arrival at collection face
 
-  void ReportReflection(const Phonon &);        
+  void ReportReflection(const Phonon &);
                                   // Phonon reflected at cell boundary
 
   void ReportCellToCell(const Phonon &);
@@ -396,6 +408,10 @@ public:
   void ReportLostPhonon(const Phonon &);
                                   // Phonon exited model
 
+  void ReportInvalidPhonon(const Phonon &);
+                                  // Phonon accrued negative or NaN time or
+                                  // length or failed to advance in last N
+                                  // iterations.
 
 private:
 
@@ -403,7 +419,7 @@ private:
   // ::: Private Utility Methods  (DataReporter Class) :::
   // :::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-  void output_phonon_dataline(std::ostream *, 
+  void output_phonon_dataline(std::ostream *,
                               const std::string &,
                               const Phonon &);
 
