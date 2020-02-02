@@ -20,18 +20,18 @@ void SphereEarth(Grid & gr, const std::vector<Real> & args) {
   using Elastic::HSneak;
 
   Real sc_nu  = 0.8;    // Default scat params -
-  Real sc_eps = 0.01;   // we'll scan args for user values
+  Real sc_eps = 0.005;  // we'll scan args for user values
   Real sc_a   = 4.00;   //
   Real sc_k = 0.8;      //
-  Real q = 200;         //
+  Real q = 2000;        //
 
   HetSpec HSCr = HSneak(sc_nu, sc_eps, sc_a, sc_k); // Crust
   HetSpec HSMa = HSneak(sc_nu, sc_eps, sc_a, sc_k); // Mantle
-  HetSpec HSCo = HSneak(sc_nu, sc_eps, sc_a, sc_k); // Core Outer
+  HetSpec HSCo = HSneak(sc_nu, sc_eps, 2*sc_a, sc_k); // Core Outer
   HetSpec HSCi = HSneak(sc_nu, sc_eps, sc_a, sc_k); // Core Inner
 
 
-  Q QCr = QmQk(q);          //
+  Q QCr = QmQk(0.8*q);      //
   Q QMa = QmQk(q);          //
   Q QCo = QmQk(1,q);        //
   Q QCi = QmQk(q);          //
