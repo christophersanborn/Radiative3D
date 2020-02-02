@@ -585,7 +585,7 @@ SphereShell::SphereShell(Real RadTop, Real RadBot,
     throw Runtime("SphereShell: Top surface must have greater radius than bottom surface.");
   } if (RadBot < 0) {
     throw Runtime("SphereShell: Bottom radius is less than zero. Check grid.");
-  } if (DataBot.Vp() > DataTop.Vp() || DataBot.Vs() > DataTop.Vs()) {
+  } if (DataBot.Vp() < DataTop.Vp() || DataBot.Vs() < DataTop.Vs()) {
     throw Runtime("SphereShell: Reverse velocity gradients within model cells not currently supported. "
                   "Ensure velocity at bottom of cell is greater than or equal to the top of the cell.");
   } if (DataTop.Vp() <= 0 || DataTop.Vs() <= 0 || DataBot.Vp() <= 0 || DataBot.Vs() <= 0) {
