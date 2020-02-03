@@ -135,6 +135,16 @@ private:
                                            // of how many phonons have
                                            // been constructed.
 
+  static unsigned long cm_loop_concern; // Number of loops in Propagate()
+                                        // before we treat phonon as
+                                        // pathological.
+
+  static Real cm_slow_concern;      // Short time, below which, if a phonon
+                                    // has not advanced more than this amount
+                                    // amount of sim time at a check interval
+                                    // (128 propagate loops), it will be
+                                    // treated as pathological.
+
   static Real cm_ttl;         // Phonon time-to-live. Phonon will
                               // "die" if propagation sim-time exceeds
                               // this amount.

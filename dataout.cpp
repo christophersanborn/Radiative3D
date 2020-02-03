@@ -509,6 +509,11 @@ inline void DataReporter
        *out << "  cell: " << phon.mpCell;
   }
 
+  if (true) {   // Optionally include propagate loop iteration count
+                // TODO: Make conditional on user debug-level choice
+       *out << " it: " << phon.mMoveCount;
+  }
+
   // Endline
   *out << std::endl;
 
@@ -603,10 +608,11 @@ void DataReporter::ReportPhononTimeout(const Phonon & phon) {
 //////
 // METHOD:  ReportInvalidPhonon()
 //
-void DataReporter::ReportInvalidPhonon(const Phonon & phon) {
+void DataReporter::ReportInvalidPhonon(const Phonon & phon, invalid_reason_e reason) {
   if (mbReportInvalid) {
     output_phonon_dataline(mposReports, mIDInvalid, phon);
   }
+  mDiagInvalid |= (1 << reason);
   mNumInvalid += 1;
 }
 
@@ -624,7 +630,8 @@ void DataReporter::OutputPostSimSummary() {
   std::cout << "->  Phonons lost due to:\n"
             << "      Loss surfaces:  " << mNumLost << "\n"
             << "      Timeout:        " << mNumTimeout << "\n"
-            << "      Invalidity:     " << mNumInvalid << "\n";
+            << "      Invalidity:     " << mNumInvalid
+            << "  (Diag: 0x" << std::hex << mDiagInvalid << std::dec << ")\n";
 
   // ::::::
   // :: Print summaries and traces of all Seismometers:

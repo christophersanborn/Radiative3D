@@ -22,13 +22,15 @@
 //   o  TransferWithRefraction()
 //   o  InsertInto()
 //   o  Propagate()
-//  
+//
 
 //////
 // CLASS-STATIC PARAMETERS:
 //
 
 unsigned long Phonon::cm_phonon_counter = 0;
+unsigned long Phonon::cm_loop_concern = 1048576; // (2^20, ~1M loops)
+Real Phonon::cm_slow_concern = 0.001;
 Real Phonon::cm_min_theta = 0.0000001;
 Real Phonon::cm_max_theta = Geometry::Pi - 0.0000001;
 Real Phonon::cm_ttl = 3600.0;    // One hour.  Note: the Model()
@@ -541,17 +543,41 @@ void Phonon::Propagate() {
                     //   PROPAGATION INNER LOOP:
 
     // ::::::
-    // :: Test for TIME-OUT:
+    // :: Test for TIME-OUT and VALIDITY:
     // :
 
     if (mTimeAlive > cm_ttl) {
       dataout.ReportPhononTimeout(*this);
       break;
     }
-    if ((mMoveCount % 128)==127) { // Check validity
-      if (std::isnan(mPathLength) || std::isnan(mTimeAlive) || (mPathLength < 0)
-          || (mTimeAlive < 0) || (mRecentTravelTime <= 0)) {
-        dataout.ReportInvalidPhonon(*this);
+
+    if ((mMoveCount % 128)==127) { // Various VALIDITY checks:
+      if (std::isnan(mPathLength)) {
+        dataout.ReportInvalidPhonon(*this, DataReporter::INV_PATH_NAN);
+        break;
+      }
+      if (std::isnan(mTimeAlive)) {
+        dataout.ReportInvalidPhonon(*this, DataReporter::INV_TIME_NAN);
+        break;
+      }
+      if (mPathLength < 0) {
+        dataout.ReportInvalidPhonon(*this, DataReporter::INV_PATH_NEGATIVE);
+        break;
+      }
+      if ((mTimeAlive < 0) || (mRecentTravelTime < 0)) {
+        dataout.ReportInvalidPhonon(*this, DataReporter::INV_TIME_NEGATIVE);
+        break;
+      }
+      if (mRecentTravelTime == 0) {
+        dataout.ReportInvalidPhonon(*this, DataReporter::INV_STUCK);
+        break;
+      }
+      if (mRecentTravelTime < cm_slow_concern) {
+        dataout.ReportInvalidPhonon(*this, DataReporter::INV_SLOW);
+        break;
+      }
+      if (mMoveCount > cm_loop_concern) {
+        dataout.ReportInvalidPhonon(*this, DataReporter::INV_LOOP_EXCEED);
         break;
       }
       mRecentTravelTime = 0;

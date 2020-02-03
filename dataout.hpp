@@ -224,6 +224,18 @@ public:
 // CLASS: DataReporter
 //
 class DataReporter {
+public:
+
+  enum invalid_reason_e {
+    INV_PATH_NAN = 0,   // Implies diag component 0x01
+    INV_TIME_NAN,       // Implies diag component 0x02
+    INV_PATH_NEGATIVE,  // Implies diag component 0x04
+    INV_TIME_NEGATIVE,  // Implies diag component 0x08
+    INV_STUCK,          // Implies diag component 0x10
+    INV_SLOW,           // Implies diag component 0x20
+    INV_LOOP_EXCEED     // Implies diag component 0x40
+  };
+
 protected:
 
   // ::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -269,6 +281,7 @@ protected:
   std::string     mIDInvalid;  // Text ID label for INVALID reports
   bool       mbReportInvalid;  // True if INVALID data wanted
   unsigned long  mNumInvalid;  // How many phonons discarded as INVALID
+  unsigned int  mDiagInvalid;  // Bitfield of triggered diag codes
 
   std::ostream *mpOSSeisTrace; // Output stream for seismometer traces
   std::string    mIDSeisTrace; // Text ID label for seismometer traces
@@ -311,6 +324,7 @@ public:
     mIDInvalid       ( "INV: "    ),
     mbReportInvalid  ( true       ),
     mNumInvalid      ( 0          ),
+    mDiagInvalid     ( 0          ),
     mpOSSeisTrace    ( &std::cout ),  // Default to stdout; can override
     mIDSeisTrace     ( "SEIS: "   ),
     mbReportSeisTrace (true       )
@@ -408,7 +422,7 @@ public:
   void ReportLostPhonon(const Phonon &);
                                   // Phonon exited model
 
-  void ReportInvalidPhonon(const Phonon &);
+  void ReportInvalidPhonon(const Phonon &, invalid_reason_e reason);
                                   // Phonon accrued negative or NaN time or
                                   // length or failed to advance in last N
                                   // iterations.
