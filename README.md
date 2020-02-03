@@ -9,6 +9,14 @@ Radiative3D is a 3D radiative transport software tool being developed by Christo
 * [Simulations with Radiative3D, 2017](https://opencommons.uconn.edu/dissertations/1460/)
 * [Combined effects of deterministic and statistical structure, GJI, 2017](https://academic.oup.com/gji/article/210/2/1143/3833065)
 
+## What's New:
+
+##### Janaury 2020:
+
+* Added support for model architecture composed of concentric spherical shells, in which the elastic velocity profiles vary quadraticaly with the radial coordinate (_v<sub>P,S</sub> = a r^2 + c_).  The grid defines the velocities at the top and bottom of each spherical layer. This allows for whole-Earth models, efficiently defined in terms of a reasonably small number of layers.
+
+* Raspbian Buster on the Raspberry Pi 4 is now my primary development and testing environment.  Radiative3D is fast, efficient, and runs on inexpensive hardware!  Of course, it still runs great on Intel and AMD-based workstations as well.
+
 ## Build Process
 
 Radiative3D builds with GCC on MacOS (OS X), Linux, and Raspbian.  (And perhaps also Windows.)
