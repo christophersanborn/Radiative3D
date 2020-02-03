@@ -39,7 +39,7 @@ SOURCELOC=0,0,-10                       # Source location
 
 FREQ=2.0                      # Phonon frequency to model
 NUMPHONS=1M                   # Number of phonons to spray (Recommend: 50M)
-RECTIME=6000                  # Recording duration of seismometers (seconds).
+RECTIME=8000                  # Recording duration of seismometers (seconds).
 BINSIZE=20.0                  # Seismometer time-bin size in seconds
 GATHER=400.0                  # Terminal gather radius, in kilometers.
 
@@ -52,10 +52,8 @@ SCAT5=0.8,0.01,0.20,0.5,900   # Scat Args in mantle layer
                               # (Note: Q's specified are Q_s values.
                               # Q_p is computed from assumption that
                               # Q_kappa is infinite.)
-LAYERS=2.0,30.0,5.0           # SediThick,CrustThick,MohoThick
-PINCH=.3666667,.4736842,1,1   # PinchFrac,DepthFrac,SediFrac,MohoFrac
 
-COMPARGS=$SCAT1,$SCAT2,$SCAT3,$SCAT4,$SCAT5,$LAYERS,$PINCH
+COMPARGS=$SCAT1,$SCAT2,$SCAT3,$SCAT4,$SCAT5
 
 #FLATTEN="--flatten"          # If set to "--flatten", apply Earth-flattening
 FLATTEN=""                    # transformation to depths and velocities.
@@ -68,12 +66,12 @@ ADDITIONAL=""                 # Additional params. (Such as --ocsraw,
 SEISORIG1=0,67.5,0            # Array locations: (Range, Azimuth, Z)
 SEISORIG2=0,112.5,0           #
 SEISORIG3=0,90,0              #
-SEISDEST1=9000,67.5,0         #
-SEISDEST2=9000,112.5,0        #
-SEISDEST3=9000,90,0           #
-SEIS1=--seis-p2p=$SEISORIG1,$SEISDEST1,10.0,20.0,$GATHER,160
-SEIS2=--seis-p2p=$SEISORIG2,$SEISDEST2,10.0,20.0,$GATHER,160
-SEIS3=--seis-p2p=$SEISORIG3,$SEISDEST3,10.0,20.0,$GATHER,160
+SEISDEST1=12000,67.5,0         #
+SEISDEST2=12000,112.5,0        #
+SEISDEST3=12000,90,0           #
+SEIS1=--seis-p2p=$SEISORIG1,$SEISDEST1,20.0,20.0,$GATHER,160
+SEIS2=--seis-p2p=$SEISORIG2,$SEISDEST2,20.0,20.0,$GATHER,160
+SEIS3=--seis-p2p=$SEISORIG3,$SEISDEST3,20.0,20.0,$GATHER,160
 
 
 ## RUN THE SIMULATION:
@@ -213,7 +211,7 @@ produce_ttcurves() {  # $1:     station code
   [ -d other3 ] && ln -sf "other3/${ncbase}.octv" "${ncbase}_other3.octv"
   octave -qf <<EOF
     AR = array("seisfiles/seis_%03d.octv",$2,$3);
-    NORMCURVE = arrayimage(AR, [1 1 1], 2.0, [0 6000]);
+    NORMCURVE = arrayimage(AR, [1 1 1], 2.0, [0 8000]);
     save("traveltime-$1-xyz-normcurve.octv", "NORMCURVE");
     NC2 = NORMCURVE;
     NORMCURVE = normcurve_fitpowerlaw(NORMCURVE,10,160);
@@ -228,21 +226,8 @@ produce_ttcurves() {  # $1:     station code
     end   # Loads a common curve if one has been created (requires
           # user intervention).  If _othercurve also exists, 
           # then plot a comparisson.
-    ROI{1}.RegionWindow = [310 530];    # Region of Interest definitions
-    ROI{1}.RegionVSpan = [0.04 0.51];   #
-    ROI{1}.RegionLineWidth = 1.0;
-    ROI{1}.Label = "";
-    ROI{1}.LabelFontSize = 8;
-    ROI{1}.LabelVPos = 0.10;
-    ROI{2}.RegionWindow = [370 470];
-    ROI{2}.RegionVSpan = [0.09 0.46];
-    ROI{2}.RegionLineWidth = 1.0;
-    ROI{2}.Label = "";
-    ROI{2}.LabelFontSize = 8;
-    ROI{2}.LabelVPos = 0.35;
-    arrayimage(AR, [1 1 1], 2.0, [0 6000], NORMCURVE, $4);
-    annotate_regions(ROI);
-    annotate_array(); # (mark phases with velocity lines)
+    arrayimage(AR, [1 1 1], 2.0, [0 8000], NORMCURVE, $4);
+    #annotate_array(); # (mark phases with velocity lines)
     hRID = papertext(0.03, 0.00, "$RUNID",   ## Plot RunID in lowerleft corner
               "verticalalignment", "bottom", "horizontalalignment", "left",
               "fontsize", 5, "fontweight", "normal");

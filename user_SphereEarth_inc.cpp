@@ -33,7 +33,7 @@ void SphereEarth(Grid & gr, const std::vector<Real> & args) {
 
   Q QCr = QmQk(0.8*q);      //
   Q QMa = QmQk(q);          //
-  Q QCo = QmQk(1,q);        //
+  Q QCo = QmQk(1,20*q);     //
   Q QCi = QmQk(q);          //
 
   gr.SetSize(1,1,16);           // Sets index bounds

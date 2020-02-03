@@ -80,7 +80,7 @@ function PopDefaults {
     case "$1" in
         waveform)
             [ -z "$TOA_DEGREE" ] && TOA_DEGREE=9
-            [ -z "$REPORTS" ]    && REPORTS=ALL_OFF
+            [ -z "$REPORTS" ]    && REPORTS=INV
             [ -z "$FINTAG" ]     && FINTAG=R3D
             ;;
         video)
