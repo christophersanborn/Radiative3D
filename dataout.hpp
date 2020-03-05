@@ -23,6 +23,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <atomic>
 #include "geom.hpp"
 #include "tensors.hpp"
 #include "raytype.hpp"
@@ -272,16 +273,16 @@ protected:
 
   std::string     mIDLost;     // Text ID label for LOST reports
   bool       mbReportLost;     // True if LOST data wanted
-  unsigned long  mNumLost;     // How many phonons discarded as LOST
+  std::atomic<unsigned long>  mNumLost;     // How many phonons discarded as LOST
 
   std::string     mIDTimeout;  // Text ID label for TIMEOUT reports
   bool       mbReportTimeout;  // True if TIMEOUT data wanted
-  unsigned long  mNumTimeout;  // How many phonons discarded for TIMEOUT
+  std::atomic<unsigned long>  mNumTimeout;  // How many phonons discarded for TIMEOUT
 
   std::string     mIDInvalid;  // Text ID label for INVALID reports
   bool       mbReportInvalid;  // True if INVALID data wanted
   unsigned long  mNumInvalid;  // How many phonons discarded as INVALID
-  unsigned int  mDiagInvalid;  // Bitfield of triggered diag codes
+  std::atomic<unsigned int>  mDiagInvalid;  // Bitfield of triggered diag codes
 
   std::ostream *mpOSSeisTrace; // Output stream for seismometer traces
   std::string    mIDSeisTrace; // Text ID label for seismometer traces

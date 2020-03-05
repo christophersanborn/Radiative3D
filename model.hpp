@@ -17,6 +17,7 @@
 //
 #include <iostream>
 #include <vector>
+#include <atomic>
 #include "events.hpp"
 #include "scatterers.hpp"
 #include "grid.hpp"   /* includes ecs.hpp, elastic.hpp, geom.hpp */
@@ -333,6 +334,14 @@ private:;
 
   long               mNumPhonons;   // Number of phonons to generate
                                     // and then simulate.
+
+  ///
+  // Threads and coordination:
+
+  std::atomic<long> mPhononsRemain; // Threads deduct from this counter
+                                    // until all phonons simulated.
+  void SimulationThread();
+
 
 public:
 

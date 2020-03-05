@@ -1,6 +1,6 @@
 CC=gcc
 CPP=g++
-FLAGS= -std=c++11 -O3 -g -Wall
+FLAGS= -std=c++11 -pthread -O3 -g -Wall
 DEFINES=
 
 build_dir = build

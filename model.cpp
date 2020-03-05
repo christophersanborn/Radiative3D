@@ -3,6 +3,7 @@
 #include <cstdlib>      /* rand(), srand(), RAND_MAX */
 #include <ctime>        /* time() */
 #include <iomanip>
+#include <thread>
 #include "model.hpp"
 #include "phonons.hpp"
 #include "dataout.hpp"
@@ -595,34 +596,57 @@ R3::XYZ Model::FindSurface(R3::XYZ loc) const {
 
 
 //////
-// METHOD:  Model :: RunSimulation()
+// METHOD:  Model :: SimulationThread()
 //
-//   Runs the simulation outer-loop.
-//
-void Model::RunSimulation() {
+void Model::SimulationThread() {
 
   unsigned nph_byten = mNumPhonons / 10;  // For Progress Indicator
   unsigned nph_by100 = mNumPhonons / 100; //
   bool finegrain = (mNumPhonons > 9999);  // Threshold for hundredths indicator
   if (nph_byten==0) nph_byten=1;          // Prevent div/0
 
-  std::cout << "@@ __BEGINNING_SIMULATION__" << std::endl << std::flush;
-
-  for (int i=0; i < mNumPhonons; i++) {
+  long remain = mPhononsRemain.fetch_sub(1);
+  while (remain > 0) {
 
     Phonon P = mpEventSource->GenerateEventPhonon();
     P.Propagate();
 
+    int i = mNumPhonons - remain; // phonons complete
     if ( finegrain && (i % nph_by100 == 0) && (i>0) ) {  // 1% mark
       std::cerr << ".";                                  //
     }
-    if ( i % nph_byten == 0 ) {                 // 10% mark
+    if ( i % nph_byten == 0 ) {   // 10% mark
       unsigned pct = (i / nph_byten) * 10;      //
-      std::cerr << pct << "% of " << mNumPhonons 
+      std::cerr << pct << "% of " << mNumPhonons
                 << " have been cast.\n";
     }
+    remain = mPhononsRemain.fetch_sub(1);
 
   }
+}
+
+//////
+// METHOD:  Model :: RunSimulation()
+//
+//   Runs the simulation outer-loop.
+//
+void Model::RunSimulation() {
+
+  bool finegrain = (mNumPhonons > 9999);  // Threshold for hundredths indicator
+
+  std::cout << "@@ __BEGINNING_SIMULATION__" << std::endl << std::flush;
+
+  mPhononsRemain = mNumPhonons;
+
+  std::thread thread1(&Model::SimulationThread, this);
+  std::thread thread2(&Model::SimulationThread, this);
+  std::thread thread3(&Model::SimulationThread, this);
+  std::thread thread4(&Model::SimulationThread, this);
+
+  thread1.join();
+  thread2.join();
+  thread3.join();
+  thread4.join();
 
   if (finegrain) {std::cerr << ".";}
   std::cerr << "100% of " << mNumPhonons << " have been cast.\n";
