@@ -1,9 +1,36 @@
 // model.cpp
 //
-#include <cstdlib>      /* rand(), srand(), RAND_MAX */
+#include <cstdlib>
+#include <chrono>
+#include <random>
 #include <ctime>        /* time() */
 #include <iomanip>
 #include <thread>
+#if defined(__APPLE__)
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#endif
+
+static std::uint64_t MixRandomSeed(std::uint64_t value) {
+  value += 0x9e3779b97f4a7c15ULL;
+  value = (value ^ (value >> 30)) * 0xbf58476d1ce4e5b9ULL;
+  value = (value ^ (value >> 27)) * 0x94d049bb133111ebULL;
+  return value ^ (value >> 31);
+}
+
+static unsigned GetAutomaticWorkerLimit() {
+  unsigned hardware = std::thread::hardware_concurrency();
+  if (hardware == 0) hardware = 1;
+#if defined(__APPLE__)
+  int performance = 0;
+  size_t size = sizeof(performance);
+  if (sysctlbyname("hw.perflevel0.logicalcpu", &performance, &size, 0, 0) == 0 &&
+      performance > 0) {
+    return static_cast<unsigned>(performance);
+  }
+#endif
+  return hardware;
+}
 #include "model.hpp"
 #include "phonons.hpp"
 #include "dataout.hpp"
@@ -106,12 +133,16 @@ void ModelParams::Output() const
     << ((Frequency == def.Frequency) ? "(default)" : "") << endl
     << "Number of Phonons: " << NumPhonons << setw(22)
     << ((NumPhonons == def.NumPhonons) ? "(default)" : "") << endl
-    << "Time to Live: " << PhononTTL << setw(27)
+     << "Time to Live: " << PhononTTL << setw(27)
     << ((PhononTTL == def.PhononTTL) ? "(default)" : "") << endl
     << "Time Bin Size: " << GetBinSize() << setw(27)
     << ((GetBinSize() == def.GetBinSize()) ? "(default)" : "") 
     << endl
-    << "Cylinder Range: " << CylinderRange << setw(24)
+     << "Threads: " << NumThreads << setw(32)
+     << ((NumThreads == def.NumThreads) ? "(automatic)" : "") << endl
+     << "Random Seed: " << RandomSeed << setw(26)
+     << (SeedProvided ? "(provided)" : "(automatic)") << endl
+     << "Cylinder Range: " << CylinderRange << setw(24)
     << ((CylinderRange == def.CylinderRange) ? "(default)" : "") 
     << endl;
   std::cout << "Args provided for \"compiled\" model are: ";
@@ -227,16 +258,21 @@ Model::Model(const ModelParams & par) {
   // :
 
   mNumPhonons = par.NumPhonons;
+  mNumThreads = par.NumThreads;
 
 
   // ::::::
   // :: Initialize global standard-lib objects:
   // :
 
-  srand(time(NULL));  // Seed the random number generator.
-                      // (TODO: Look into better random number
-                      // implementations than the standard library
-                      // RNG.)
+  mRandomSeed = par.RandomSeed;
+  if (!par.SeedProvided) {
+    std::random_device rd;
+    mRandomSeed = (static_cast<std::uint64_t>(rd()) << 32)
+               ^ static_cast<std::uint64_t>(rd())
+               ^ static_cast<std::uint64_t>(
+                   std::chrono::high_resolution_clock::now().time_since_epoch().count());
+  }
 
 
   // ::::::
@@ -598,31 +634,32 @@ R3::XYZ Model::FindSurface(R3::XYZ loc) const {
 //////
 // METHOD:  Model :: SimulationThread()
 //
-void Model::SimulationThread() {
+void Model::SimulationThread(unsigned worker_index) {
+  (void) worker_index;
+  DataReporter::WorkerAccumulator *acc = dataout.CreateWorkerAccumulator();
+  DataReporter::SetActiveWorkerAccumulator(acc);
+  while (true) {
+    if (mCancelSimulation.load()) break;
+    long remain = mPhononsRemain.fetch_sub(1);
+    if (remain <= 0) break;
 
-  unsigned nph_byten = mNumPhonons / 10;  // For Progress Indicator
-  unsigned nph_by100 = mNumPhonons / 100; //
-  bool finegrain = (mNumPhonons > 9999);  // Threshold for hundredths indicator
-  if (nph_byten==0) nph_byten=1;          // Prevent div/0
-
-  long remain = mPhononsRemain.fetch_sub(1);
-  while (remain > 0) {
-
-    Phonon P = mpEventSource->GenerateEventPhonon();
-    P.Propagate();
-
-    int i = mNumPhonons - remain; // phonons complete
-    if ( finegrain && (i % nph_by100 == 0) && (i>0) ) {  // 1% mark
-      std::cerr << ".";                                  //
+    const std::uint64_t phonon_id = static_cast<std::uint64_t>(mNumPhonons - remain);
+    RandomContext random(MixRandomSeed(mRandomSeed ^ phonon_id));
+    SetActiveRandomContext(&random);
+    try {
+      Phonon P = mpEventSource->GenerateEventPhonon();
+      P.Propagate();
+      SetActiveRandomContext(0);
+    } catch (...) {
+      SetActiveRandomContext(0);
+      mCancelSimulation.store(true);
+      std::lock_guard<std::mutex> lock(mWorkerExceptionMutex);
+      if (!mWorkerException) mWorkerException = std::current_exception();
+      break;
     }
-    if ( i % nph_byten == 0 ) {   // 10% mark
-      unsigned pct = (i / nph_byten) * 10;      //
-      std::cerr << pct << "% of " << mNumPhonons
-                << " have been cast.\n";
-    }
-    remain = mPhononsRemain.fetch_sub(1);
-
   }
+  DataReporter::SetActiveWorkerAccumulator(0);
+  mWorkerAccumulators[worker_index] = acc;
 }
 
 //////
@@ -632,23 +669,49 @@ void Model::SimulationThread() {
 //
 void Model::RunSimulation() {
 
-  bool finegrain = (mNumPhonons > 9999);  // Threshold for hundredths indicator
-
   std::cout << "@@ __BEGINNING_SIMULATION__" << std::endl << std::flush;
 
   mPhononsRemain = mNumPhonons;
+  mCancelSimulation = false;
+  mWorkerException = std::exception_ptr();
+  unsigned hardware = std::thread::hardware_concurrency();
+  if (hardware == 0) hardware = 1;
+  unsigned workers = mNumThreads;
+  if (workers == 0) {
+    workers = GetAutomaticWorkerLimit();
+    if (workers > 2) --workers;
+    if (mNumPhonons > 0 && workers > static_cast<unsigned>(mNumPhonons))
+      workers = static_cast<unsigned>(mNumPhonons);
+  }
+  if (workers == 0) workers = 1;
+  std::cout << "Workers: " << workers << "\n";
+  std::cout << "Hardware threads: " << hardware << "\n";
+  std::cout << "Random seed: " << mRandomSeed << "\n";
+  std::vector<std::thread> threads;
+  mWorkerAccumulators.assign(workers, static_cast<DataReporter::WorkerAccumulator*>(0));
+  try {
+    for (unsigned i = 0; i < workers; ++i)
+      threads.push_back(std::thread(&Model::SimulationThread, this, i));
+  } catch (...) {
+    mCancelSimulation.store(true);
+    for (std::vector<std::thread>::iterator it = threads.begin(); it != threads.end(); ++it) it->join();
+    throw;
+  }
+  for (std::vector<std::thread>::iterator it = threads.begin();
+       it != threads.end(); ++it) it->join();
 
-  std::thread thread1(&Model::SimulationThread, this);
-  std::thread thread2(&Model::SimulationThread, this);
-  std::thread thread3(&Model::SimulationThread, this);
-  std::thread thread4(&Model::SimulationThread, this);
+  for (unsigned i = 0; i < workers; ++i) {
+    if (mWorkerAccumulators[i]) {
+      dataout.MergeWorkerAccumulator(*mWorkerAccumulators[i]);
+      delete mWorkerAccumulators[i];
+    }
+  }
 
-  thread1.join();
-  thread2.join();
-  thread3.join();
-  thread4.join();
+  if (mWorkerException) {
+    std::lock_guard<std::mutex> lock(mWorkerExceptionMutex);
+    if (mWorkerException) std::rethrow_exception(mWorkerException);
+  }
 
-  if (finegrain) {std::cerr << ".";}
   std::cerr << "100% of " << mNumPhonons << " have been cast.\n";
   std::cout << "@@ __SIMULATION_COMPLETE__" << std::endl;
 

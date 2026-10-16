@@ -1,7 +1,8 @@
 // probability.cpp
 //
 #include <iostream>
-#include <cstdlib>      /* rand(), srand(), RAND_MAX, exit() */
+#include <cstdlib>
+#include <mutex>
 #include "probability.hpp"
 using namespace std;
 
@@ -103,12 +104,16 @@ Real ProbDist::GetDiffProb(Index idx) {
 //
 Index ProbDist::GetRandomIndex() {
 
-  if (!mbIntegrated) {Integrate();}  // Needs integral representation
+  if (!mbIntegrated) {
+    static std::mutex integrate_mutex;
+    std::lock_guard<std::mutex> lock(integrate_mutex);
+    if (!mbIntegrated) Integrate();
+  }  // Needs integral representation
 
   Index k1 = 0;                 // Initial lower bound for search
   Index k2 = mDist.size() - 1;  // Initial upper bound
   Index k;
-  Real r = mDist[k2] * ((Real) rand() / RAND_MAX); 
+  Real r = mDist[k2] * RandomUniform();
              // A value between 0.0 and the final (and presumably
              // maximum) value of mDist.
 

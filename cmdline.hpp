@@ -35,6 +35,8 @@ public:
     OPT_NUMBER,         // Number of Phonons
     OPT_TTLIVE,         // Phonon Time-to-Live
     OPT_TOA,            // Take-off angle degree
+    OPT_THREADS,        // Simulation worker count
+    OPT_SEED,           // Simulation random seed
 
     OPT_MODARGS,        // Model-compiled args
     OPT_COMPSELECT,     // Model-compiled selector index
@@ -265,6 +267,8 @@ CmdOpt::OpMap CmdOpt::init_map() {
   map["--timetolive"] =          OPT_TTLIVE;  //  ''
   map["-A"] =                       OPT_TOA;  // Take-off Angle degree
   map["--toa-degree"] =             OPT_TOA;  //  ''
+  map["--threads"] =                OPT_THREADS;
+  map["--seed"] =                   OPT_SEED;
 
   // Model:
   map["--grid-compiled"] =   OPT_COMPSELECT;  // Compiled model select

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>      /* rand(), RAND_MAX */
+#include "random.hpp"
 #include "rtcoef.hpp"
 
 //////
@@ -411,7 +412,7 @@ raytype RTCoef::ChooseSPolType(const R3::XYZ & pdom) const {
   shfrac = pdom.Dot(fparash);
   shfrac *= shfrac;
 
-  Real ran = ((Real) rand() / RAND_MAX);  // 0.0 < ran <= 1.0
+  Real ran = RandomUniform();  // 0.0 < ran <= 1.0
   if (ran <= shfrac)
      { stype = RAY_SH; }
   else
@@ -444,7 +445,7 @@ void RTCoef::Choose() {
   }
   TotalP = PI[RT_NUM-1];
 
-  int iran = rand();      // Generate an int in range: [0,RAND_MAX]
+  int iran = (int) RandomInteger((unsigned long) RAND_MAX + 1UL);
   if (iran==0) {iran=1;}  // Now we are in the range:  (0,RAND_MAX]
   Real ran = ((Real) iran / RAND_MAX) * TotalP; // Range: (0.0, TotalP]
 

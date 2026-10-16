@@ -4,6 +4,8 @@
 #include <sstream>
 #include <string>
 #include <stdexcept>
+#include <cerrno>
+#include <climits>
 #include "params.hpp"
 #include "model.hpp"
 #include "dataout.hpp"  /* for SuppressAllReports() */
@@ -203,6 +205,34 @@ void process_option(CmdOpt & opt, ModelParams & params,
                     MissionParams & mission) {
 
   switch (opt.GetID()) {
+
+  case CmdOpt::OPT_THREADS:
+    {
+      Text value = opt.PopValue_Text();
+      char *end = 0;
+      errno = 0;
+      unsigned long parsed = std::strtoul(value.c_str(), &end, 10);
+      if (errno || end == value.c_str() || *end != '\0' || parsed == 0 ||
+          parsed > UINT_MAX) {
+        throw(Runtime("thread count must be a positive integer"));
+      }
+      params.NumThreads = static_cast<unsigned>(parsed);
+    }
+    break;
+
+  case CmdOpt::OPT_SEED:
+    {
+      Text value = opt.PopValue_Text();
+      char *end = 0;
+      errno = 0;
+      unsigned long long parsed = std::strtoull(value.c_str(), &end, 10);
+      if (errno || end == value.c_str() || *end != '\0' || value[0] == '-') {
+        throw(Runtime("random seed must be a non-negative integer"));
+      }
+      params.RandomSeed = static_cast<std::uint64_t>(parsed);
+      params.SeedProvided = true;
+    }
+    break;
 
   ////////////////////////////////////////////////////////////////////
   case CmdOpt::OPT_FREQ:        // *** Frequency:
@@ -632,5 +662,3 @@ void process_option(CmdOpt & opt, ModelParams & params,
   }
 
 }
-
-

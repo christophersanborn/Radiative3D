@@ -29,6 +29,52 @@ Radiative3D models energy propagation through both deterministic and statistical
 
   Sets the time to live for each phonon, or in other words the amount of sim-time to model.
 
+* <tt>--threads=_N_</tt>
+
+  Sets the number of phonon-simulation worker threads. If omitted, Radiative3D
+  selects a worker count automatically from the available hardware and the
+  requested phonon count. Use <tt>--threads=1</tt> for a single-thread
+  debugging or reference run. Explicit values must be positive.
+
+* <tt>--seed=_N_</tt>
+
+  Sets the non-negative random seed used to derive independent phonon random
+  streams. If omitted, a seed is generated automatically and printed in the
+  simulation parameters so the run can be repeated. Event-report ordering is
+  not guaranteed when multiple workers are active.
+
+### Multithreaded performance benchmark
+
+The simulation-only Lop Nor benchmark compares a serial reference run, an
+explicit 12-worker run, and automatic worker selection. It does not invoke
+Octave or generate figures:
+
+    LOPNOR_BENCH_PHONONS=210000000 \
+    LOPNOR_BENCH_OUTPUT_DIR=/path/to/benchmark-output \
+    tests/benchmark_lopnor_threads.sh
+
+The benchmark uses the same fixed-seed scenario for all three modes. Record
+the host and compiler with the results because performance depends on the
+machine:
+
+| Date | Host | Compiler | Workload |
+|---|---|---|---|
+| 2026-10-16 | macOS host, 24 logical CPUs | Apple Clang/G++ C++11 build | 210,000,000 phonons |
+
+| Mode | Workers | Phonons | Seconds | Phonons/s | Speedup |
+|---|---:|---:|---:|---:|---:|
+| Serial | 1 | 210,000,000 | 221.917 | 946,300 | 1.00x |
+| Explicit | 12 | 210,000,000 | 27.623 | 7,602,360 | 8.03x |
+| Automatic | 15 | 210,000,000 | 28.122 | 7,467,463 | 7.89x |
+
+The benchmark was rerun after removing unnecessary report-mutex acquisition
+when reporting is disabled. The original implementation serialized these
+frequent report calls even with <tt>--reports=ALL_OFF</tt>; the corrected
+results show the expected strong scaling up to the useful core range of this
+host.
+Automatic selection uses the 16 performance logical CPUs reported by macOS and
+reserves one; the explicit 12-worker run was slightly faster in this sample.
+
 * <tt>-A, --toa-degree=_TOA_DEGREE_</tt>
 
   Sets the take-off angle degree, which determines the number of discrete [[take-off angle]]s that PhononSource objects (e.g. event sources and scattering sources) have to choose from.  Increasing this number increases the angular fineness of these objects.  "Degree," in this context, is an integer that represents the number of times the angular space is subdivided, and in the default (and at present only) method for discretizing take-off angles, the algorithm starts with 20 angles and subdivides by four with each iteration (degree), such that N_TOA = 20 * 4 ^ (degree).

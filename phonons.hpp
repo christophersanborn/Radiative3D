@@ -20,6 +20,7 @@
 #include <cmath>
 #include "geom.hpp"
 #include "raytype.hpp"
+#include "random.hpp"
 
 //////
 // CLASSES: -- Forward Declarations --

@@ -2,7 +2,8 @@
 //
 #include <cmath>        /* log(), sqrt() */
 #include <iomanip>      /* setw() */
-#include <cstdlib>      /* rand(), RAND_MAX */
+#include <cstdlib>
+#include "random.hpp"
 #include "scatterers.hpp"
 #include "phonons.hpp"
 
@@ -296,7 +297,7 @@ void Scatterer::SetMeanFreePathsPS(Real mfpP, Real mfpS) {
 //
 Real Scatterer::GetRandomPathLength(raytype intype) {
 
-  Real r = ((Real) rand()) / ((Real) RAND_MAX + 1); 
+  Real r = RandomUniform();
                 // A double in the range [0,1)
   r = 1.0 - r;  // A double in the range (0,1]
                 // TODO: This is a little ugly. Maybe compute r like

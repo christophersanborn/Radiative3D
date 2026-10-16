@@ -10,6 +10,7 @@
 //
 #include <vector>
 #include "typedefs.hpp"  // CHECK!!!
+#include "random.hpp"
 
 //////
 // *** FORWARD DECLARATIONS:
